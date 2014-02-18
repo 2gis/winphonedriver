@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
@@ -10,22 +11,24 @@ namespace OuterDriver
     class Responder
     {
 
-        public static void Respond(NetworkStream stream, String responseBody)
+        public static void WriteResponse(NetworkStream stream, String responseBody)
         {
+            //the stream is closed in the calling method
             String response = CreateResponse(responseBody);
-            byte[] msg = System.Text.Encoding.ASCII.GetBytes(response);
-            stream.Write(msg, 0, msg.Length);
+            var writer = new StreamWriter(stream);
+            writer.Write(response);
+            writer.Close();
         }
 
         private static String CreateResponse(String body)
         {
-            StringBuilder response = new StringBuilder();
-            response.AppendLine("HTTP/1.0 200 OK");
-            response.AppendLine("Content-Type: application/json");
-            response.AppendLine("Connection: close");
-            response.AppendLine("");
-            response.AppendLine(body);
-            return response.ToString();
+            StringBuilder responseString = new StringBuilder();
+            responseString.AppendLine("HTTP/1.0 200 OK");
+            responseString.AppendLine("Content-Type: application/json");
+            responseString.AppendLine("Connection: close");
+            responseString.AppendLine("");
+            responseString.AppendLine(body);
+            return responseString.ToString();
         }
 
     }

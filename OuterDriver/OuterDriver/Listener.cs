@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading.Tasks;
+using System.IO;
 
 namespace OuterDriver
 {
@@ -12,18 +14,21 @@ namespace OuterDriver
     public class Listener
     {
 
-        private readonly int bufferSize = 512;
-        Byte[] readBuffer;
-        TcpListener listener;
+        private TcpListener listener;
+        private readonly int port;
 
         public Listener(int port)
         {
+            this.port = port;
             this.listener = null;
-            this.readBuffer = new Byte[bufferSize];
+        }
+
+        public async void StartListening()
+        {
             try
             {
                 IPAddress localAddr = IPAddress.Parse(OuterServer.FindIPAddress());
-                listener = new TcpListener(localAddr, port);
+                listener = new TcpListener(localAddr, this.port);
 
                 // Start listening for client requests.
                 listener.Start();
@@ -41,25 +46,39 @@ namespace OuterDriver
                     // Get a stream object for reading and writing
                     NetworkStream stream = client.GetStream();
 
-                    String headers = ReadString(stream);
-                    //TODO read body only if it's a POST request
-                    String body = ReadString(stream);
+                    //read HTTP headers
+                    var headers = new Dictionary<String, String>();
+                    String header;
+                    while (!String.IsNullOrEmpty(header = ReadString(stream)))
+                    {
+                        Console.WriteLine(header);
+                        String[] splitHeader;
+                        splitHeader = header.Split(':');
+                        headers.Add(splitHeader[0], splitHeader[1].Trim(' '));
+                    }
 
-
-                    Console.WriteLine("Headers: " + headers);
-                    Console.WriteLine("Body: " + body);
+                    //try and read request content
+                    String contentLengthString;
+                    bool hasContentLength = headers.TryGetValue("Content-Length", out contentLengthString);
+                    if (hasContentLength)
+                    {
+                        String content = ReadContent(stream, Convert.ToInt32(contentLengthString));
+                        Console.WriteLine(content);
+                    }
 
                     String responseBody = "Success";
-                    Responder.Respond(stream, responseBody);
-                    
+                    Responder.WriteResponse(stream, responseBody);
 
                     // Shutdown and end connection
+                    stream.Close();
                     client.Close();
+
+                    Console.WriteLine("Client closed");
                 }
             }
-            catch (SocketException e)
+            catch (SocketException ex)
             {
-                Console.WriteLine("SocketException: {0}", e);
+                Console.WriteLine("SocketException: {0}", ex);
             }
             finally
             {
@@ -68,12 +87,32 @@ namespace OuterDriver
             }
         }
 
+        public void StopListening()
+        {
+            listener.Stop();
+        }
+
+        //reads the content of a request depending on its length
+        private String ReadContent(NetworkStream s, int contentLength)
+        {
+            Byte[] readBuffer = new Byte[contentLength];
+            int readBytes = s.Read(readBuffer, 0, readBuffer.Length);
+            return System.Text.Encoding.ASCII.GetString(readBuffer, 0, readBytes);
+        }
+
         private String ReadString(NetworkStream stream)
         {
-            Byte[] readBuffer = new Byte[1024];
-            int readBytes = stream.Read(readBuffer, 0, readBuffer.Length);
-            String result = System.Text.Encoding.ASCII.GetString(readBuffer, 0, readBytes);
-            return result;
+            //StreamReader reader = new StreamReader(stream);
+            int nextChar;
+            String data = "";
+            while (true)
+            {
+                nextChar = stream.ReadByte();
+                if (nextChar == '\n') { break; }
+                if (nextChar == '\r') { continue; }
+                data += Convert.ToChar(nextChar);
+            }
+            return data;
         }
     }
 

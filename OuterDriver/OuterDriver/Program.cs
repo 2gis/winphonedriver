@@ -21,6 +21,12 @@ namespace OuterDriver
 
             String command = String.Empty;
 
+            Console.WriteLine("Enter ip");
+            String innerIp = Console.ReadLine();
+            Console.WriteLine("Enter port");
+            String innerPort = Console.ReadLine();
+            outerServer = new OuterServer(innerIp, innerPort);
+
             while(!command.Equals("exit"))
             {
                 command = Console.ReadLine();
@@ -37,14 +43,11 @@ namespace OuterDriver
                         Console.WriteLine("Enter listening port");
                         int port = Convert.ToInt32(Console.ReadLine());
                         listener = new Listener(port);
+                        listener.StartListening();
                         break;
 
                     case "send":
-                        Console.WriteLine("Enter ip");
-                        String innerIp = Console.ReadLine();
-                        Console.WriteLine("Enter port");
-                        String innerPort = Console.ReadLine();
-                        outerServer = new OuterServer(innerIp, innerPort);
+                        
                         String response = outerServer.SendRequest("/session/", tokens[1]);
                         Console.WriteLine(response);
                         break;
@@ -53,15 +56,6 @@ namespace OuterDriver
                         Console.WriteLine("Unknown command");
                         break;
                 }
-
-                //try
-                //{
-                //    Console.WriteLine(outerServer.SendRequest("/session/lols", command));
-                //}
-                //catch (Exception ex)
-                //{
-                //    Console.WriteLine(ex.Message);
-                //}
 
             }
         }
