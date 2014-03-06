@@ -6,15 +6,13 @@ using System.Threading.Tasks;
 
 namespace OuterDriver
 {
-    class Proxy
+    class JsonCapabilities
     {
-        private Requester requester;
+        public String platform;
 
-        public Proxy(String ip, String port)
+        public JsonCapabilities(String platform)
         {
-            requester = new Requester(ip, port)
+            this.platform = platform;
         }
-
-
     }
 }

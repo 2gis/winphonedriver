@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Net;
 
 namespace OuterDriver
@@ -12,7 +9,7 @@ namespace OuterDriver
 
         private Requester requester;
 
-        public OuterServer(String innerIp, String innerPort)
+        public OuterServer(String innerIp, int innerPort)
         {
             this.requester = new Requester(innerIp, innerPort);
         }

@@ -1,28 +1,53 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace OuterDriver
 {
     class Parser
     {
-        static String GetRequestMethod(String requestHeaders)
+
+        private static List<String> commandsToProxy = new List<String>{ "element", "click", "text", "displayed", "location" };
+        private static List<String> commandsWithGET = new List<String> { "text", "displayed", "location" };
+
+        public static String GetRequestUrn(String request)
         {
-            String[] headers = requestHeaders.Split('\n');
-            String[] firstHeaderTokens = headers[0].Split(' ');
-            String method = firstHeaderTokens[0];
-            if (!method.Equals("POST") || !(method.Equals("GET")))
-                return "";
-            return method;
+            String[] firstHeaderTokens = request.Split(' ');
+            return firstHeaderTokens[1];
         }
 
-        static String GetRequestUri(String requestHeaders)
+        public static String GetLastToken(String urn)
         {
-            String[] headers = requestHeaders.Split('\n');
-            String[] firstHeaderTokens = headers[0].Split(' ');
-            return firstHeaderTokens[1];
+            String[] urnTokens = urn.Split(new String[] {"/"}, StringSplitOptions.RemoveEmptyEntries);
+            String command = urnTokens[urnTokens.Length - 1];
+            return command;
+        }
+
+        public static String GetRequestCommand(String request)
+        {
+            String[] requestTokens = request.Split(' ');
+            String urn = requestTokens[1];
+            //take care of the slash in the end of the string
+            String[] urnTokens = urn.Split(new String[] { "/" }, StringSplitOptions.RemoveEmptyEntries);
+            String command = urnTokens[urnTokens.Length - 1];
+            return command;
+        }
+
+        //decides if the request should be simply proxied by looking at the last command token
+        public static bool ShouldProxy(String request)
+        {
+            Console.WriteLine("Checking if need to proxy " + request);
+            String urn = GetRequestUrn(request);
+            return commandsToProxy.Contains(GetLastToken(urn));
+        }
+
+        //chooses the request method by looking at the last command token
+        public static String ChooseRequestMethod(String uri)
+        {
+            Console.WriteLine("choosing request method for " + uri);
+            if (commandsWithGET.Contains(GetLastToken(uri)))
+                return "GET";
+            return "POST";
         }
     }
 }
