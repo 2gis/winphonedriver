@@ -1,13 +1,26 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace OuterDriver
 {
+
+    class JsonKeysContent
+    {
+        public String sessionId { get; set; }
+        public String[] value { get; set; }
+
+        public String[] GetValue()
+        {
+            return this.value;
+        }
+    }
+
     class Parser
     {
 
-        private static List<String> commandsToProxy = new List<String>{ "element", "click", "text", "displayed", "location" };
+        private static List<String> commandsToProxy = new List<String>{ "element", "click", "text", "displayed", "location", "value" };
         private static List<String> commandsWithGET = new List<String> { "text", "displayed", "location" };
 
         public static String GetRequestUrn(String request)
@@ -39,6 +52,19 @@ namespace OuterDriver
             Console.WriteLine("Checking if need to proxy " + request);
             String urn = GetRequestUrn(request);
             return commandsToProxy.Contains(GetLastToken(urn));
+        }
+
+        //deserializes json string array and returns a single String
+        public static String GetKeysString(String requestContent)
+        {
+            String result = String.Empty;
+            JsonKeysContent jsonContent = JsonConvert.DeserializeObject<JsonKeysContent>(requestContent);
+            String[] value = jsonContent.GetValue();
+            foreach (String str in value)
+            {
+                result += str;
+            }
+            return result;
         }
 
         //chooses the request method by looking at the last command token

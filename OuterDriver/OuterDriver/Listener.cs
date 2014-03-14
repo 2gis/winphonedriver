@@ -161,14 +161,23 @@ namespace OuterDriver
         {
             String responseBody = String.Empty;
             String request = acceptedRequest.request;
+            String content = acceptedRequest.content;
             String command = Parser.GetRequestCommand(request);
             switch (command)
             {
                 case "session":
-                    String jsonResponse = Responder.CreateJsonResponse("MyId",
+                    String sessionId = "awesomeSessionId";
+                    String jsonResponse = Responder.CreateJsonResponse(sessionId,
                         ResponseStatus.Sucess, new JsonCapabilities("WinPhone"));
                     Console.WriteLine("jsonResponse: " + jsonResponse);
                     responseBody = jsonResponse;
+                    break;
+
+                case "keys":
+                    String enter = "\ue007";
+                    String jsonValue = Parser.GetKeysString(content);
+                    if (jsonValue.Equals(enter))
+                        OuterDriver.ClickEnter();
                     break;
 
                 default:
