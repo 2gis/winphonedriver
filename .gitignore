@@ -1,2 +1,6 @@
 OuterDriver/OuterDriver/bin/
 OuterDriver/OuterDriver/obj/
+WindowsPhoneJsonWireServer/Bin
+WindowsPhoneJsonWireServer/obj
+*.suo
+*.user

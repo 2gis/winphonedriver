@@ -1,0 +1,164 @@
+﻿using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.IO.IsolatedStorage;
+using System.Threading.Tasks;
+using System.Windows;
+using Windows.Networking.Connectivity;
+using Windows.Networking.Sockets;
+using Windows.Storage.Streams;
+
+namespace WindowsPhoneJsonWireServer
+{
+    public class Server
+    {
+        private readonly int listeningPort;
+        private StreamSocketListener listener;
+        private bool isServerActive = false;
+        private Automator automator;
+
+        public Server(int port)
+        {
+            listeningPort = port;
+        }
+
+        public void SetAutomator(UIElement visualRoot)
+        {
+            automator = new Automator(visualRoot);
+        }
+
+        public delegate void Output(String data);
+
+        public async void Start()
+        {
+            if (isServerActive) return;
+            isServerActive = true;
+            listener = new StreamSocketListener();
+            listener.Control.QualityOfService = SocketQualityOfService.Normal;
+            listener.ConnectionReceived += ListenerConnectionReceived;
+            await listener.BindServiceNameAsync(listeningPort.ToString());
+            WriteIpAddress();
+        }
+
+        public void Stop()
+        {
+            if (isServerActive)
+            {
+                listener.Dispose();
+                isServerActive = false;
+            }
+        }
+
+        async void ListenerConnectionReceived(StreamSocketListener sender, StreamSocketListenerConnectionReceivedEventArgs args)
+        {
+            await Task.Run(() => HandleRequest(args.Socket));
+        }
+
+
+        private async void HandleRequest(StreamSocket socket)
+        {
+            //Initialize IO classes
+            var reader = new DataReader(socket.InputStream) {InputStreamOptions = InputStreamOptions.Partial};
+            var writer = new DataWriter(socket.OutputStream)
+            {
+                UnicodeEncoding = Windows.Storage.Streams.UnicodeEncoding.Utf8
+            };
+
+            var acceptedRequest = new AcceptedRequest();
+            await acceptedRequest.AcceptRequest(reader);
+
+            String response = ProcessRequest(acceptedRequest.request, acceptedRequest.content);
+
+            //create response
+            writer.WriteString(Responder.CreateResponse(response));
+            await writer.StoreAsync();
+
+            socket.Dispose();
+        }
+
+        public void WriteIpAddress()
+        {
+            using (var isoStore = IsolatedStorageFile.GetUserStoreForApplication())
+            using (var sw = new StreamWriter(isoStore.OpenFile("ip.txt", FileMode.OpenOrCreate, FileAccess.Write)))
+            {
+                sw.Write(FindIPAddress());
+            }
+        }
+
+        private String ProcessRequest(String request, String content)
+        {
+            String response = String.Empty;
+            String command = Parser.GetRequestCommand(request);
+            String elementId = String.Empty;
+            switch (command)
+            {
+                case "element":
+                    FindElementObject elementObject = JsonConvert.DeserializeObject<FindElementObject>(content);
+                    response = automator.PerformElementCommand(elementObject);
+
+                    break;
+
+                case "click":
+                    elementId = Parser.GetElementId(request);
+                    response = automator.PerformClickCommand(elementId);
+                    
+                    break;
+
+                case "value":
+                    elementId = Parser.GetElementId(request);
+                    response = automator.PerformValueCommand(elementId, content);
+                    break;
+
+                case "text":
+                    response = "Unimplemented";
+                    break;
+
+                case "displayed":
+                    response = "Unimplemented";
+                    break;
+
+                case "location":
+                    response = "Unimplemented";
+                    break;
+
+                default:
+                    response = "Unimplemented";
+                    break;
+            }
+            return response;
+        }
+
+        public static String FindIPAddress()
+        {
+            List<String> ipAddresses = new List<String>();
+            var hostnames = NetworkInformation.GetHostNames();
+            foreach (var hn in hostnames)
+            {
+                //IanaInterfaceType == 71 => Wifi
+                //IanaInterfaceType == 6 => Ethernet (Emulator)
+                if (hn.IPInformation != null &&
+                    (hn.IPInformation.NetworkAdapter.IanaInterfaceType == 71
+                    || hn.IPInformation.NetworkAdapter.IanaInterfaceType == 6))
+                {
+                    String ipAddress = hn.DisplayName;
+                    ipAddresses.Add(ipAddress);
+                }
+            }
+
+            if (ipAddresses.Count < 1)
+            {
+                return null;
+            }
+            else if (ipAddresses.Count == 1)
+            {
+                return ipAddresses[0];
+            }
+            else
+            {
+                return ipAddresses[ipAddresses.Count - 1];
+            }
+        }
+
+    }
+}
