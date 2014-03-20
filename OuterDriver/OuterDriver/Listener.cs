@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Web.Script.Serialization;
+using Newtonsoft.Json;
 
 namespace OuterDriver
 {
@@ -160,6 +161,8 @@ namespace OuterDriver
         private String HandleLocalRequest(AcceptedRequest acceptedRequest)
         {
             String responseBody = String.Empty;
+            String jsonValue = String.Empty;
+            String ENTER = "\ue007";
             String request = acceptedRequest.request;
             String content = acceptedRequest.content;
             String command = Parser.GetRequestCommand(request);
@@ -167,16 +170,32 @@ namespace OuterDriver
             {
                 case "session":
                     String sessionId = "awesomeSessionId";
+                    InitializeApplication();
                     String jsonResponse = Responder.CreateJsonResponse(sessionId,
                         ResponseStatus.Sucess, new JsonCapabilities("WinPhone"));
                     Console.WriteLine("jsonResponse: " + jsonResponse);
                     responseBody = jsonResponse;
                     break;
 
+                //if the text has the ENTER command in it, execute it after sending the rest of the text to the inner driver
+                case "value":
+                    bool needToClickEnter = false;
+                    JsonValueContent oldContent= JsonConvert.DeserializeObject<JsonValueContent>(content);
+                    String[] value = oldContent.GetValue();
+                    if (value.Contains(ENTER))
+                    {
+                        needToClickEnter = true;
+                        value = value.Where(val => val != ENTER).ToArray();
+                    }
+                    JsonValueContent newContent = new JsonValueContent(oldContent.sessionId, oldContent.id, value);
+                    responseBody = phoneRequester.SendRequest(Parser.GetRequestUrn(request), JsonConvert.SerializeObject(newContent));
+                    if (needToClickEnter)
+                        OuterDriver.ClickEnter();
+                    break;
+
                 case "keys":
-                    String enter = "\ue007";
-                    String jsonValue = Parser.GetKeysString(content);
-                    if (jsonValue.Equals(enter))
+                    jsonValue = Parser.GetKeysString(content);
+                    if (jsonValue.Equals(ENTER))
                         OuterDriver.ClickEnter();
                     break;
 
@@ -186,6 +205,15 @@ namespace OuterDriver
                     break;
             }
             return responseBody;
+        }
+
+        private void InitializeApplication()
+        {
+            String appId;
+            var deployer = new Deployer(appId);
+            deployer.Deploy();
+            String ip = deployer.ReceiveIpAddress();
+            throw new NotImplementedException();
         }
 
         public void StopListening()

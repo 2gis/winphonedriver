@@ -22,7 +22,7 @@ namespace OuterDriver
             Listener listener;
             Console.WriteLine("Starting listener on port " + listeningPort);
             listener = new Listener(listeningPort, innerPort, innerIp);
-            listener.StartListening();
+            //listener.StartListening();
 
             String command = String.Empty;
 
@@ -31,12 +31,23 @@ namespace OuterDriver
                 command = Console.ReadLine();
                 Console.WriteLine(String.Empty);
                 String[] tokens = command.Split(' ');
+                Deployer deployer = new Deployer("{846135ee-2c7a-453c-9a72-e57c607c26c8}");
                 
                 switch (tokens[0])
                 {
 
                     case "ip":
                         Console.WriteLine(OuterServer.FindIPAddress());
+                        break;
+
+                    case "install":
+                        
+                        deployer.Deploy();
+                        deployer.ReceiveIpAddress();
+                        break;
+
+                    case "file":
+                        deployer.ReceiveIpAddress();
                         break;
 
                     case "listener":

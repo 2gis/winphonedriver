@@ -20,7 +20,7 @@ namespace OuterDriver
     class Parser
     {
 
-        private static List<String> commandsToProxy = new List<String>{ "element", "click", "text", "displayed", "location", "value" };
+        private static List<String> commandsToProxy = new List<String>{ "element", "click", "text", "displayed", "location" };
         private static List<String> commandsWithGET = new List<String> { "text", "displayed", "location" };
 
         public static String GetRequestUrn(String request)
