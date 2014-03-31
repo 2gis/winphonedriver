@@ -49,7 +49,6 @@ namespace OuterDriver
         //decides if the request should be simply proxied by looking at the last command token
         public static bool ShouldProxy(String request)
         {
-            Console.WriteLine("Checking if need to proxy " + request);
             String urn = GetRequestUrn(request);
             return commandsToProxy.Contains(GetLastToken(urn));
         }
