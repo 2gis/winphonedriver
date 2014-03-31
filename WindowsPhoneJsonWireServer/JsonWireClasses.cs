@@ -45,12 +45,12 @@ namespace WindowsPhoneJsonWireServer
     public class JsonResponse
     {
         public String sessionId = "awesomeSessionId";
-        public int status { get; set; }
+        public ResponseStatus status { get; set; }
         public object value { get; set; }
 
-        public JsonResponse(int responseCode, object value)
+        public JsonResponse(ResponseStatus status, object value)
         {
-            this.status = responseCode;
+            this.status = status;
             this.value = value;
         }
     }

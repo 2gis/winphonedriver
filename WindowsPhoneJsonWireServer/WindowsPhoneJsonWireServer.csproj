@@ -85,6 +85,7 @@
   <ItemGroup>
     <Compile Include="AcceptedRequest.cs" />
     <Compile Include="Automator.cs" />
+    <Compile Include="JsonResponseStatus.cs" />
     <Compile Include="JsonWireClasses.cs" />
     <Compile Include="Parser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

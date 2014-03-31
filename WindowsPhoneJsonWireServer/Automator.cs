@@ -79,17 +79,17 @@ namespace WindowsPhoneJsonWireServer
                 Button button = element as Button;
                 if (button != null)
                 {
-                    TryClick(button as Button);
-                    response = Responder.CreateJsonResponse(0, null);
+                    TryClick(button);
+                    response = Responder.CreateJsonResponse(ResponseStatus.Success, null);
                 }
                 else
                 {
-                    response = Responder.CreateJsonResponse(13, null);
+                    response = Responder.CreateJsonResponse(ResponseStatus.UnknownError, null);
                 }
             }
             else
             {
-                response = Responder.CreateJsonResponse(7, null);
+                response = Responder.CreateJsonResponse(ResponseStatus.NoSuchElement, null);
             }
             return response;
         }
@@ -112,10 +112,10 @@ namespace WindowsPhoneJsonWireServer
                 if (webElements.ContainsKey(elementName))
                 {
                     var webElement = new WebElement(elementName);
-                    response = Responder.CreateJsonResponse(0, webElement);
+                    response = Responder.CreateJsonResponse(ResponseStatus.Success, webElement);
                 }
                 else
-                    response = Responder.CreateJsonResponse(7, null);
+                    response = Responder.CreateJsonResponse(ResponseStatus.NoSuchElement, null);
             }
             return response;
         }
@@ -130,16 +130,16 @@ namespace WindowsPhoneJsonWireServer
                 if (button != null)
                 {
                     TryClick(button as Button);
-                    response = Responder.CreateJsonResponse(0, null);
+                    response = Responder.CreateJsonResponse(ResponseStatus.Success, null);
                 }
                 else
                 {
-                    response = Responder.CreateJsonResponse(13, null);
+                    response = Responder.CreateJsonResponse(ResponseStatus.UnknownError, null);
                 }
             }
             else
             {
-                response = Responder.CreateJsonResponse(7, null);
+                response = Responder.CreateJsonResponse(ResponseStatus.NoSuchElement, null);
             }
             return response;
         }
@@ -155,18 +155,17 @@ namespace WindowsPhoneJsonWireServer
                 if (textbox != null)
                 {
                     // DISPATCHER
-                    //textbox.Focus();
                     TrySetText(textbox, jsonValue);
-                    response = Responder.CreateJsonResponse(0, null);
+                    response = Responder.CreateJsonResponse(ResponseStatus.Success, null);
                 }
                 else
                 {
-                    response = Responder.CreateJsonResponse(13, null);
+                    response = Responder.CreateJsonResponse(ResponseStatus.UnknownError, null);
                 }
             }
             else
             {
-                response = Responder.CreateJsonResponse(13, null);
+                response = Responder.CreateJsonResponse(ResponseStatus.NoSuchElement, null);
             }
             return response;
         }
@@ -191,7 +190,7 @@ namespace WindowsPhoneJsonWireServer
             }
         }
 
-       // public 
+        // public 
 
         private IEnumerable<DependencyObject> GetDescendants<T>(DependencyObject item)
         {
@@ -214,5 +213,7 @@ namespace WindowsPhoneJsonWireServer
                 }
             }
         }
+
+
     }
 }

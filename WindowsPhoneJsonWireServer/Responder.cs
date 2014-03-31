@@ -24,7 +24,7 @@ namespace WindowsPhoneJsonWireServer
             return ret.ToString();
         }
 
-        public static String CreateJsonResponse(int status, object value)
+        public static String CreateJsonResponse(ResponseStatus status, object value)
         {
             return JsonConvert.SerializeObject(new JsonResponse(status, value));
         }
