@@ -91,7 +91,6 @@ namespace OuterDriver
                 {
                     try
                     {
-                        Console.WriteLine(procs[i].MainModule.ModuleName);
                         if (procs[i].MainModule.ModuleName ==
                            "XDE.exe")
                         {

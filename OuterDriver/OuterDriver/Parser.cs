@@ -69,7 +69,6 @@ namespace OuterDriver
         //chooses the request method by looking at the last command token
         public static String ChooseRequestMethod(String uri)
         {
-            Console.WriteLine("choosing request method for " + uri);
             if (commandsWithGET.Contains(GetLastToken(uri)))
                 return "GET";
             return "POST";

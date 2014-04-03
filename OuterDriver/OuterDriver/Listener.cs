@@ -22,7 +22,7 @@ namespace OuterDriver
             {
                 //read HTTP request
                 this.request = ReadString(stream);
-                Console.WriteLine(request);
+                Console.WriteLine("Request: " + request);
 
                 //read HTTP headers
                 this.headers = ReadHeaders(stream);
@@ -39,7 +39,7 @@ namespace OuterDriver
                 if (hasContentLength)
                 {
                     content = ReadContent(stream, Convert.ToInt32(contentLengthString));
-                    Console.WriteLine(content);
+                    Console.WriteLine("Content: " + content);
                 }
                 return content;
             }
@@ -50,7 +50,6 @@ namespace OuterDriver
                 String header;
                 while (!String.IsNullOrEmpty(header = ReadString(stream)))
                 {
-                    Console.WriteLine(header);
                     String[] splitHeader;
                     splitHeader = header.Split(':');
                     headers.Add(splitHeader[0], splitHeader[1].Trim(' '));
@@ -87,11 +86,9 @@ namespace OuterDriver
         private Requester phoneRequester;
         private readonly int listeningPort;
 
-        public Listener(int listeningPort, int phonePort, String phoneIp)
+        public Listener(int listeningPort)
         {
             this.listeningPort = listeningPort;
-            this.listener = null;
-            phoneRequester = new Requester(phoneIp, phonePort);
         }
 
         public void StartListening()
@@ -111,7 +108,6 @@ namespace OuterDriver
 
                     // Perform a blocking call to accept requests. 
                     TcpClient client = listener.AcceptTcpClient();
-                    Console.WriteLine("Connected!");
 
                     // Get a stream object for reading and writing
                     NetworkStream stream = client.GetStream();
@@ -147,14 +143,10 @@ namespace OuterDriver
             String request = acceptedRequest.request;
             String content = acceptedRequest.content;
             if (Parser.ShouldProxy(request))
-            {
-                Console.WriteLine("proxying");
                 responseBody = phoneRequester.SendRequest(Parser.GetRequestUrn(request), content);
-            }
             else
-            {
                 responseBody = HandleLocalRequest(acceptedRequest);
-            }
+
             return responseBody;
         }
 
@@ -163,6 +155,7 @@ namespace OuterDriver
             String responseBody = String.Empty;
             String jsonValue = String.Empty;
             String ENTER = "\ue007";
+            int innerPort = 9998;
             String request = acceptedRequest.request;
             String content = acceptedRequest.content;
             String command = Parser.GetRequestCommand(request);
@@ -170,10 +163,13 @@ namespace OuterDriver
             {
                 case "session":
                     String sessionId = "awesomeSessionId";
-                    InitializeApplication();
+                    String innerIp = InitializeApplication();
+                    //Console.WriteLine("Enter inner driver ip");
+                    //String innerIp = Console.ReadLine();
+                    //Console.WriteLine("Inner ip: " + innerIp);
+                    phoneRequester = new Requester(innerIp, innerPort);
                     String jsonResponse = Responder.CreateJsonResponse(sessionId,
                         ResponseStatus.Sucess, new JsonCapabilities("WinPhone"));
-                    Console.WriteLine("jsonResponse: " + jsonResponse);
                     responseBody = jsonResponse;
                     break;
 
@@ -207,13 +203,15 @@ namespace OuterDriver
             return responseBody;
         }
 
-        private void InitializeApplication()
+        private String InitializeApplication()
         {
-            String appId;
-            var deployer = new Deployer(appId);
-            deployer.Deploy();
-            String ip = deployer.ReceiveIpAddress();
-            throw new NotImplementedException();
+            String appId = "846135ee-2c7a-453c-9a72-e57c607c26c8";
+            //var deployer = new Deployer(appId);
+            //deployer.Deploy();
+            //String ip = deployer.ReceiveIpAddress();
+            //return ip;
+
+            return String.Empty;
         }
 
         public void StopListening()

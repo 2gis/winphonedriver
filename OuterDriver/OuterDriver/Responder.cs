@@ -36,7 +36,6 @@ namespace OuterDriver
         {
             //the stream is closed in the calling method
             String response = CreateResponse(responseBody);
-            Console.WriteLine("\nResponse: " + responseBody + String.Empty);
             var writer = new StreamWriter(stream);
             writer.Write(response);
             writer.Close();

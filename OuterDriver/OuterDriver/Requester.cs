@@ -28,10 +28,10 @@ namespace OuterDriver
                 //create the request
                 String uri = CreateUri(urn);
                 HttpWebRequest request = CreateWebRequest(uri, requestContent);
+                Console.WriteLine("Sending request: " + requestContent + " to " + uri);
                 //send the request and get the response
-                response = (HttpWebResponse)request.GetResponse();
-
-                Console.WriteLine("Sending " + request + " to " + uri + "\n");
+                response = request.GetResponse();
+                Console.WriteLine(response);
 
                 //read and return the response
                 reader = new StreamReader(response.GetResponseStream());
@@ -53,14 +53,12 @@ namespace OuterDriver
 
         private String CreateUri(String urn)
         {
-            Console.WriteLine("Creating uri from " + urn);
             String uri = "http://" + this.ip + ":" + this.port + urn;
             return uri;
         }
 
         private HttpWebRequest CreateWebRequest(String uri, String content)
         {
-            Console.WriteLine("Creating request to " + uri + " and content " + content);
             //create request
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(uri);
             request.ContentType = "application/json";

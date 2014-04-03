@@ -1,23 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.IO;
-using System.Reflection;
 
 // Libraries needed to connect to the Windows Phone X Emulator
-using Microsoft.SmartDevice.Connectivity;
 using Microsoft.SmartDevice.Connectivity.Interface;
 using Microsoft.SmartDevice.MultiTargeting.Connectivity;
 using System.Globalization;
-using System.Collections.ObjectModel;
 
         
 namespace OuterDriver
@@ -54,7 +42,7 @@ namespace OuterDriver
             Guid instanceId = appID;
             String applicationGenre = "NormalApp";
             String iconPath = @"C:\test\ApplicationIcon.png";
-            String xapPackage = @"C:\test\testApp.xap";
+            String xapPackage = @"C:\Users\Automator\programming\testApp\testApp\testApp\Bin\Debug\testApp_Debug_AnyCPU.xap";
 
             // Install the application 
             Console.WriteLine("Installing the application...");
@@ -66,7 +54,7 @@ namespace OuterDriver
             Console.WriteLine("Starting the application...");
             remoteApplication.Launch();
 
-            int startStopWaitTime = 1000;   // msec
+            int startStopWaitTime = 3000;   // msec
             int executionWaitTime = 5000; // msec
 
             // Note that IRemoteApplication has a 'IsRunning' method but it is not implemented.
@@ -95,9 +83,8 @@ namespace OuterDriver
         {
             String ip = String.Empty;
             IRemoteApplication remoteApplication = iDevice.GetApplication(new Guid(appIdString));
-
             IRemoteIsolatedStorageFile remoteIsolatedStorageFile = remoteApplication.GetIsolatedStore();
-            String sourceDeviceFilePath = (object) Path.DirectorySeparatorChar + "test.txt";
+            String sourceDeviceFilePath = (object) Path.DirectorySeparatorChar + "ip.txt";
             const String targetDesktopFilePath = @"C:\test\" + "test.txt";
             if (remoteIsolatedStorageFile.FileExists(sourceDeviceFilePath))
             {
