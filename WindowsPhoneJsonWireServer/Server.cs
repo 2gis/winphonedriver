@@ -62,7 +62,7 @@ namespace WindowsPhoneJsonWireServer
             var reader = new DataReader(socket.InputStream) {InputStreamOptions = InputStreamOptions.Partial};
             var writer = new DataWriter(socket.OutputStream)
             {
-                UnicodeEncoding = Windows.Storage.Streams.UnicodeEncoding.Utf8
+                UnicodeEncoding = UnicodeEncoding.Utf8
             };
 
             var acceptedRequest = new AcceptedRequest();
@@ -82,7 +82,7 @@ namespace WindowsPhoneJsonWireServer
             using (var isoStore = IsolatedStorageFile.GetUserStoreForApplication())
             using (var sw = new StreamWriter(isoStore.OpenFile("ip.txt", FileMode.OpenOrCreate, FileAccess.Write)))
             {
-                sw.Write(FindIPAddress());
+                sw.Write(FindIpAddress());
             }
         }
 
@@ -93,10 +93,13 @@ namespace WindowsPhoneJsonWireServer
             String elementId = String.Empty;
             switch (command)
             {
+                case "status":
+                    response = Responder.CreateJsonResponse(ResponseStatus.Success, FindIpAddress());
+                    break;
+
                 case "element":
                     FindElementObject elementObject = JsonConvert.DeserializeObject<FindElementObject>(content);
                     response = automator.PerformElementCommand(elementObject);
-
                     break;
 
                 case "click":
@@ -111,7 +114,8 @@ namespace WindowsPhoneJsonWireServer
                     break;
 
                 case "text":
-                    response = "Unimplemented";
+                    elementId = Parser.GetElementId(request);
+                    response = automator.PerformTextCommand(elementId);
                     break;
 
                 case "displayed":
@@ -129,7 +133,7 @@ namespace WindowsPhoneJsonWireServer
             return response;
         }
 
-        public static String FindIPAddress()
+        public String FindIpAddress()
         {
             List<String> ipAddresses = new List<String>();
             var hostnames = NetworkInformation.GetHostNames();
@@ -147,17 +151,10 @@ namespace WindowsPhoneJsonWireServer
             }
 
             if (ipAddresses.Count < 1)
-            {
                 return null;
-            }
-            else if (ipAddresses.Count == 1)
-            {
+            if (ipAddresses.Count == 1)
                 return ipAddresses[0];
-            }
-            else
-            {
-                return ipAddresses[ipAddresses.Count - 1];
-            }
+            return ipAddresses[ipAddresses.Count - 1];
         }
 
     }

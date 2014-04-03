@@ -24,51 +24,6 @@ namespace WindowsPhoneJsonWireServer
             this.visualRoot = visualRoot;
         }
 
-
-        private void TryClick(Button button)
-        {
-            Deployment.Current.Dispatcher.BeginInvoke(() =>
-            {
-                ButtonAutomationPeer peer = new ButtonAutomationPeer(button);
-                IInvokeProvider invokeProv = peer.GetPattern(PatternInterface.Invoke) as IInvokeProvider;
-                invokeProv.Invoke();
-            });
-        }
-
-        private void TrySetText(TextBox textbox, String text)
-        {
-            Deployment.Current.Dispatcher.BeginInvoke(() =>
-            {
-                TextBoxAutomationPeer peer = new TextBoxAutomationPeer(textbox);
-                IValueProvider valueProvider = peer.GetPattern(PatternInterface.Value) as IValueProvider;
-                valueProvider.SetValue(text);
-                textbox.Focus();
-            });
-        }
-
-        //ugly search workaround
-        private void FindElementByName(String elementName)
-        {
-            FrameworkElement element = null;
-            //Used to wait until the element is actually added
-            EventWaitHandle wait = new AutoResetEvent(false);
-            Deployment.Current.Dispatcher.BeginInvoke(() =>
-            {
-                var grids = GetDescendants<Grid>(visualRoot);
-                var topGrid = grids.First() as FrameworkElement;
-                if (topGrid != null)
-                {
-                    element = topGrid.FindName(elementName) as FrameworkElement;
-                    if (element != null)
-                    {
-                        webElements.Add(elementName, element);
-                    }
-                    wait.Set();
-                }
-            });
-            wait.WaitOne();
-        }
-
         public String PerformTextCommand(String elementId)
         {
             String text = String.Empty;
@@ -76,16 +31,12 @@ namespace WindowsPhoneJsonWireServer
             FrameworkElement element;
             if (webElements.TryGetValue(elementId, out element))
             {
-                Button button = element as Button;
-                if (button != null)
-                {
-                    TryClick(button);
-                    response = Responder.CreateJsonResponse(ResponseStatus.Success, null);
-                }
-                else
-                {
-                    response = Responder.CreateJsonResponse(ResponseStatus.UnknownError, null);
-                }
+                if (element is TextBlock)
+                    text = (element as TextBlock).Text;
+                else if (element is TextBox)
+                    text = (element as TextBox).Text;
+                
+                response = Responder.CreateJsonResponse(ResponseStatus.Success, text);
             }
             else
             {
@@ -168,6 +119,50 @@ namespace WindowsPhoneJsonWireServer
                 response = Responder.CreateJsonResponse(ResponseStatus.NoSuchElement, null);
             }
             return response;
+        }
+
+        private void TryClick(Button button)
+        {
+            Deployment.Current.Dispatcher.BeginInvoke(() =>
+            {
+                ButtonAutomationPeer peer = new ButtonAutomationPeer(button);
+                IInvokeProvider invokeProv = peer.GetPattern(PatternInterface.Invoke) as IInvokeProvider;
+                invokeProv.Invoke();
+            });
+        }
+
+        private void TrySetText(TextBox textbox, String text)
+        {
+            Deployment.Current.Dispatcher.BeginInvoke(() =>
+            {
+                TextBoxAutomationPeer peer = new TextBoxAutomationPeer(textbox);
+                IValueProvider valueProvider = peer.GetPattern(PatternInterface.Value) as IValueProvider;
+                valueProvider.SetValue(text);
+                textbox.Focus();
+            });
+        }
+
+        //ugly search workaround
+        private void FindElementByName(String elementName)
+        {
+            FrameworkElement element = null;
+            //Used to wait until the element is actually added
+            EventWaitHandle wait = new AutoResetEvent(false);
+            Deployment.Current.Dispatcher.BeginInvoke(() =>
+            {
+                var grids = GetDescendants<Grid>(visualRoot);
+                var topGrid = grids.First() as FrameworkElement;
+                if (topGrid != null)
+                {
+                    element = topGrid.FindName(elementName) as FrameworkElement;
+                    if (element != null)
+                    {
+                        webElements.Add(elementName, element);
+                    }
+                    wait.Set();
+                }
+            });
+            wait.WaitOne();
         }
 
         private IEnumerable<DependencyObject> GetDescendants(DependencyObject item)
