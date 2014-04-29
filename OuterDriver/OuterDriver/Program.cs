@@ -12,14 +12,9 @@ namespace OuterDriver
     {
         static void Main(string[] args)
         {
-            Console.WriteLine(OuterServer.FindIPAddress());
-            //Console.WriteLine("Enter inner driver ip");
-            //String innerIp = Console.ReadLine();
             int listeningPort = 9999;
-           // var outerServer = new OuterServer(innerIp, innerPort);
-
-            Listener listener = new Listener(listeningPort);
-            //Console.WriteLine("Starting listener on port " + listeningPort);
+            var listener = new Listener(listeningPort);
+            Console.WriteLine("Starting listener on " + OuterServer.FindIPAddress() + ":" + listeningPort);
             listener.StartListening();
 
             //String command = String.Empty;

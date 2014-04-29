@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Automation.Peers;
 using System.Windows.Automation.Provider;
 using System.Windows.Controls;
 using System.Windows.Media;
+using Newtonsoft.Json;
 
 namespace WindowsPhoneJsonWireServer
 {
@@ -17,11 +16,13 @@ namespace WindowsPhoneJsonWireServer
 
         private Dictionary<String, FrameworkElement> webElements;
         private UIElement visualRoot;
+        private List<Point> points; //ugly temporary (i hope) workaround to get objects from the UI thread
 
         public Automator(UIElement visualRoot)
         {
             this.webElements = new Dictionary<string, FrameworkElement>();
             this.visualRoot = visualRoot;
+            this.points = new List<Point>();
         }
 
         public String PerformTextCommand(String elementId)
@@ -39,9 +40,7 @@ namespace WindowsPhoneJsonWireServer
                 response = Responder.CreateJsonResponse(ResponseStatus.Success, text);
             }
             else
-            {
                 response = Responder.CreateJsonResponse(ResponseStatus.NoSuchElement, null);
-            }
             return response;
         }
 
@@ -49,20 +48,23 @@ namespace WindowsPhoneJsonWireServer
         {
             String response = String.Empty;
             //search for the element by it's name
-            //TODO - other search policies
-            String elementName = elementObject.getValue();
-            if (webElements.ContainsKey(elementName))
+            String elementId = elementObject.getValue();
+            String searchPolicy = elementObject.usingMethod;
+            if (webElements.ContainsKey(elementId))
             {
-                var webElement = new WebElement(elementName);
+                var webElement = new WebElement(elementId);
                 response = Responder.CreateJsonResponse(0, webElement);
             }
             else
             {
-                FindElementByName(elementName);
+                if (searchPolicy.Equals("name"))
+                    FindElementByName(elementId);
+                else if (searchPolicy.Equals("tag name"))
+                    FindElementByType(elementId);
                 //if the element has been sucessfully added
-                if (webElements.ContainsKey(elementName))
+                if (webElements.ContainsKey(elementId))
                 {
-                    var webElement = new WebElement(elementName);
+                    var webElement = new WebElement(elementId);
                     response = Responder.CreateJsonResponse(ResponseStatus.Success, webElement);
                 }
                 else
@@ -85,13 +87,17 @@ namespace WindowsPhoneJsonWireServer
                 }
                 else
                 {
-                    response = Responder.CreateJsonResponse(ResponseStatus.UnknownError, null);
+                    var coordinates = new Point();
+                    GetElementCoordinates(element);
+                    coordinates = points.First();
+                    //Point leftUpper = element.TransformToVisual(visualRoot).Transform(new Point(0.0, 0.0));
+                    //Point center = new Point(leftUpper.X + element.ActualWidth/2, leftUpper.Y + element.ActualHeight/2 );
+                    String strCoordinates = coordinates.X + ":" + coordinates.Y;
+                    response = Responder.CreateJsonResponse(ResponseStatus.UnknownError, strCoordinates);
                 }
             }
             else
-            {
                 response = Responder.CreateJsonResponse(ResponseStatus.NoSuchElement, null);
-            }
             return response;
         }
 
@@ -110,15 +116,25 @@ namespace WindowsPhoneJsonWireServer
                     response = Responder.CreateJsonResponse(ResponseStatus.Success, null);
                 }
                 else
-                {
                     response = Responder.CreateJsonResponse(ResponseStatus.UnknownError, null);
-                }
             }
             else
-            {
                 response = Responder.CreateJsonResponse(ResponseStatus.NoSuchElement, null);
-            }
             return response;
+        }
+
+        private void GetElementCoordinates(FrameworkElement element)
+        {
+            EventWaitHandle wait = new AutoResetEvent(false);
+            Deployment.Current.Dispatcher.BeginInvoke(() =>
+            {
+                
+                var point = element.TransformToVisual(visualRoot).Transform(new Point(0, 0));
+                Point center = new Point(point.X + (int)element.ActualWidth/2, point.Y - (int)element.ActualHeight/2);
+                points.Add(center);
+                wait.Set();
+            });
+            wait.WaitOne();
         }
 
         private void TryClick(Button button)
@@ -156,11 +172,25 @@ namespace WindowsPhoneJsonWireServer
                 {
                     element = topGrid.FindName(elementName) as FrameworkElement;
                     if (element != null)
-                    {
                         webElements.Add(elementName, element);
-                    }
                     wait.Set();
                 }
+            });
+            wait.WaitOne();
+        }
+
+        private void FindElementByType(String typeName)
+        {
+            FrameworkElement element = null;
+            //Used to wait until the element is actually added
+            EventWaitHandle wait = new AutoResetEvent(false);
+            Deployment.Current.Dispatcher.BeginInvoke(() =>
+            {
+                var elements = GetDescendantsOfTypeName(visualRoot, typeName);
+                element = elements.First() as FrameworkElement;
+                if (element != null)
+                    webElements.Add(typeName, element);
+                wait.Set();
             });
             wait.WaitOne();
         }
@@ -185,8 +215,6 @@ namespace WindowsPhoneJsonWireServer
             }
         }
 
-        // public 
-
         private IEnumerable<DependencyObject> GetDescendants<T>(DependencyObject item)
         {
             int childrenCount = VisualTreeHelper.GetChildrenCount(item);
@@ -204,6 +232,28 @@ namespace WindowsPhoneJsonWireServer
                 foreach (var grandChild in GetDescendants(child))
                 {
                     if (grandChild is T)
+                        yield return grandChild;
+                }
+            }
+        }
+
+        private IEnumerable<DependencyObject> GetDescendantsOfTypeName(DependencyObject item, String typeName)
+        {
+            int childrenCount = VisualTreeHelper.GetChildrenCount(item);
+            List<DependencyObject> children = new List<DependencyObject>();
+            for (int i = 0; i < childrenCount; i++)
+            {
+                children.Add(VisualTreeHelper.GetChild(item, i));
+            }
+
+            foreach (var child in children)
+            {
+                if (child.GetType().ToString().Equals(typeName))
+                    yield return child;
+
+                foreach (var grandChild in GetDescendants(child))
+                {
+                    if (grandChild.GetType().ToString().Equals(typeName))
                         yield return grandChild;
                 }
             }

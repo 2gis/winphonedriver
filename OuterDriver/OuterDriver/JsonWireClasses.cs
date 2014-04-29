@@ -24,4 +24,18 @@ namespace OuterDriver
             return this.value;
         }
     }
+
+    public class JsonResponse
+    {
+        public String sessionId { get; set; }
+        public ResponseStatus status { get; set; }
+        public Object value { get; set; }
+
+        public JsonResponse(String sessionId, ResponseStatus responseCode, Object value)
+        {
+            this.sessionId = sessionId;
+            this.status = responseCode;
+            this.value = value;
+        }
+    }
 }

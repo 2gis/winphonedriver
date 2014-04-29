@@ -14,40 +14,41 @@ namespace OuterDriver
     class OuterDriver
     {
 
-        public static void ClickEnter()
-        {
+        public static void ClickEmulatorScreenPoint(Point point) {
             const String emulatorProcessName = "XDE.exe";
-            int xOffset = 315;
-            int yOffset = 545;
+            int xOffset = point.X;
+            int yOffset = point.Y;
             const int SW_RESTORE = 9;
             Process[] procs = Process.GetProcesses();
-            if (procs.Length != 0)
-            {
-                for (int i = 0; i < procs.Length; i++)
-                {
-                    try
-                    {
-                        if (procs[i].MainModule.ModuleName == emulatorProcessName)
-                        {
+            if (procs.Length != 0) {
+                for (int i = 0; i < procs.Length; i++) {
+                    try {
+                        if (procs[i].MainModule.ModuleName == emulatorProcessName) {
                             IntPtr hwnd = procs[i].MainWindowHandle;
                             SetForegroundWindow(hwnd);
                             ShowWindow(hwnd, SW_RESTORE);
                             ClickOnPoint(hwnd, new Point(xOffset, yOffset));
-
                             return;
                         }
                     }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine(ex.GetType() + ex.Message);
+                    catch (Exception ex) {
+                        //Console.WriteLine(ex.GetType() + ex.Message);
                     }
                 }
             }
-            else
-            {
-                Console.WriteLine("No process running");
+            else {
+                Console.WriteLine("No emulator running");
                 return;
             }
+        }
+
+        public static void ClickEnter()
+        {
+            //ugly hardcoded stuff. I'm sorry
+            int xOffset = 315;
+            int yOffset = 545;
+
+            ClickEmulatorScreenPoint(new Point(xOffset, yOffset));
         }
 
         [DllImport("user32.dll")]
@@ -104,7 +105,7 @@ namespace OuterDriver
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine(ex.GetType() + ex.Message);
+                        //Console.WriteLine(ex.GetType() + ex.Message);
                     }
                 }
             }

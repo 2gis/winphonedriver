@@ -11,20 +11,6 @@ namespace OuterDriver
     class Responder
     {
 
-        private class JsonResponse
-        {
-            public String sessionId { get; set; }
-            public ResponseStatus status { get; set; }
-            public String value { get; set; } 
-
-            public JsonResponse(String sessionId, ResponseStatus responseCode, String value)
-            {
-                this.sessionId = sessionId;
-                this.status = responseCode;
-                this.value = value;
-            }
-        }
-
         public static String CreateJsonResponse(String sessionId, ResponseStatus status, object jsonValue)
         {
             var serializer = new JavaScriptSerializer();

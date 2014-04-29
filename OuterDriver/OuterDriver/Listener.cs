@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -163,9 +164,9 @@ namespace OuterDriver
             {
                 case "session":
                     String sessionId = "awesomeSessionId";
-                    String innerIp = InitializeApplication();
-                    //Console.WriteLine("Enter inner driver ip");
-                    //String innerIp = Console.ReadLine();
+                    //String innerIp = InitializeApplication();
+                    Console.WriteLine("Enter inner driver ip");
+                    String innerIp = Console.ReadLine();
                     //Console.WriteLine("Inner ip: " + innerIp);
                     phoneRequester = new Requester(innerIp, innerPort);
                     String jsonResponse = Responder.CreateJsonResponse(sessionId,
@@ -189,6 +190,21 @@ namespace OuterDriver
                         OuterDriver.ClickEnter();
                     break;
 
+                case "click":
+                    responseBody = phoneRequester.SendRequest(Parser.GetRequestUrn(request), content);
+                   // String content = Parser.
+                    JsonResponse response = JsonConvert.DeserializeObject<JsonResponse>(responseBody); 
+                    var clickValue = (String)response.value;
+                    if (clickValue != null)
+                    {
+                        String[] clickCoordinatesArray = ((String)clickValue).Split(':');
+                        Point point = new Point(Convert.ToInt32(clickCoordinatesArray[0]), Convert.ToInt32(clickCoordinatesArray[1]));
+                        OuterDriver.ClickEmulatorScreenPoint(point);
+                        Console.WriteLine("Coords x:" + point.X + "  y:" + point.Y);
+                        responseBody = String.Empty;
+                    }
+                    break;
+
                 case "keys":
                     jsonValue = Parser.GetKeysString(content);
                     if (jsonValue.Equals(ENTER))
@@ -206,10 +222,10 @@ namespace OuterDriver
         private String InitializeApplication()
         {
             String appId = "846135ee-2c7a-453c-9a72-e57c607c26c8";
-            //var deployer = new Deployer(appId);
-            //deployer.Deploy();
-            //String ip = deployer.ReceiveIpAddress();
-            //return ip;
+            var deployer = new Deployer(appId);
+            deployer.Deploy();
+            String ip = deployer.ReceiveIpAddress();
+            return ip;
 
             return String.Empty;
         }
