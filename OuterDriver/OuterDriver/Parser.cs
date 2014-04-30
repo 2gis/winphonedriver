@@ -6,17 +6,6 @@ using System.Linq;
 namespace OuterDriver
 {
 
-    class JsonKeysContent
-    {
-        public String sessionId { get; set; }
-        public String[] value { get; set; }
-
-        public String[] GetValue()
-        {
-            return this.value;
-        }
-    }
-
     class Parser
     {
 

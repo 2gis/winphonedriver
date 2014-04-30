@@ -25,6 +25,26 @@ namespace OuterDriver
         }
     }
 
+    class JsonMovetoContent
+    {
+
+        public String sessionId { get; set; }
+        public String xOffset { get; set; }
+        public String yOffset { get; set; }
+
+    }
+
+    class JsonKeysContent
+    {
+        public String sessionId { get; set; }
+        public String[] value { get; set; }
+
+        public String[] GetValue()
+        {
+            return this.value;
+        }
+    }
+
     public class JsonResponse
     {
         public String sessionId { get; set; }
