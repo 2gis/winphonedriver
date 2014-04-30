@@ -90,6 +90,7 @@ namespace WindowsPhoneJsonWireServer
                     var coordinates = new Point();
                     GetElementCoordinates(element);
                     coordinates = points.First();
+                    points.RemoveAt(0);
                     //Point leftUpper = element.TransformToVisual(visualRoot).Transform(new Point(0.0, 0.0));
                     //Point center = new Point(leftUpper.X + element.ActualWidth/2, leftUpper.Y + element.ActualHeight/2 );
                     String strCoordinates = coordinates.X + ":" + coordinates.Y;
@@ -130,7 +131,8 @@ namespace WindowsPhoneJsonWireServer
             {
                 
                 var point = element.TransformToVisual(visualRoot).Transform(new Point(0, 0));
-                Point center = new Point(point.X + (int)element.ActualWidth/2, point.Y - (int)element.ActualHeight/2);
+                Point center = new Point(point.X + (int)element.ActualWidth/2, point.Y + (int)element.ActualHeight/2);
+                //Point center = new Point(point.X, point.Y);
                 points.Add(center);
                 wait.Set();
             });
@@ -187,9 +189,12 @@ namespace WindowsPhoneJsonWireServer
             Deployment.Current.Dispatcher.BeginInvoke(() =>
             {
                 var elements = GetDescendantsOfTypeName(visualRoot, typeName);
-                element = elements.First() as FrameworkElement;
-                if (element != null)
-                    webElements.Add(typeName, element);
+                if (elements.Count() != 0)
+                {
+                    element = elements.First() as FrameworkElement;
+                    if (element != null)
+                        webElements.Add(typeName, element);
+                }
                 wait.Set();
             });
             wait.WaitOne();

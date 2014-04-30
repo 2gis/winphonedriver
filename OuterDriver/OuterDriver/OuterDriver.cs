@@ -14,39 +14,52 @@ namespace OuterDriver
     class OuterDriver
     {
 
-        public static void ClickEmulatorScreenPoint(Point point) {
+        private static int borderXOffset = 35;
+        private static int borderYOffset = 72;
+        private static int statusBarSize = 20;
+
+        public static void MoveCursorToEmulatorCoordinates(Point clientPoint) {
             const String emulatorProcessName = "XDE.exe";
-            int xOffset = point.X;
-            int yOffset = point.Y;
             const int SW_RESTORE = 9;
             Process[] procs = Process.GetProcesses();
             if (procs.Length != 0) {
                 for (int i = 0; i < procs.Length; i++) {
                     try {
-                        if (procs[i].MainModule.ModuleName == emulatorProcessName) {
+                        if (procs[i].MainModule.ModuleName == emulatorProcessName) { 
                             IntPtr hwnd = procs[i].MainWindowHandle;
                             SetForegroundWindow(hwnd);
                             ShowWindow(hwnd, SW_RESTORE);
-                            ClickOnPoint(hwnd, new Point(xOffset, yOffset));
+                            ClientToScreen(hwnd, ref clientPoint);
+                            Cursor.Position = new Point(clientPoint.X + borderXOffset, clientPoint.Y + borderYOffset);
                             return;
                         }
                     }
-                    catch (Exception ex) {
+                    catch (Exception ex) { 
                         //Console.WriteLine(ex.GetType() + ex.Message);
                     }
                 }
             }
-            else {
+            else { 
                 Console.WriteLine("No emulator running");
                 return;
             }
         }
 
-        public static void ClickEnter()
-        {
-            //ugly hardcoded stuff. I'm sorry
-            int xOffset = 315;
-            int yOffset = 545;
+        public static void ClickEmulatorScreenPoint(Point point) {
+            var oldPos = Cursor.Position;
+
+            MoveCursorToEmulatorCoordinates(point);
+            mouse_event(0x00000002, 0, 0, 0, UIntPtr.Zero); // left mouse button down
+            mouse_event(0x00000004, 0, 0, 0, UIntPtr.Zero); // left mouse button up
+
+            // return mouse 
+            Cursor.Position = oldPos;
+        }
+
+        public static void ClickEnter() {
+            //ugly hardcoded stuff. I'm truly sorry
+            int xOffset = 445;
+            int yOffset = 760;
 
             ClickEmulatorScreenPoint(new Point(xOffset, yOffset));
         }
@@ -57,23 +70,6 @@ namespace OuterDriver
         [DllImport("user32.dll")]
         static extern bool ClientToScreen(IntPtr hWnd, ref Point lpPoint);
 
-        private static void ClickOnPoint(IntPtr wndHandle, Point clientPoint)
-        {
-            var oldPos = Cursor.Position;
-
-            // get screen coordinates
-            ClientToScreen(wndHandle, ref clientPoint);
-
-            // set cursor on coords, and press mouse
-            Cursor.Position = new Point(clientPoint.X, clientPoint.Y);
-            Thread.Sleep(1000);
-            mouse_event(0x00000002, 0, 0, 0, UIntPtr.Zero); // left mouse button down
-            mouse_event(0x00000004, 0, 0, 0, UIntPtr.Zero); // left mouse button up
-
-            // return mouse 
-            Cursor.Position = oldPos;
-        }
-
         [DllImport("user32.dll")]
         private static extern bool
         SetForegroundWindow(IntPtr hWnd);
@@ -82,35 +78,27 @@ namespace OuterDriver
         private static extern bool ShowWindow(
         IntPtr hWnd, int nCmdShow);
 
-        private static void SwitchToEmulator()
-        {
+        private static void SwitchToEmulator() {
             const int SW_RESTORE = 9;
             Process[] procs = Process.GetProcesses();
-            if (procs.Length != 0)
-            {
-                for (int i = 0; i < procs.Length; i++)
-                {
-                    try
-                    {
-                        if (procs[i].MainModule.ModuleName ==
-                           "XDE.exe")
-                        {
+            if (procs.Length != 0) {
+                for (int i = 0; i < procs.Length; i++) { 
+                    try {
+                        if (procs[i].MainModule.ModuleName == "XDE.exe") { 
                             IntPtr hwnd = procs[i].MainWindowHandle;
                             SetForegroundWindow(hwnd);
                             ShowWindow(hwnd, SW_RESTORE);
-                            ClickOnPoint(hwnd, new Point(10, 10));
+                            ClickEmulatorScreenPoint(new Point(-10, -10));
 
                             return;
                         }
                     }
-                    catch (Exception ex)
-                    {
+                    catch (Exception ex) { 
                         //Console.WriteLine(ex.GetType() + ex.Message);
                     }
                 }
             }
-            else
-            {
+            else {
                 Console.WriteLine("No process running");
                 return;
             }

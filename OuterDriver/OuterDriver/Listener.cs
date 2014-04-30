@@ -190,17 +190,25 @@ namespace OuterDriver
                         OuterDriver.ClickEnter();
                     break;
 
+                case "moveto":
+                    JsonMovetoContent moveToContent = JsonConvert.DeserializeObject<JsonMovetoContent>(content);
+                    var coordinates = new Point(Int32.Parse(moveToContent.xOffset), Int32.Parse(moveToContent.yOffset));
+                    OuterDriver.MoveCursorToEmulatorCoordinates(coordinates);
+                    break;
+
                 case "click":
+                    
                     responseBody = phoneRequester.SendRequest(Parser.GetRequestUrn(request), content);
-                   // String content = Parser.
                     JsonResponse response = JsonConvert.DeserializeObject<JsonResponse>(responseBody); 
                     var clickValue = (String)response.value;
                     if (clickValue != null)
                     {
                         String[] clickCoordinatesArray = ((String)clickValue).Split(':');
-                        Point point = new Point(Convert.ToInt32(clickCoordinatesArray[0]), Convert.ToInt32(clickCoordinatesArray[1]));
+                        int xOffset = Convert.ToInt32(clickCoordinatesArray[0]);
+                        int yOffset = Convert.ToInt32(clickCoordinatesArray[1]);
+                        Point point = new Point(xOffset, yOffset);
                         OuterDriver.ClickEmulatorScreenPoint(point);
-                        Console.WriteLine("Coords x:" + point.X + "  y:" + point.Y);
+                        Console.WriteLine("Coordinates: " + xOffset + " " + yOffset);
                         responseBody = String.Empty;
                     }
                     break;
