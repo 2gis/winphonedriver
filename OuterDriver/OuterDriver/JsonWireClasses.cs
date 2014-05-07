@@ -29,6 +29,7 @@ namespace OuterDriver
     {
 
         public String sessionId { get; set; }
+        public String elementId { get; set; }
         public String xOffset { get; set; }
         public String yOffset { get; set; }
 

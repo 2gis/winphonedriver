@@ -105,7 +105,6 @@ namespace WindowsPhoneJsonWireServer
                 case "click":
                     elementId = Parser.GetElementId(request);
                     response = automator.PerformClickCommand(elementId);
-                    
                     break;
 
                 case "value":
@@ -123,7 +122,8 @@ namespace WindowsPhoneJsonWireServer
                     break;
 
                 case "location":
-                    response = "Unimplemented";
+                    elementId = Parser.GetElementId(request);
+                    response = automator.PerformLocationCommand(elementId);
                     break;
 
                 default:

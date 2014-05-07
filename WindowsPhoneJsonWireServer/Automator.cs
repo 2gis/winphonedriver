@@ -91,8 +91,6 @@ namespace WindowsPhoneJsonWireServer
                     GetElementCoordinates(element);
                     coordinates = points.First();
                     points.RemoveAt(0);
-                    //Point leftUpper = element.TransformToVisual(visualRoot).Transform(new Point(0.0, 0.0));
-                    //Point center = new Point(leftUpper.X + element.ActualWidth/2, leftUpper.Y + element.ActualHeight/2 );
                     String strCoordinates = coordinates.X + ":" + coordinates.Y;
                     response = Responder.CreateJsonResponse(ResponseStatus.UnknownError, strCoordinates);
                 }
@@ -112,12 +110,30 @@ namespace WindowsPhoneJsonWireServer
                 String jsonValue = Parser.GetKeysString(content);
                 if (textbox != null)
                 {
-                    // DISPATCHER
                     TrySetText(textbox, jsonValue);
                     response = Responder.CreateJsonResponse(ResponseStatus.Success, null);
                 }
                 else
                     response = Responder.CreateJsonResponse(ResponseStatus.UnknownError, null);
+            }
+            else
+                response = Responder.CreateJsonResponse(ResponseStatus.NoSuchElement, null);
+            return response;
+        }
+
+        public String PerformLocationCommand(String elementId) {
+            String response = String.Empty;
+            FrameworkElement valueElement;
+            if (webElements.TryGetValue(elementId, out valueElement))
+            {
+                var coordinates = new Point();
+                GetElementCoordinates(valueElement);
+                coordinates = points.First();
+                points.RemoveAt(0);
+                var coordinatesDict = new Dictionary<String, Int32>();
+                coordinatesDict.Add("x", (int)coordinates.X);
+                coordinatesDict.Add("y", (int)coordinates.Y);
+                response = Responder.CreateJsonResponse(ResponseStatus.Success, coordinatesDict);
             }
             else
                 response = Responder.CreateJsonResponse(ResponseStatus.NoSuchElement, null);
