@@ -9,29 +9,25 @@ using Windows.Networking.Connectivity;
 using Windows.Networking.Sockets;
 using Windows.Storage.Streams;
 
-namespace WindowsPhoneJsonWireServer
-{
-    public class Server
-    {
+namespace WindowsPhoneJsonWireServer {
+    public class Server {
+
         private readonly int listeningPort;
         private StreamSocketListener listener;
         private bool isServerActive = false;
         private Automator automator;
 
-        public Server(int port)
-        {
+        public Server(int port) {
             listeningPort = port;
         }
 
-        public void SetAutomator(UIElement visualRoot)
-        {
+        public void SetAutomator(UIElement visualRoot) {
             automator = new Automator(visualRoot);
         }
 
         public delegate void Output(String data);
 
-        public async void Start()
-        {
+        public async void Start() {
             if (isServerActive) return;
             isServerActive = true;
             listener = new StreamSocketListener();
@@ -41,27 +37,22 @@ namespace WindowsPhoneJsonWireServer
             WriteIpAddress();
         }
 
-        public void Stop()
-        {
-            if (isServerActive)
-            {
+        public void Stop() {
+            if (isServerActive) {
                 listener.Dispose();
                 isServerActive = false;
             }
         }
 
-        async void ListenerConnectionReceived(StreamSocketListener sender, StreamSocketListenerConnectionReceivedEventArgs args)
-        {
+        async void ListenerConnectionReceived(StreamSocketListener sender, StreamSocketListenerConnectionReceivedEventArgs args) {
             await Task.Run(() => HandleRequest(args.Socket));
         }
 
 
-        private async void HandleRequest(StreamSocket socket)
-        {
+        private async void HandleRequest(StreamSocket socket) {
             //Initialize IO classes
-            var reader = new DataReader(socket.InputStream) {InputStreamOptions = InputStreamOptions.Partial};
-            var writer = new DataWriter(socket.OutputStream)
-            {
+            var reader = new DataReader(socket.InputStream) { InputStreamOptions = InputStreamOptions.Partial };
+            var writer = new DataWriter(socket.OutputStream) {
                 UnicodeEncoding = UnicodeEncoding.Utf8
             };
 
@@ -77,22 +68,18 @@ namespace WindowsPhoneJsonWireServer
             socket.Dispose();
         }
 
-        public void WriteIpAddress()
-        {
+        public void WriteIpAddress() {
             using (var isoStore = IsolatedStorageFile.GetUserStoreForApplication())
-            using (var sw = new StreamWriter(isoStore.OpenFile("ip.txt", FileMode.OpenOrCreate, FileAccess.Write)))
-            {
+            using (var sw = new StreamWriter(isoStore.OpenFile("ip.txt", FileMode.OpenOrCreate, FileAccess.Write))) {
                 sw.Write(FindIpAddress());
             }
         }
 
-        private String ProcessRequest(String request, String content)
-        {
+        private String ProcessRequest(String request, String content) {
             String response = String.Empty;
             String command = Parser.GetRequestCommand(request);
             String elementId = String.Empty;
-            switch (command)
-            {
+            switch (command) {
                 case "status":
                     response = Responder.CreateJsonResponse(ResponseStatus.Success, FindIpAddress());
                     break;
@@ -133,18 +120,15 @@ namespace WindowsPhoneJsonWireServer
             return response;
         }
 
-        public String FindIpAddress()
-        {
+        public String FindIpAddress() {
             List<String> ipAddresses = new List<String>();
             var hostnames = NetworkInformation.GetHostNames();
-            foreach (var hn in hostnames)
-            {
+            foreach (var hn in hostnames) {
                 //IanaInterfaceType == 71 => Wifi
                 //IanaInterfaceType == 6 => Ethernet (Emulator)
                 if (hn.IPInformation != null &&
                     (hn.IPInformation.NetworkAdapter.IanaInterfaceType == 71
-                    || hn.IPInformation.NetworkAdapter.IanaInterfaceType == 6))
-                {
+                    || hn.IPInformation.NetworkAdapter.IanaInterfaceType == 6)) {
                     String ipAddress = hn.DisplayName;
                     ipAddresses.Add(ipAddress);
                 }

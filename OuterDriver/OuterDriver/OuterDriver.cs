@@ -9,10 +9,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace OuterDriver
-{
-    class OuterDriver
-    {
+namespace OuterDriver {
+    class OuterDriver {
 
         private static int borderXOffset = 35;
         private static int borderYOffset = 72;
@@ -25,7 +23,7 @@ namespace OuterDriver
             if (procs.Length != 0) {
                 for (int i = 0; i < procs.Length; i++) {
                     try {
-                        if (procs[i].MainModule.ModuleName == emulatorProcessName) { 
+                        if (procs[i].MainModule.ModuleName == emulatorProcessName) {
                             IntPtr hwnd = procs[i].MainWindowHandle;
                             SetForegroundWindow(hwnd);
                             ShowWindow(hwnd, SW_RESTORE);
@@ -34,12 +32,12 @@ namespace OuterDriver
                             return;
                         }
                     }
-                    catch (Exception ex) { 
+                    catch (Exception ex) {
                         //Console.WriteLine(ex.GetType() + ex.Message);
                     }
                 }
             }
-            else { 
+            else {
                 Console.WriteLine("No emulator running");
                 return;
             }
@@ -82,9 +80,9 @@ namespace OuterDriver
             const int SW_RESTORE = 9;
             Process[] procs = Process.GetProcesses();
             if (procs.Length != 0) {
-                for (int i = 0; i < procs.Length; i++) { 
+                for (int i = 0; i < procs.Length; i++) {
                     try {
-                        if (procs[i].MainModule.ModuleName == "XDE.exe") { 
+                        if (procs[i].MainModule.ModuleName == "XDE.exe") {
                             IntPtr hwnd = procs[i].MainWindowHandle;
                             SetForegroundWindow(hwnd);
                             ShowWindow(hwnd, SW_RESTORE);
@@ -93,7 +91,7 @@ namespace OuterDriver
                             return;
                         }
                     }
-                    catch (Exception ex) { 
+                    catch (Exception ex) {
                         //Console.WriteLine(ex.GetType() + ex.Message);
                     }
                 }
@@ -103,7 +101,7 @@ namespace OuterDriver
                 return;
             }
         }
-    
-    
+
+
     }
 }

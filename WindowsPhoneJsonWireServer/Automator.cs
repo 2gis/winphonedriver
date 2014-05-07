@@ -9,34 +9,29 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using Newtonsoft.Json;
 
-namespace WindowsPhoneJsonWireServer
-{
-    class Automator
-    {
+namespace WindowsPhoneJsonWireServer {
+    class Automator {
 
         private Dictionary<String, FrameworkElement> webElements;
         private UIElement visualRoot;
         private List<Point> points; //ugly temporary (i hope) workaround to get objects from the UI thread
 
-        public Automator(UIElement visualRoot)
-        {
+        public Automator(UIElement visualRoot) {
             this.webElements = new Dictionary<string, FrameworkElement>();
             this.visualRoot = visualRoot;
             this.points = new List<Point>();
         }
 
-        public String PerformTextCommand(String elementId)
-        {
+        public String PerformTextCommand(String elementId) {
             String text = String.Empty;
             String response = String.Empty;
             FrameworkElement element;
-            if (webElements.TryGetValue(elementId, out element))
-            {
+            if (webElements.TryGetValue(elementId, out element)) {
                 if (element is TextBlock)
                     text = (element as TextBlock).Text;
                 else if (element is TextBox)
                     text = (element as TextBox).Text;
-                
+
                 response = Responder.CreateJsonResponse(ResponseStatus.Success, text);
             }
             else
@@ -44,26 +39,22 @@ namespace WindowsPhoneJsonWireServer
             return response;
         }
 
-        public String PerformElementCommand(FindElementObject elementObject)
-        {
+        public String PerformElementCommand(FindElementObject elementObject) {
             String response = String.Empty;
             //search for the element by it's name
             String elementId = elementObject.getValue();
             String searchPolicy = elementObject.usingMethod;
-            if (webElements.ContainsKey(elementId))
-            {
+            if (webElements.ContainsKey(elementId)) {
                 var webElement = new WebElement(elementId);
                 response = Responder.CreateJsonResponse(0, webElement);
             }
-            else
-            {
+            else {
                 if (searchPolicy.Equals("name"))
                     FindElementByName(elementId);
                 else if (searchPolicy.Equals("tag name"))
                     FindElementByType(elementId);
                 //if the element has been sucessfully added
-                if (webElements.ContainsKey(elementId))
-                {
+                if (webElements.ContainsKey(elementId)) {
                     var webElement = new WebElement(elementId);
                     response = Responder.CreateJsonResponse(ResponseStatus.Success, webElement);
                 }
@@ -73,20 +64,16 @@ namespace WindowsPhoneJsonWireServer
             return response;
         }
 
-        public String PerformClickCommand(String elementId)
-        {
+        public String PerformClickCommand(String elementId) {
             String response = String.Empty;
             FrameworkElement element;
-            if (webElements.TryGetValue(elementId, out element))
-            {
+            if (webElements.TryGetValue(elementId, out element)) {
                 Button button = element as Button;
-                if (button != null)
-                {
+                if (button != null) {
                     TryClick(button as Button);
                     response = Responder.CreateJsonResponse(ResponseStatus.Success, null);
                 }
-                else
-                {
+                else {
                     var coordinates = new Point();
                     GetElementCoordinates(element);
                     coordinates = points.First();
@@ -100,16 +87,13 @@ namespace WindowsPhoneJsonWireServer
             return response;
         }
 
-        public String PerformValueCommand(String elementId, String content)
-        {
+        public String PerformValueCommand(String elementId, String content) {
             String response = String.Empty;
             FrameworkElement valueElement;
-            if (webElements.TryGetValue(elementId, out valueElement))
-            {
+            if (webElements.TryGetValue(elementId, out valueElement)) {
                 TextBox textbox = valueElement as TextBox;
                 String jsonValue = Parser.GetKeysString(content);
-                if (textbox != null)
-                {
+                if (textbox != null) {
                     TrySetText(textbox, jsonValue);
                     response = Responder.CreateJsonResponse(ResponseStatus.Success, null);
                 }
@@ -124,8 +108,7 @@ namespace WindowsPhoneJsonWireServer
         public String PerformLocationCommand(String elementId) {
             String response = String.Empty;
             FrameworkElement valueElement;
-            if (webElements.TryGetValue(elementId, out valueElement))
-            {
+            if (webElements.TryGetValue(elementId, out valueElement)) {
                 var coordinates = new Point();
                 GetElementCoordinates(valueElement);
                 coordinates = points.First();
@@ -140,35 +123,28 @@ namespace WindowsPhoneJsonWireServer
             return response;
         }
 
-        private void GetElementCoordinates(FrameworkElement element)
-        {
+        private void GetElementCoordinates(FrameworkElement element) {
             EventWaitHandle wait = new AutoResetEvent(false);
-            Deployment.Current.Dispatcher.BeginInvoke(() =>
-            {
-                
+            Deployment.Current.Dispatcher.BeginInvoke(() => {
+
                 var point = element.TransformToVisual(visualRoot).Transform(new Point(0, 0));
-                Point center = new Point(point.X + (int)element.ActualWidth/2, point.Y + (int)element.ActualHeight/2);
-                //Point center = new Point(point.X, point.Y);
+                Point center = new Point(point.X + (int)element.ActualWidth / 2, point.Y + (int)element.ActualHeight / 2);
                 points.Add(center);
                 wait.Set();
             });
             wait.WaitOne();
         }
 
-        private void TryClick(Button button)
-        {
-            Deployment.Current.Dispatcher.BeginInvoke(() =>
-            {
+        private void TryClick(Button button) {
+            Deployment.Current.Dispatcher.BeginInvoke(() => {
                 ButtonAutomationPeer peer = new ButtonAutomationPeer(button);
                 IInvokeProvider invokeProv = peer.GetPattern(PatternInterface.Invoke) as IInvokeProvider;
                 invokeProv.Invoke();
             });
         }
 
-        private void TrySetText(TextBox textbox, String text)
-        {
-            Deployment.Current.Dispatcher.BeginInvoke(() =>
-            {
+        private void TrySetText(TextBox textbox, String text) {
+            Deployment.Current.Dispatcher.BeginInvoke(() => {
                 TextBoxAutomationPeer peer = new TextBoxAutomationPeer(textbox);
                 IValueProvider valueProvider = peer.GetPattern(PatternInterface.Value) as IValueProvider;
                 valueProvider.SetValue(text);
@@ -177,17 +153,14 @@ namespace WindowsPhoneJsonWireServer
         }
 
         //ugly search workaround
-        private void FindElementByName(String elementName)
-        {
+        private void FindElementByName(String elementName) {
             FrameworkElement element = null;
             //Used to wait until the element is actually added
             EventWaitHandle wait = new AutoResetEvent(false);
-            Deployment.Current.Dispatcher.BeginInvoke(() =>
-            {
+            Deployment.Current.Dispatcher.BeginInvoke(() => {
                 var grids = GetDescendants<Grid>(visualRoot);
                 var topGrid = grids.First() as FrameworkElement;
-                if (topGrid != null)
-                {
+                if (topGrid != null) {
                     element = topGrid.FindName(elementName) as FrameworkElement;
                     if (element != null)
                         webElements.Add(elementName, element);
@@ -197,16 +170,13 @@ namespace WindowsPhoneJsonWireServer
             wait.WaitOne();
         }
 
-        private void FindElementByType(String typeName)
-        {
+        private void FindElementByType(String typeName) {
             FrameworkElement element = null;
             //Used to wait until the element is actually added
             EventWaitHandle wait = new AutoResetEvent(false);
-            Deployment.Current.Dispatcher.BeginInvoke(() =>
-            {
+            Deployment.Current.Dispatcher.BeginInvoke(() => {
                 var elements = GetDescendantsOfTypeName(visualRoot, typeName);
-                if (elements.Count() != 0)
-                {
+                if (elements.Count() != 0) {
                     element = elements.First() as FrameworkElement;
                     if (element != null)
                         webElements.Add(typeName, element);
@@ -216,64 +186,52 @@ namespace WindowsPhoneJsonWireServer
             wait.WaitOne();
         }
 
-        private IEnumerable<DependencyObject> GetDescendants(DependencyObject item)
-        {
+        private IEnumerable<DependencyObject> GetDescendants(DependencyObject item) {
             int childrenCount = VisualTreeHelper.GetChildrenCount(item);
             List<DependencyObject> children = new List<DependencyObject>();
-            for (int i = 0; i < childrenCount; i++)
-            {
+            for (int i = 0; i < childrenCount; i++) {
                 children.Add(VisualTreeHelper.GetChild(item, i));
             }
 
-            foreach (var child in children)
-            {
+            foreach (var child in children) {
                 yield return child;
 
-                foreach (var grandChild in GetDescendants(child))
-                {
+                foreach (var grandChild in GetDescendants(child)) {
                     yield return grandChild;
                 }
             }
         }
 
-        private IEnumerable<DependencyObject> GetDescendants<T>(DependencyObject item)
-        {
+        private IEnumerable<DependencyObject> GetDescendants<T>(DependencyObject item) {
             int childrenCount = VisualTreeHelper.GetChildrenCount(item);
             List<DependencyObject> children = new List<DependencyObject>();
-            for (int i = 0; i < childrenCount; i++)
-            {
+            for (int i = 0; i < childrenCount; i++) {
                 children.Add(VisualTreeHelper.GetChild(item, i));
             }
 
-            foreach (var child in children)
-            {
+            foreach (var child in children) {
                 if (child is T)
                     yield return child;
 
-                foreach (var grandChild in GetDescendants(child))
-                {
+                foreach (var grandChild in GetDescendants(child)) {
                     if (grandChild is T)
                         yield return grandChild;
                 }
             }
         }
 
-        private IEnumerable<DependencyObject> GetDescendantsOfTypeName(DependencyObject item, String typeName)
-        {
+        private IEnumerable<DependencyObject> GetDescendantsOfTypeName(DependencyObject item, String typeName) {
             int childrenCount = VisualTreeHelper.GetChildrenCount(item);
             List<DependencyObject> children = new List<DependencyObject>();
-            for (int i = 0; i < childrenCount; i++)
-            {
+            for (int i = 0; i < childrenCount; i++) {
                 children.Add(VisualTreeHelper.GetChild(item, i));
             }
 
-            foreach (var child in children)
-            {
+            foreach (var child in children) {
                 if (child.GetType().ToString().Equals(typeName))
                     yield return child;
 
-                foreach (var grandChild in GetDescendants(child))
-                {
+                foreach (var grandChild in GetDescendants(child)) {
                     if (grandChild.GetType().ToString().Equals(typeName))
                         yield return grandChild;
                 }

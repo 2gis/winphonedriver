@@ -1,8 +1,6 @@
 ﻿
-namespace WindowsPhoneJsonWireServer
-{
-    public enum ResponseStatus
-    {
+namespace WindowsPhoneJsonWireServer {
+    public enum ResponseStatus {
         Success = 0,
         NoSuchDriver = 6,
         NoSuchElement = 7,

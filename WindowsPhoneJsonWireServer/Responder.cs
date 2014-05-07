@@ -5,15 +5,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace WindowsPhoneJsonWireServer
-{
-    class Responder
-    {
+namespace WindowsPhoneJsonWireServer {
+    class Responder {
 
         private String sessionId = "awesomeSessionId";
 
-        public static String CreateResponse(String response)
-        {
+        public static String CreateResponse(String response) {
             StringBuilder ret = new StringBuilder();
             ret.AppendLine("HTTP/1.1 200 OK");
             ret.AppendLine("Content-Type: application/json;charset=utf-8");
@@ -24,8 +21,7 @@ namespace WindowsPhoneJsonWireServer
             return ret.ToString();
         }
 
-        public static String CreateJsonResponse(ResponseStatus status, object value)
-        {
+        public static String CreateJsonResponse(ResponseStatus status, object value) {
             return JsonConvert.SerializeObject(new JsonResponse(status, value));
         }
 

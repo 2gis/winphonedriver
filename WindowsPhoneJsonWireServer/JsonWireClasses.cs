@@ -5,51 +5,42 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace WindowsPhoneJsonWireServer
-{
-    public class FindElementObject
-    {
+namespace WindowsPhoneJsonWireServer {
+    public class FindElementObject {
         [JsonProperty("using")]
         public String usingMethod { get; set; }
         public String sessionId { get; set; }
         public String value { get; set; }
 
-        public String getValue()
-        {
+        public String getValue() {
             return value;
         }
 
     }
 
-    public class JsonKeysContent
-    {
+    public class JsonKeysContent {
         public String sessionId { get; set; }
         public String[] value { get; set; }
 
-        public String[] GetValue()
-        {
+        public String[] GetValue() {
             return this.value;
         }
     }
 
-    public class WebElement
-    {
+    public class WebElement {
         public String ELEMENT { get; set; }
 
-        public WebElement(String element)
-        {
+        public WebElement(String element) {
             this.ELEMENT = element;
         }
     }
 
-    public class JsonResponse
-    {
+    public class JsonResponse {
         public String sessionId = "awesomeSessionId";
         public ResponseStatus status { get; set; }
         public object value { get; set; }
 
-        public JsonResponse(ResponseStatus status, object value)
-        {
+        public JsonResponse(ResponseStatus status, object value) {
             this.status = status;
             this.value = value;
         }

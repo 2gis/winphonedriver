@@ -7,32 +7,27 @@ using Microsoft.SmartDevice.Connectivity.Interface;
 using Microsoft.SmartDevice.MultiTargeting.Connectivity;
 using System.Globalization;
 
-        
-namespace OuterDriver
-{
-    class Deployer
-    {
+
+namespace OuterDriver {
+    class Deployer {
 
         private IDevice iDevice;
         private String appIdString;
         private String Wvga512DeviceId = "5E7661DF-D928-40ff-B747-A4B1957194F9";
 
-        public Deployer(String appIdString)
-        {
+        public Deployer(String appIdString) {
             this.appIdString = appIdString;
             MultiTargetingConnectivity connectivity = new MultiTargetingConnectivity(CultureInfo.CurrentUICulture.LCID);
             ConnectableDevice connectableDevice = connectivity.GetConnectableDevice(Wvga512DeviceId);
             this.iDevice = connectableDevice.Connect();
         }
-        
-        public void Deploy()
-        {
+
+        public void Deploy() {
 
             // Check if the application is already install, if it is remove it (From WMAppManifect.xml)
             Guid appID = new Guid(appIdString);
 
-            if (iDevice.IsApplicationInstalled(appID))
-            {
+            if (iDevice.IsApplicationInstalled(appID)) {
                 Console.WriteLine("Uninstalling application...");
                 iDevice.GetApplication(appID).Uninstall();
                 Console.WriteLine("Done!");
@@ -47,7 +42,7 @@ namespace OuterDriver
             // Install the application 
             Console.WriteLine("Installing the application...");
             IRemoteApplication remoteApplication = iDevice.InstallApplication(appID, appID, applicationGenre, iconPath, xapPackage);
-            
+
             Console.WriteLine("Done!");
 
             // Launch the application
@@ -79,24 +74,21 @@ namespace OuterDriver
             //Console.WriteLine("\nDone!");
         }
 
-        public String ReceiveIpAddress()
-        {
+        public String ReceiveIpAddress() {
             String ip = String.Empty;
             IRemoteApplication remoteApplication = iDevice.GetApplication(new Guid(appIdString));
             IRemoteIsolatedStorageFile remoteIsolatedStorageFile = remoteApplication.GetIsolatedStore();
-            String sourceDeviceFilePath = (object) Path.DirectorySeparatorChar + "ip.txt";
+            String sourceDeviceFilePath = (object)Path.DirectorySeparatorChar + "ip.txt";
             const String targetDesktopFilePath = @"C:\test\" + "test.txt";
-            if (remoteIsolatedStorageFile.FileExists(sourceDeviceFilePath))
-            {
+            if (remoteIsolatedStorageFile.FileExists(sourceDeviceFilePath)) {
                 remoteIsolatedStorageFile.ReceiveFile(sourceDeviceFilePath, targetDesktopFilePath, true);
-                using (var sr = new StreamReader(targetDesktopFilePath))
-                {
+                using (var sr = new StreamReader(targetDesktopFilePath)) {
                     ip = sr.ReadLine();
                 }
             }
             return ip;
         }
 
-    
+
     }
 }

@@ -5,12 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace WindowsPhoneJsonWireServer
-{
-    class Parser
-    {
-        public static String GetRequestCommand(String request)
-        {
+namespace WindowsPhoneJsonWireServer {
+    class Parser {
+        public static String GetRequestCommand(String request) {
             String[] requestTokens = request.Split(' ');
             String urn = requestTokens[1];
             //take care of the slash in the end of the string
@@ -19,8 +16,7 @@ namespace WindowsPhoneJsonWireServer
             return command;
         }
 
-        public static String GetElementId(String request)
-        {
+        public static String GetElementId(String request) {
             String[] requestTokens = request.Split(' ');
             String urn = requestTokens[1];
             //take care of the slash in the end of the string
@@ -29,13 +25,11 @@ namespace WindowsPhoneJsonWireServer
             return elementId;
         }
 
-        public static String GetKeysString(String requestContent)
-        {
+        public static String GetKeysString(String requestContent) {
             String result = String.Empty;
             JsonKeysContent jsonContent = JsonConvert.DeserializeObject<JsonKeysContent>(requestContent);
             String[] value = jsonContent.GetValue();
-            foreach (String str in value)
-            {
+            foreach (String str in value) {
                 result += str;
             }
             return result;

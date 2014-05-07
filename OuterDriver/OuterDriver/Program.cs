@@ -6,12 +6,9 @@ using System.Threading;
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
 
-namespace OuterDriver
-{
-    class Program
-    {
-        static void Main(string[] args)
-        {
+namespace OuterDriver {
+    class Program {
+        static void Main(string[] args) {
             int listeningPort = 9999;
             var listener = new Listener(listeningPort);
             Console.WriteLine("Starting listener on " + OuterServer.FindIPAddress() + ":" + listeningPort);
@@ -56,6 +53,6 @@ namespace OuterDriver
 
             //}
         }
-        
+
     }
 }

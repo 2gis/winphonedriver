@@ -5,21 +5,17 @@ using System.Net.Sockets;
 using System.Text;
 using System.Web.Script.Serialization;
 
-namespace OuterDriver
-{
+namespace OuterDriver {
 
-    class Responder
-    {
+    class Responder {
 
-        public static String CreateJsonResponse(String sessionId, ResponseStatus status, object jsonValue)
-        {
+        public static String CreateJsonResponse(String sessionId, ResponseStatus status, object jsonValue) {
             var serializer = new JavaScriptSerializer();
             var response = new JsonResponse(sessionId, status, serializer.Serialize(jsonValue));
             return serializer.Serialize(response);
         }
 
-        public static void WriteResponse(NetworkStream stream, String responseBody)
-        {
+        public static void WriteResponse(NetworkStream stream, String responseBody) {
             //the stream is closed in the calling method
             String response = CreateResponse(responseBody);
             var writer = new StreamWriter(stream);
@@ -27,8 +23,7 @@ namespace OuterDriver
             writer.Close();
         }
 
-        private static String CreateResponse(String body)
-        {
+        private static String CreateResponse(String body) {
             StringBuilder responseString = new StringBuilder();
             responseString.AppendLine("HTTP/1.1 200 OK");
             responseString.AppendLine("Content-Type: application/json;charset=UTF-8");

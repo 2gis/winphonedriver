@@ -4,27 +4,22 @@ using System.Linq;
 using System.Net;
 
 
-namespace OuterDriver
-{
-    class Requester
-    {
+namespace OuterDriver {
+    class Requester {
 
         private readonly String ip;
         private readonly int port;
 
-        public Requester(String ip, int port)
-        {
+        public Requester(String ip, int port) {
             this.ip = ip;
             this.port = port;
         }
 
-        public String SendRequest(String urn, String requestContent)
-        {
+        public String SendRequest(String urn, String requestContent) {
             String result = "error";
             StreamReader reader = null;
             WebResponse response = null;
-            try
-            {
+            try {
                 //create the request
                 String uri = CreateUri(urn);
                 HttpWebRequest request = CreateWebRequest(uri, requestContent);
@@ -37,12 +32,10 @@ namespace OuterDriver
                 reader = new StreamReader(response.GetResponseStream());
                 result = reader.ReadToEnd();
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) {
                 Console.WriteLine(ex.Message);
             }
-            finally
-            {
+            finally {
                 if (response != null)
                     response.Close();
                 if (reader != null)
@@ -51,23 +44,20 @@ namespace OuterDriver
             return result;
         }
 
-        private String CreateUri(String urn)
-        {
+        private String CreateUri(String urn) {
             String uri = "http://" + this.ip + ":" + this.port + urn;
             return uri;
         }
 
-        private HttpWebRequest CreateWebRequest(String uri, String content)
-        {
+        private HttpWebRequest CreateWebRequest(String uri, String content) {
             //create request
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(uri);
             request.ContentType = "application/json";
             request.Method = Parser.ChooseRequestMethod(uri);
             request.KeepAlive = false;
-            
+
             //write request body
-            if (!String.IsNullOrEmpty(content))
-            {
+            if (!String.IsNullOrEmpty(content)) {
                 StreamWriter writer = new StreamWriter(request.GetRequestStream());
                 writer.Write(content);
                 writer.Close();

@@ -7,20 +7,16 @@ using System.Net.Sockets;
 using System.Web.Script.Serialization;
 using Newtonsoft.Json;
 
-namespace OuterDriver
-{
+namespace OuterDriver {
 
-    public class Listener
-    {
+    public class Listener {
 
-        private class AcceptedRequest
-        {
+        private class AcceptedRequest {
             public String request { get; set; }
             public Dictionary<String, String> headers { get; set; }
             public String content { get; set; }
 
-            public void AcceptRequest(NetworkStream stream)
-            {
+            public void AcceptRequest(NetworkStream stream) {
                 //read HTTP request
                 this.request = ReadString(stream);
                 Console.WriteLine("Request: " + request);
@@ -32,25 +28,21 @@ namespace OuterDriver
                 this.content = ReadContent(stream, headers);
             }
 
-            private string ReadContent(NetworkStream stream, Dictionary<String, String> headers)
-            {
+            private string ReadContent(NetworkStream stream, Dictionary<String, String> headers) {
                 String contentLengthString;
                 bool hasContentLength = headers.TryGetValue("Content-Length", out contentLengthString);
                 String content = "";
-                if (hasContentLength)
-                {
+                if (hasContentLength) {
                     content = ReadContent(stream, Convert.ToInt32(contentLengthString));
                     Console.WriteLine("Content: " + content);
                 }
                 return content;
             }
 
-            private Dictionary<String, String> ReadHeaders(NetworkStream stream)
-            {
+            private Dictionary<String, String> ReadHeaders(NetworkStream stream) {
                 var headers = new Dictionary<String, String>();
                 String header;
-                while (!String.IsNullOrEmpty(header = ReadString(stream)))
-                {
+                while (!String.IsNullOrEmpty(header = ReadString(stream))) {
                     String[] splitHeader;
                     splitHeader = header.Split(':');
                     headers.Add(splitHeader[0], splitHeader[1].Trim(' '));
@@ -59,20 +51,17 @@ namespace OuterDriver
             }
 
             //reads the content of a request depending on its length
-            private String ReadContent(NetworkStream s, int contentLength)
-            {
+            private String ReadContent(NetworkStream s, int contentLength) {
                 Byte[] readBuffer = new Byte[contentLength];
                 int readBytes = s.Read(readBuffer, 0, readBuffer.Length);
                 return System.Text.Encoding.ASCII.GetString(readBuffer, 0, readBytes);
             }
 
-            private String ReadString(NetworkStream stream)
-            {
+            private String ReadString(NetworkStream stream) {
                 //StreamReader reader = new StreamReader(stream);
                 int nextChar;
                 String data = "";
-                while (true)
-                {
+                while (true) {
                     nextChar = stream.ReadByte();
                     if (nextChar == '\n') { break; }
                     if (nextChar == '\r') { continue; }
@@ -87,15 +76,12 @@ namespace OuterDriver
         private Requester phoneRequester;
         private readonly int listeningPort;
 
-        public Listener(int listeningPort)
-        {
+        public Listener(int listeningPort) {
             this.listeningPort = listeningPort;
         }
 
-        public void StartListening()
-        {
-            try
-            {
+        public void StartListening() {
+            try {
                 IPAddress localAddr = IPAddress.Parse(OuterServer.FindIPAddress());
                 listener = new TcpListener(localAddr, this.listeningPort);
 
@@ -103,8 +89,7 @@ namespace OuterDriver
                 listener.Start();
 
                 // Enter the listening loop
-                while (true)
-                {
+                while (true) {
                     Console.Write("Waiting for a connection... ");
 
                     // Perform a blocking call to accept requests. 
@@ -117,7 +102,7 @@ namespace OuterDriver
                     acceptedRequest.AcceptRequest(stream);
 
                     String responseBody = HandleRequest(acceptedRequest);
-                    
+
                     Responder.WriteResponse(stream, responseBody);
 
                     // Shutdown and end connection
@@ -127,19 +112,16 @@ namespace OuterDriver
                     Console.WriteLine("Client closed\n");
                 }
             }
-            catch (SocketException ex)
-            {
+            catch (SocketException ex) {
                 Console.WriteLine("SocketException: {0}", ex);
             }
-            finally
-            {
+            finally {
                 // Stop listening for new clients.
                 listener.Stop();
             }
         }
-  
-        private String HandleRequest(AcceptedRequest acceptedRequest)
-        {
+
+        private String HandleRequest(AcceptedRequest acceptedRequest) {
             String responseBody = String.Empty;
             String request = acceptedRequest.request;
             String content = acceptedRequest.content;
@@ -151,8 +133,7 @@ namespace OuterDriver
             return responseBody;
         }
 
-        private String HandleLocalRequest(AcceptedRequest acceptedRequest)
-        {
+        private String HandleLocalRequest(AcceptedRequest acceptedRequest) {
             String responseBody = String.Empty;
             String jsonValue = String.Empty;
             String ENTER = "\ue007";
@@ -160,8 +141,7 @@ namespace OuterDriver
             String request = acceptedRequest.request;
             String content = acceptedRequest.content;
             String command = Parser.GetRequestCommand(request);
-            switch (command)
-            {
+            switch (command) {
                 case "session":
                     String sessionId = "awesomeSessionId";
                     //String innerIp = InitializeApplication();
@@ -177,10 +157,9 @@ namespace OuterDriver
                 //if the text has the ENTER command in it, execute it after sending the rest of the text to the inner driver
                 case "value":
                     bool needToClickEnter = false;
-                    JsonValueContent oldContent= JsonConvert.DeserializeObject<JsonValueContent>(content);
+                    JsonValueContent oldContent = JsonConvert.DeserializeObject<JsonValueContent>(content);
                     String[] value = oldContent.GetValue();
-                    if (value.Contains(ENTER))
-                    {
+                    if (value.Contains(ENTER)) {
                         needToClickEnter = true;
                         value = value.Where(val => val != ENTER).ToArray();
                     }
@@ -197,12 +176,11 @@ namespace OuterDriver
                     break;
 
                 case "click":
-                    
+
                     responseBody = phoneRequester.SendRequest(Parser.GetRequestUrn(request), content);
-                    JsonResponse response = JsonConvert.DeserializeObject<JsonResponse>(responseBody); 
+                    JsonResponse response = JsonConvert.DeserializeObject<JsonResponse>(responseBody);
                     var clickValue = (String)response.value;
-                    if (clickValue != null)
-                    {
+                    if (clickValue != null) {
                         String[] clickCoordinatesArray = ((String)clickValue).Split(':');
                         int xOffset = Convert.ToInt32(clickCoordinatesArray[0]);
                         int yOffset = Convert.ToInt32(clickCoordinatesArray[1]);
@@ -227,8 +205,7 @@ namespace OuterDriver
             return responseBody;
         }
 
-        private String InitializeApplication()
-        {
+        private String InitializeApplication() {
             String appId = "846135ee-2c7a-453c-9a72-e57c607c26c8";
             var deployer = new Deployer(appId);
             deployer.Deploy();
@@ -238,8 +215,7 @@ namespace OuterDriver
             return String.Empty;
         }
 
-        public void StopListening()
-        {
+        public void StopListening() {
             listener.Stop();
         }
 

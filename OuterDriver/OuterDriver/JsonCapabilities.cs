@@ -4,14 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OuterDriver
-{
-    class JsonCapabilities
-    {
+namespace OuterDriver {
+    class JsonCapabilities {
         public String platform;
 
-        public JsonCapabilities(String platform)
-        {
+        public JsonCapabilities(String platform) {
             this.platform = platform;
         }
     }
