@@ -26,7 +26,6 @@ namespace OuterDriver {
                 Console.WriteLine("Sending request: " + requestContent + " to " + uri);
                 //send the request and get the response
                 response = request.GetResponse();
-                Console.WriteLine(response);
 
                 //read and return the response
                 reader = new StreamReader(response.GetResponseStream());

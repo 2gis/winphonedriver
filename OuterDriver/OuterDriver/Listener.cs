@@ -138,12 +138,12 @@ namespace OuterDriver {
             String jsonValue = String.Empty;
             String ENTER = "\ue007";
             int innerPort = 9998;
+            String sessionId = "awesomeSessionId";
             String request = acceptedRequest.request;
             String content = acceptedRequest.content;
             String command = Parser.GetRequestCommand(request);
             switch (command) {
                 case "session":
-                    String sessionId = "awesomeSessionId";
                     //String innerIp = InitializeApplication();
                     Console.WriteLine("Enter inner driver ip");
                     String innerIp = Console.ReadLine();
@@ -171,12 +171,23 @@ namespace OuterDriver {
 
                 case "moveto":
                     JsonMovetoContent moveToContent = JsonConvert.DeserializeObject<JsonMovetoContent>(content);
-                    var coordinates = new Point(Int32.Parse(moveToContent.xOffset), Int32.Parse(moveToContent.yOffset));
+                    String elementId = moveToContent.element;
+                    Point coordinates = new Point();
+                    if (elementId != null) {
+                        String locationRequest = "/session/" + sessionId + "/element/" + elementId + "/location";
+                        String locationResponse = phoneRequester.SendRequest(locationRequest, String.Empty);
+                        JsonResponse JsonResponse = JsonConvert.DeserializeObject<JsonResponse>(locationResponse);
+                        Dictionary<String, String> values = JsonConvert.DeserializeObject<Dictionary<String, String>>(JsonResponse.value.ToString());
+                        coordinates.X = Convert.ToInt32(values["x"]);
+                        coordinates.Y = Convert.ToInt32(values["y"]);
+                    }
+                    else {
+                        coordinates = new Point(Int32.Parse(moveToContent.xOffset), Int32.Parse(moveToContent.yOffset));
+                    }
                     OuterDriver.MoveCursorToEmulatorCoordinates(coordinates);
                     break;
 
                 case "click":
-
                     responseBody = phoneRequester.SendRequest(Parser.GetRequestUrn(request), content);
                     JsonResponse response = JsonConvert.DeserializeObject<JsonResponse>(responseBody);
                     var clickValue = (String)response.value;
@@ -189,6 +200,14 @@ namespace OuterDriver {
                         Console.WriteLine("Coordinates: " + xOffset + " " + yOffset);
                         responseBody = String.Empty;
                     }
+                    break;
+
+                case "buttondown":
+                    OuterDriver.ButtonDown();
+                    break;
+
+                case "buttonup":
+                    OuterDriver.ButtonUp();
                     break;
 
                 case "keys":

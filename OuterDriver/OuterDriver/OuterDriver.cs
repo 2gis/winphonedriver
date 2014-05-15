@@ -28,7 +28,8 @@ namespace OuterDriver {
                             SetForegroundWindow(hwnd);
                             ShowWindow(hwnd, SW_RESTORE);
                             ClientToScreen(hwnd, ref clientPoint);
-                            Cursor.Position = new Point(clientPoint.X + borderXOffset, clientPoint.Y + borderYOffset);
+                            //Cursor.Position = new Point(clientPoint.X + borderXOffset, clientPoint.Y + borderYOffset);
+                            LinearSmoothMove(new Point(clientPoint.X + borderXOffset, clientPoint.Y + borderYOffset), 100);
                             return;
                         }
                     }
@@ -43,15 +44,45 @@ namespace OuterDriver {
             }
         }
 
+        public static void LinearSmoothMove(Point newPosition, int steps) {
+            Point start = Cursor.Position;
+            PointF iterPoint = start;
+
+            // Find the slope of the line segment defined by start and newPosition
+            PointF slope = new PointF(newPosition.X - start.X, newPosition.Y - start.Y);
+
+            // Divide by the number of steps
+            slope.X = slope.X / steps;
+            slope.Y = slope.Y / steps;
+
+            // Move the mouse to each iterative point.
+            for (int i = 0; i < steps; i++) {
+                iterPoint = new PointF(iterPoint.X + slope.X, iterPoint.Y + slope.Y);
+                Cursor.Position = Point.Round(iterPoint);
+                Thread.Sleep(10);
+            }
+
+            // Move the mouse to the final destination.
+            Cursor.Position = newPosition;
+        }
+
         public static void ClickEmulatorScreenPoint(Point point) {
             var oldPos = Cursor.Position;
 
             MoveCursorToEmulatorCoordinates(point);
-            mouse_event(0x00000002, 0, 0, 0, UIntPtr.Zero); // left mouse button down
-            mouse_event(0x00000004, 0, 0, 0, UIntPtr.Zero); // left mouse button up
+            ButtonDown();
+            ButtonUp();
 
             // return mouse 
             Cursor.Position = oldPos;
+        }
+
+        public static void ButtonDown() {
+            mouse_event(0x00000002, 0, 0, 0, UIntPtr.Zero);
+        }
+
+        public static void ButtonUp() {
+            mouse_event(0x00000004, 0, 0, 0, UIntPtr.Zero);
         }
 
         public static void ClickEnter() {

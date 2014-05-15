@@ -68,19 +68,19 @@ namespace WindowsPhoneJsonWireServer {
             String response = String.Empty;
             FrameworkElement element;
             if (webElements.TryGetValue(elementId, out element)) {
-                Button button = element as Button;
-                if (button != null) {
-                    TryClick(button as Button);
-                    response = Responder.CreateJsonResponse(ResponseStatus.Success, null);
-                }
-                else {
+                //Button button = element as Button;
+                //if (button != null) {
+                //    TryClick(button as Button);
+                //    response = Responder.CreateJsonResponse(ResponseStatus.Success, null);
+                //}
+                //else {
                     var coordinates = new Point();
                     GetElementCoordinates(element);
                     coordinates = points.First();
                     points.RemoveAt(0);
                     String strCoordinates = coordinates.X + ":" + coordinates.Y;
                     response = Responder.CreateJsonResponse(ResponseStatus.UnknownError, strCoordinates);
-                }
+                //}
             }
             else
                 response = Responder.CreateJsonResponse(ResponseStatus.NoSuchElement, null);
@@ -161,7 +161,8 @@ namespace WindowsPhoneJsonWireServer {
                 var grids = GetDescendants<Grid>(visualRoot);
                 var topGrid = grids.First() as FrameworkElement;
                 if (topGrid != null) {
-                    element = topGrid.FindName(elementName) as FrameworkElement;
+                    //element = topGrid.FindName(elementName) as FrameworkElement;
+                    element = GetDescendantsOfName(topGrid, elementName) as FrameworkElement;
                     if (element != null)
                         webElements.Add(elementName, element);
                     wait.Set();
@@ -236,6 +237,25 @@ namespace WindowsPhoneJsonWireServer {
                         yield return grandChild;
                 }
             }
+        }
+
+        private DependencyObject GetDescendantsOfName(DependencyObject item, String name) {
+            int childrenCount = VisualTreeHelper.GetChildrenCount(item);
+            List<DependencyObject> children = new List<DependencyObject>();
+            for (int i = 0; i < childrenCount; i++) {
+                children.Add(VisualTreeHelper.GetChild(item, i));
+            }
+
+            foreach (var child in children) {
+                if (((FrameworkElement)child).Name.Equals(name))
+                    return child;
+
+                foreach (var grandChild in GetDescendants(child)) {
+                    if (((FrameworkElement)grandChild).Name.Equals(name))
+                        return grandChild;
+                }
+            }
+            return null;
         }
 
 
