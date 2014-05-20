@@ -17,10 +17,15 @@ namespace OuterDriver {
 
         public static void WriteResponse(NetworkStream stream, String responseBody) {
             //the stream is closed in the calling method
-            String response = CreateResponse(responseBody);
-            var writer = new StreamWriter(stream);
-            writer.Write(response);
-            writer.Close();
+            try {
+                String response = CreateResponse(responseBody);
+                var writer = new StreamWriter(stream);
+                writer.Write(response);
+                writer.Close();
+            }
+            catch (Exception ex) {
+                Console.WriteLine("Exception occured " + ex.Message);
+            }
         }
 
         private static String CreateResponse(String body) {
