@@ -89,6 +89,11 @@ namespace WindowsPhoneJsonWireServer {
                     response = automator.PerformElementCommand(elementObject);
                     break;
 
+                case "elements":
+                    FindElementObject elementsObject = JsonConvert.DeserializeObject<FindElementObject>(content);
+                    response = automator.PerformElementsCommand(elementsObject);
+                    break;
+
                 case "click":
                     elementId = Parser.GetElementId(request);
                     response = automator.PerformClickCommand(elementId);

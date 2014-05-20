@@ -15,6 +15,7 @@ namespace WindowsPhoneJsonWireServer {
         private Dictionary<String, FrameworkElement> webElements;
         private UIElement visualRoot;
         private List<Point> points; //ugly temporary (i hope) workaround to get objects from the UI thread
+        private int elementsCount; //same here
 
         public Automator(UIElement visualRoot) {
             this.webElements = new Dictionary<string, FrameworkElement>();
@@ -41,7 +42,6 @@ namespace WindowsPhoneJsonWireServer {
 
         public String PerformElementCommand(FindElementObject elementObject) {
             String response = String.Empty;
-            //search for the element by it's name
             String elementId = elementObject.getValue();
             String searchPolicy = elementObject.usingMethod;
             if (webElements.ContainsKey(elementId)) {
@@ -64,16 +64,46 @@ namespace WindowsPhoneJsonWireServer {
             return response;
         }
 
+        public String PerformElementsCommand(FindElementObject elementObject) {
+            elementsCount = 0;
+            String response = String.Empty;
+            String elementId = elementObject.getValue();
+            String searchPolicy = elementObject.usingMethod;
+            //think of a prettier way to do this - without modifying names
+            List<WebElement> result = new List<WebElement>();
+            if (searchPolicy.Equals("tag name"))
+                FindElementsByType(elementId);
+            
+            //if something has been added to the collection, get it out and return it;
+            for (int current = 0; current < elementsCount; current++) {
+                String currentId = elementId + current.ToString();
+                if (webElements.ContainsKey(currentId)) 
+                result.Add(new WebElement(currentId));
+            }
+            if (result.Count != 0)
+                response = Responder.CreateJsonResponse(ResponseStatus.Success, result.ToArray());
+            //if the elementы have been sucessfully added
+            
+            else
+                response = Responder.CreateJsonResponse(ResponseStatus.NoSuchElement, null);
+
+            return response;
+
+        }
+
         public String PerformClickCommand(String elementId) {
             String response = String.Empty;
             FrameworkElement element;
             if (webElements.TryGetValue(elementId, out element)) {
+                //commented part is working, but is disable so that click will work the same way for all the elements
+
                 //Button button = element as Button;
                 //if (button != null) {
                 //    TryClick(button as Button);
                 //    response = Responder.CreateJsonResponse(ResponseStatus.Success, null);
                 //}
                 //else {
+
                     var coordinates = new Point();
                     GetElementCoordinates(element);
                     coordinates = points.First();
@@ -181,6 +211,31 @@ namespace WindowsPhoneJsonWireServer {
                     element = elements.First() as FrameworkElement;
                     if (element != null)
                         webElements.Add(typeName, element);
+                }
+                wait.Set();
+            });
+            wait.WaitOne();
+        }
+
+        private void FindElementsByType(String typeName) {
+            FrameworkElement element = null;
+            //Used to wait until the element is actually added
+            EventWaitHandle wait = new AutoResetEvent(false);
+            Deployment.Current.Dispatcher.BeginInvoke(() => {
+                var elements = GetDescendantsOfTypeName(visualRoot, typeName);
+                if (elements.Count() != 0) {
+                    int count = 0;
+                    foreach (var nextElement in elements) {
+                        element = nextElement as FrameworkElement;
+                        String webElementName = typeName + count.ToString();
+                        if (element != null) {
+                            //if the webElement is already cached, don't add it again, but still count the found ones
+                            if (!webElements.ContainsKey(webElementName))
+                                webElements.Add(webElementName, element);
+                            count++;
+                        }
+                    }
+                    elementsCount = count;
                 }
                 wait.Set();
             });
