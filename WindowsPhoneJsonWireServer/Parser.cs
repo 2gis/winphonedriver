@@ -34,5 +34,13 @@ namespace WindowsPhoneJsonWireServer {
             }
             return result;
         }
+
+        public static int GetUrnTokensLength(String request) {
+            String[] requestTokens = request.Split(' ');
+            String urn = requestTokens[1];
+            //take care of the slash in the end of the string
+            String[] urnTokens = urn.Split(new String[] { "/" }, StringSplitOptions.RemoveEmptyEntries);
+            return urnTokens.Length;
+        }
     }
 }

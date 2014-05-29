@@ -40,19 +40,33 @@ namespace WindowsPhoneJsonWireServer {
             return response;
         }
 
-        public String PerformElementCommand(FindElementObject elementObject) {
+        public String PerformElementCommand(FindElementObject elementObject, String relativeElementId) {
             String response = String.Empty;
             String elementId = elementObject.getValue();
             String searchPolicy = elementObject.usingMethod;
+            DependencyObject relativeElement;
+
+            if (relativeElementId == null) {
+                relativeElement = visualRoot;
+            }
+            else {
+                FrameworkElement possibleRelativeElement;
+                webElements.TryGetValue(relativeElementId, out possibleRelativeElement);
+                relativeElement = possibleRelativeElement;
+                if (relativeElementId == null) {
+                    relativeElement = visualRoot;
+                }
+            }
+            
             if (webElements.ContainsKey(elementId)) {
                 var webElement = new WebElement(elementId);
                 response = Responder.CreateJsonResponse(0, webElement);
             }
             else {
                 if (searchPolicy.Equals("name"))
-                    FindElementByName(elementId);
+                    FindElementByName(elementId, relativeElement);
                 else if (searchPolicy.Equals("tag name"))
-                    FindElementByType(elementId);
+                    FindElementByType(elementId, relativeElement);
                 //if the element has been sucessfully added
                 if (webElements.ContainsKey(elementId)) {
                     var webElement = new WebElement(elementId);
@@ -64,15 +78,28 @@ namespace WindowsPhoneJsonWireServer {
             return response;
         }
 
-        public String PerformElementsCommand(FindElementObject elementObject) {
+        public String PerformElementsCommand(FindElementObject elementObject, String relativeElementId) {
             elementsCount = 0;
             String response = String.Empty;
             String elementId = elementObject.getValue();
-            String searchPolicy = elementObject.usingMethod;
+            String searchPolicy = elementObject.usingMethod; 
+            DependencyObject relativeElement;
+
+            if (relativeElementId == null) {
+                relativeElement = visualRoot;
+            }
+            else {
+                FrameworkElement possibleRelativeElement;
+                webElements.TryGetValue(relativeElementId, out possibleRelativeElement);
+                relativeElement = possibleRelativeElement;
+                if (relativeElementId == null) {
+                    relativeElement = visualRoot;
+                }
+            }
             //think of a prettier way to do this - without modifying names
             List<WebElement> result = new List<WebElement>();
             if (searchPolicy.Equals("tag name"))
-                FindElementsByType(elementId);
+                FindElementsByType(elementId, relativeElement);
             
             //if something has been added to the collection, get it out and return it;
             for (int current = 0; current < elementsCount; current++) {
@@ -183,12 +210,12 @@ namespace WindowsPhoneJsonWireServer {
         }
 
         //ugly search workaround
-        private void FindElementByName(String elementName) {
+        private void FindElementByName(String elementName, DependencyObject relativeElement) {
             FrameworkElement element = null;
             //Used to wait until the element is actually added
             EventWaitHandle wait = new AutoResetEvent(false);
             Deployment.Current.Dispatcher.BeginInvoke(() => {
-                var grids = GetDescendants<Grid>(visualRoot);
+                var grids = GetDescendants<Grid>(relativeElement);
                 var topGrid = grids.First() as FrameworkElement;
                 if (topGrid != null) {
                     //element = topGrid.FindName(elementName) as FrameworkElement;
@@ -201,12 +228,12 @@ namespace WindowsPhoneJsonWireServer {
             wait.WaitOne();
         }
 
-        private void FindElementByType(String typeName) {
+        private void FindElementByType(String typeName, DependencyObject relativeElement) {
             FrameworkElement element = null;
             //Used to wait until the element is actually added
             EventWaitHandle wait = new AutoResetEvent(false);
             Deployment.Current.Dispatcher.BeginInvoke(() => {
-                var elements = GetDescendantsOfTypeName(visualRoot, typeName);
+                var elements = GetDescendantsOfTypeName(relativeElement, typeName);
                 if (elements.Count() != 0) {
                     element = elements.First() as FrameworkElement;
                     if (element != null)
@@ -217,12 +244,12 @@ namespace WindowsPhoneJsonWireServer {
             wait.WaitOne();
         }
 
-        private void FindElementsByType(String typeName) {
+        private void FindElementsByType(String typeName, DependencyObject relativeElement) {
             FrameworkElement element = null;
             //Used to wait until the element is actually added
             EventWaitHandle wait = new AutoResetEvent(false);
             Deployment.Current.Dispatcher.BeginInvoke(() => {
-                var elements = GetDescendantsOfTypeName(visualRoot, typeName);
+                var elements = GetDescendantsOfTypeName(relativeElement, typeName);
                 if (elements.Count() != 0) {
                     int count = 0;
                     foreach (var nextElement in elements) {

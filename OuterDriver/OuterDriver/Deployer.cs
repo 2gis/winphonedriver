@@ -37,7 +37,7 @@ namespace OuterDriver {
             Guid instanceId = appID;
             String applicationGenre = "NormalApp";
             String iconPath = @"C:\test\ApplicationIcon.png";
-            String xapPackage = @"C:\Users\Automator\programming\testApp\testApp\testApp\Bin\Debug\testApp_Debug_AnyCPU.xap";
+            String xapPackage = @"C:\test\DoubleGis.WinPhone.App_Release_x86.xap";
 
             // Install the application 
             Console.WriteLine("Installing the application...");

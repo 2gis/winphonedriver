@@ -77,6 +77,11 @@ namespace OuterDriver {
             Cursor.Position = oldPos;
         }
 
+        public static void ClickLeftMouseButton() {
+            ButtonDown();
+            ButtonUp();
+        }
+
         public static void ButtonDown() {
             mouse_event(0x00000002, 0, 0, 0, UIntPtr.Zero);
         }

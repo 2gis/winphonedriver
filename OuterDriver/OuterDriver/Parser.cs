@@ -47,6 +47,13 @@ namespace OuterDriver {
             return result;
         }
 
+        public static int GetRequestLength(String request) {
+            String[] requestTokens = request.Split(' ');
+            String urn = requestTokens[1];
+            String[] urnTokens = urn.Split(new String[] { "/" }, StringSplitOptions.RemoveEmptyEntries);
+            return urnTokens.Length;
+        }
+
         //chooses the request method by looking at the last command token
         public static String ChooseRequestMethod(String uri) {
             if (commandsWithGET.Contains(GetLastToken(uri)))

@@ -79,6 +79,7 @@ namespace WindowsPhoneJsonWireServer {
             String response = String.Empty;
             String command = Parser.GetRequestCommand(request);
             String elementId = String.Empty;
+            int urnLength = Parser.GetUrnTokensLength(request);
             switch (command) {
                 case "status":
                     response = Responder.CreateJsonResponse(ResponseStatus.Success, FindIpAddress());
@@ -86,12 +87,28 @@ namespace WindowsPhoneJsonWireServer {
 
                 case "element":
                     FindElementObject elementObject = JsonConvert.DeserializeObject<FindElementObject>(content);
-                    response = automator.PerformElementCommand(elementObject);
+                    //this is an absolute elements command ("/session/:sessionId/element"), search from root
+                    if (urnLength == 3) {
+                        response = automator.PerformElementCommand(elementObject, null);
+                    }
+                    //this is a relative elements command("/session/:sessionId/element/:id/element"), search from specific element
+                    else if (urnLength == 5) {
+                        String relativeElementId = Parser.GetElementId(request);
+                        response = automator.PerformElementCommand(elementObject, relativeElementId);
+                    }
                     break;
 
                 case "elements":
                     FindElementObject elementsObject = JsonConvert.DeserializeObject<FindElementObject>(content);
-                    response = automator.PerformElementsCommand(elementsObject);
+                    //this is an absolute elements command ("/session/:sessionId/element"), search from root
+                    if (urnLength == 3) {
+                        response = automator.PerformElementsCommand(elementsObject, null);
+                    }
+                    //this is a relative elements command("/session/:sessionId/element/:id/element"), search from specific element
+                    else if (urnLength == 5) {
+                        String relativeElementId = Parser.GetElementId(request);
+                        response = automator.PerformElementsCommand(elementsObject, relativeElementId);
+                    }
                     break;
 
                 case "click":

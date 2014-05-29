@@ -144,10 +144,10 @@ namespace OuterDriver {
             String command = Parser.GetRequestCommand(request);
             switch (command) {
                 case "session":
-                    //String innerIp = InitializeApplication();
-                    Console.WriteLine("Enter inner driver ip");
-                    String innerIp = Console.ReadLine();
-                    //Console.WriteLine("Inner ip: " + innerIp);
+                    String innerIp = InitializeApplication();
+                    //Console.WriteLine("Enter inner driver ip");
+                    //String innerIp = Console.ReadLine();
+                    Console.WriteLine("Inner ip: " + innerIp);
                     phoneRequester = new Requester(innerIp, innerPort);
                     String jsonResponse = Responder.CreateJsonResponse(sessionId,
                         ResponseStatus.Sucess, new JsonCapabilities("WinPhone"));
@@ -188,6 +188,12 @@ namespace OuterDriver {
                     break;
 
                 case "click":
+                    int requestLength = Parser.GetRequestLength(request);
+                    if (requestLength == 3) {
+                        //simple click command without element
+                        OuterDriver.ClickLeftMouseButton();
+                        break;
+                    }
                     responseBody = phoneRequester.SendRequest(Parser.GetRequestUrn(request), content);
                     JsonResponse response = JsonConvert.DeserializeObject<JsonResponse>(responseBody);
                     var clickValue = (String)response.value;
@@ -225,13 +231,11 @@ namespace OuterDriver {
         }
 
         private String InitializeApplication() {
-            String appId = "846135ee-2c7a-453c-9a72-e57c607c26c8";
+            String appId = "69b4ce34-a3e0-414a-92d9-1302449f587c";
             var deployer = new Deployer(appId);
             deployer.Deploy();
             String ip = deployer.ReceiveIpAddress();
             return ip;
-
-            return String.Empty;
         }
 
         public void StopListening() {
