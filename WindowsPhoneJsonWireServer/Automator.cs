@@ -27,16 +27,47 @@ namespace WindowsPhoneJsonWireServer {
             String text = String.Empty;
             String response = String.Empty;
             FrameworkElement element;
-            if (webElements.TryGetValue(elementId, out element)) {
-                if (element is TextBlock)
-                    text = (element as TextBlock).Text;
-                else if (element is TextBox)
-                    text = (element as TextBox).Text;
+            if (webElements.TryGetValue(elementId, out element))
+            {
+                var properyNames = new List<string>() { "Text", "Content" };
+                System.Reflection.PropertyInfo textProperty = null;
+
+                foreach (var propertyName in properyNames)
+                {
+                    // list of Text property aliases. Use "Text" for TextBox, TextBlock, etc. Use "Content" as fallback if there is no "Text" property
+                    textProperty = element.GetType().GetProperty(propertyName);
+                    if (textProperty != null)
+                    {
+                        Exception exception = null;
+                        var waitEvent = new System.Threading.ManualResetEvent(false);
+
+                        // Access property in main thread (UI) thread to prevent System.UnauthorizedAccessException: Invalid cross-thread access
+                        Deployment.Current.Dispatcher.BeginInvoke(() =>
+                        {
+                            try
+                            {
+                                text = textProperty.GetValue(element, null).ToString();
+                            }
+                            catch (Exception ex)
+                            {
+                                exception = ex;
+                            }
+                            waitEvent.Set();
+                        });
+                        waitEvent.WaitOne();
+
+                        if (exception != null)
+                            throw exception;
+
+                        break;
+                    }
+                }
 
                 response = Responder.CreateJsonResponse(ResponseStatus.Success, text);
             }
-            else
+            else {
                 response = Responder.CreateJsonResponse(ResponseStatus.NoSuchElement, null);
+            }
             return response;
         }
 
