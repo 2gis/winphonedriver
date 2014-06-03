@@ -115,6 +115,11 @@ namespace OuterDriver.EmulatorHelpers
             return phoneScreen.Contains(phonePoint);
         }
 
+        public Size PhoneScreenSize()
+        {
+            return NativeHelpers.GetWindowRectangle(_wpHandle).Size;
+        }
+
         private Point TranslatePhonePointToHostPoint(Point phonePoint)
         {
             var hostScreen = HostRectangle();
@@ -129,11 +134,6 @@ namespace OuterDriver.EmulatorHelpers
             translatedPoint.Y = (int) (phonePoint.Y*yScaleFactor) + hostScreen.Y;
 
             return translatedPoint;
-        }
-
-        private Size PhoneScreenSize()
-        {
-            return NativeHelpers.GetWindowRectangle(_wpHandle).Size;
         }
 
         private Rectangle HostRectangle()
