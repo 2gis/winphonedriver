@@ -85,6 +85,18 @@ namespace WindowsPhoneJsonWireServer {
                     response = Responder.CreateJsonResponse(ResponseStatus.Success, FindIpAddress());
                     break;
 
+                case "alert_text":
+                    response = automator.FirstPopupText();
+                    break;
+
+                case "accept_alert":
+                    automator.ClosePopups();
+                    break;
+
+                case "dismiss_alert":
+                    automator.ClosePopups(false);
+                    break;
+
                 case "element":
                     FindElementObject elementObject = JsonConvert.DeserializeObject<FindElementObject>(content);
                     //this is an absolute elements command ("/session/:sessionId/element"), search from root

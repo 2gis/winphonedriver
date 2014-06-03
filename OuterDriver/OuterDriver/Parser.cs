@@ -9,8 +9,8 @@ namespace OuterDriver
     class Parser
     {
 
-        private static readonly List<String> CommandsToProxy = new List<String> { "element", "elements", "text", "displayed", "location" };
-        private static readonly List<String> CommandsWithGet = new List<String> { "text", "displayed", "location" };
+        private static readonly List<String> CommandsToProxy = new List<String> { "element", "elements", "text", "displayed", "location", "accept_alert", "dismiss_alert", "alert_text" };
+        private static readonly List<String> CommandsWithGet = new List<String> { "text", "displayed", "location", "alert_text" };
 
         public static String GetRequestUrn(String request)
         {

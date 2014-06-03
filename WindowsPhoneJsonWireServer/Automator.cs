@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Windows;
@@ -8,7 +7,6 @@ using System.Windows.Automation.Peers;
 using System.Windows.Automation.Provider;
 using System.Windows.Controls;
 using System.Windows.Media;
-using Newtonsoft.Json;
 
 namespace WindowsPhoneJsonWireServer {
     class Automator {
@@ -21,6 +19,51 @@ namespace WindowsPhoneJsonWireServer {
             this.webElements = new Dictionary<string, FrameworkElement>();
             this.visualRoot = visualRoot;
             this.points = new List<Point>();
+        }
+
+        public void ClosePopups(bool accert = true)
+        {
+            // Will work only with CustomMessageBox or other types of pop-us that have left and right button
+            var buttonName = accert ? "LeftButton" : "RightButton";
+            UiHelpers.BeginInvokeSync(() =>
+            {
+                var popups = VisualTreeHelper.GetOpenPopups();
+                foreach (var popup in popups)
+                {
+                    // TODO: Press x:Name:LeftButton instead of simple closing 
+                    var popupChild = popup.Child;
+                    var element = (FrameworkElement)GetDescendantsOfNameByPredicate(popupChild, buttonName).FirstOrDefault();
+                    if (!(element is Button)) {continue;}
+
+                    var peer = new ButtonAutomationPeer(element as Button);
+                    var invokeProv = peer.GetPattern(PatternInterface.Invoke) as IInvokeProvider;
+                    if (invokeProv != null) { invokeProv.Invoke(); }
+                }
+            });
+        }
+
+        public String FirstPopupText()
+        {
+            var message = string.Empty;
+
+            UiHelpers.BeginInvokeSync(() =>
+            {
+                var popups = VisualTreeHelper.GetOpenPopups();
+                foreach (var popup in popups)
+                {
+                    var popupChild = popup.Child;
+                    var elements = GetDescendantsOfTypeByPredicate(popupChild, "System.Windows.Controls.TextBlock");
+                    foreach (var dependencyObject in elements.OfType<TextBlock>())
+                    {
+                        message = (dependencyObject as TextBlock).Text;
+                        if (String.IsNullOrEmpty(message))
+                        {
+                            break;
+                        }
+                    }
+                }
+            });
+            return message;
         }
 
         public String PerformDisplayedCommand(String elementId)
