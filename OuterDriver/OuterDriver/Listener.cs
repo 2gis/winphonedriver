@@ -194,17 +194,18 @@ namespace OuterDriver
                         _desiredCapabilities = ParseDesiredCapabilitiesJson(content);
                         var innerIp = InitializeApplication();
 
-
                         Console.WriteLine("Inner ip: " + innerIp);
                         _phoneRequester = new Requester(innerIp, innerPort);
                         var jsonResponse = Responder.CreateJsonResponse(sessionId,
                             ResponseStatus.Sucess, _desiredCapabilities);
                         responseBody = jsonResponse;
                         break;
+
                     case "window_handle":
                         // TODO: Is it temporary implementation? There is only one window for windows phone app, so it must be OK
                         responseBody = "current";
                         break;
+
                     case "size":
                         // Window size is partially implemented
                         // TODO: Handle windows handles? 
@@ -328,10 +329,8 @@ namespace OuterDriver
         private String InitializeApplication()
         {
             var appPath = _desiredCapabilities["app"].ToString();
-            // TODO: There must be a way to get rid of hard coded app id
-            const string appId = "69b4ce34-a3e0-414a-92d9-1302449f587c";
             _deployer = new Deployer81(_desiredCapabilities["deviceName"].ToString());
-            _deployer.Deploy(appPath, appId, Convert.ToInt32(_desiredCapabilities["launchDelay"]));
+            _deployer.Deploy(appPath, Convert.ToInt32(_desiredCapabilities["launchDelay"]));
             var ip = _deployer.ReceiveIpAddress();
             Console.WriteLine("Dev Name " + _deployer.DeviceName);
             _inputController = new EmulatorInputController(_deployer.DeviceName)
