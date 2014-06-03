@@ -193,13 +193,37 @@ namespace OuterDriver
                     case "session":
                         _desiredCapabilities = ParseDesiredCapabilitiesJson(content);
                         var innerIp = InitializeApplication();
-                        
+
 
                         Console.WriteLine("Inner ip: " + innerIp);
                         _phoneRequester = new Requester(innerIp, innerPort);
                         var jsonResponse = Responder.CreateJsonResponse(sessionId,
                             ResponseStatus.Sucess, _desiredCapabilities);
                         responseBody = jsonResponse;
+                        break;
+                    case "window_handle":
+                        // TODO: Is it temporary implementation? There is only one window for windows phone app, so it must be OK
+                        responseBody = "current";
+                        break;
+                    case "size":
+                        // Window size is partially implemented
+                        // TODO: Handle windows handles? 
+                        var tokens = Parser.GetUrnTokens(request);
+                        if (tokens.Length == 5 && tokens[2].Equals("window"))
+                        {
+                            var phoneScreenSize = _inputController.PhoneScreenSize();
+                            responseBody = Responder.CreateJsonResponse(sessionId, ResponseStatus.Sucess,
+                                new Dictionary<string, int>
+                                {
+                                    {"width", phoneScreenSize.Width},
+                                    {"height", phoneScreenSize.Height}
+                                });
+                        }
+                        else
+                        {
+                            goto default;
+                        } // We can do better than goto
+
                         break;
 
                         //if the text has the ENTER command in it, execute it after sending the rest of the text to the inner driver
