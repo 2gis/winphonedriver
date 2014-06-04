@@ -23,6 +23,41 @@ namespace WindowsPhoneJsonWireServer {
             this.points = new List<Point>();
         }
 
+        public String PerformDisplayedCommand(String elementId)
+        {
+            String text = String.Empty;
+            String response;
+            FrameworkElement element;
+            if (webElements.TryGetValue(elementId, out element))
+            {
+                Exception exception = null;
+                var waitEvent = new System.Threading.ManualResetEvent(false);
+                bool displayed = true;
+                Deployment.Current.Dispatcher.BeginInvoke(() =>
+                {
+                    try
+                    {
+                        displayed = element.IsUserVisible();
+
+                    }
+                    catch (Exception ex)
+                    {
+                        exception = ex;
+                    }
+                    waitEvent.Set();
+                });
+                waitEvent.WaitOne();
+
+                if (exception != null)
+                    throw exception;
+
+                response = Responder.CreateJsonResponse(ResponseStatus.Success, displayed);
+            }
+            else
+                response = Responder.CreateJsonResponse(ResponseStatus.NoSuchElement, null);
+            return response;
+        }
+
         public String PerformTextCommand(String elementId) {
             String text = String.Empty;
             String response = String.Empty;
