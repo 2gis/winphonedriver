@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Windows;
@@ -12,10 +13,9 @@ using Newtonsoft.Json;
 namespace WindowsPhoneJsonWireServer {
     class Automator {
 
-        private Dictionary<String, FrameworkElement> webElements;
+        private Dictionary<string, FrameworkElement> webElements;
         private UIElement visualRoot;
         private List<Point> points; //ugly temporary (i hope) workaround to get objects from the UI thread
-        private int elementsCount; //same here
 
         public Automator(UIElement visualRoot) {
             this.webElements = new Dictionary<string, FrameworkElement>();
@@ -30,26 +30,12 @@ namespace WindowsPhoneJsonWireServer {
             FrameworkElement element;
             if (webElements.TryGetValue(elementId, out element))
             {
-                Exception exception = null;
-                var waitEvent = new System.Threading.ManualResetEvent(false);
                 bool displayed = true;
-                Deployment.Current.Dispatcher.BeginInvoke(() =>
+
+                UiHelpers.BeginInvokeSync(() =>
                 {
-                    try
-                    {
-                        displayed = element.IsUserVisible();
-
-                    }
-                    catch (Exception ex)
-                    {
-                        exception = ex;
-                    }
-                    waitEvent.Set();
+                    displayed = element.IsUserVisible();
                 });
-                waitEvent.WaitOne();
-
-                if (exception != null)
-                    throw exception;
 
                 response = Responder.CreateJsonResponse(ResponseStatus.Success, displayed);
             }
@@ -73,27 +59,10 @@ namespace WindowsPhoneJsonWireServer {
                     textProperty = element.GetType().GetProperty(propertyName);
                     if (textProperty != null)
                     {
-                        Exception exception = null;
-                        var waitEvent = new System.Threading.ManualResetEvent(false);
-
-                        // Access property in main thread (UI) thread to prevent System.UnauthorizedAccessException: Invalid cross-thread access
-                        Deployment.Current.Dispatcher.BeginInvoke(() =>
+                        UiHelpers.BeginInvokeSync(() =>
                         {
-                            try
-                            {
-                                text = textProperty.GetValue(element, null).ToString();
-                            }
-                            catch (Exception ex)
-                            {
-                                exception = ex;
-                            }
-                            waitEvent.Set();
+                            text = textProperty.GetValue(element, null).ToString();
                         });
-                        waitEvent.WaitOne();
-
-                        if (exception != null)
-                            throw exception;
-
                         break;
                     }
                 }
@@ -118,24 +87,24 @@ namespace WindowsPhoneJsonWireServer {
             else {
                 FrameworkElement possibleRelativeElement;
                 webElements.TryGetValue(relativeElementId, out possibleRelativeElement);
-                relativeElement = possibleRelativeElement;
-                if (relativeElementId == null) {
-                    relativeElement = visualRoot;
-                }
+                relativeElement = possibleRelativeElement ?? visualRoot;
             }
-            
+
             if (webElements.ContainsKey(elementId)) {
                 var webElement = new WebElement(elementId);
                 response = Responder.CreateJsonResponse(0, webElement);
             }
-            else {
+            else
+            {
+                string webObjectId = null;
+
                 if (searchPolicy.Equals("name"))
-                    FindElementByName(elementId, relativeElement);
+                    webObjectId = FindElementByNameTest(elementId, relativeElement);
                 else if (searchPolicy.Equals("tag name"))
-                    FindElementByType(elementId, relativeElement);
-                //if the element has been sucessfully added
-                if (webElements.ContainsKey(elementId)) {
-                    var webElement = new WebElement(elementId);
+                    webObjectId = FindElementByType(elementId, relativeElement);
+                if (webObjectId != null)
+                {
+                    var webElement = new WebElement(webObjectId);
                     response = Responder.CreateJsonResponse(ResponseStatus.Success, webElement);
                 }
                 else
@@ -145,7 +114,6 @@ namespace WindowsPhoneJsonWireServer {
         }
 
         public String PerformElementsCommand(FindElementObject elementObject, String relativeElementId) {
-            elementsCount = 0;
             String response = String.Empty;
             String elementId = elementObject.getValue();
             String searchPolicy = elementObject.usingMethod; 
@@ -157,29 +125,19 @@ namespace WindowsPhoneJsonWireServer {
             else {
                 FrameworkElement possibleRelativeElement;
                 webElements.TryGetValue(relativeElementId, out possibleRelativeElement);
-                relativeElement = possibleRelativeElement;
-                if (relativeElementId == null) {
-                    relativeElement = visualRoot;
-                }
+                relativeElement = possibleRelativeElement ?? visualRoot;
             }
             //think of a prettier way to do this - without modifying names
-            List<WebElement> result = new List<WebElement>();
+            var result = new List<WebElement>();
             if (searchPolicy.Equals("tag name"))
-                FindElementsByType(elementId, relativeElement);
-            
-            //if something has been added to the collection, get it out and return it;
-            for (int current = 0; current < elementsCount; current++) {
-                String currentId = elementId + current.ToString();
-                if (webElements.ContainsKey(currentId)) 
-                result.Add(new WebElement(currentId));
+            {
+                var foundObjectsIdList = FindElementsByType(elementId, relativeElement);
+                result.AddRange(foundObjectsIdList.Select(foundObjectId => new WebElement(foundObjectId)));
             }
             if (result.Count != 0)
                 response = Responder.CreateJsonResponse(ResponseStatus.Success, result.ToArray());
-            //if the elementы have been sucessfully added
-            
             else
                 response = Responder.CreateJsonResponse(ResponseStatus.NoSuchElement, null);
-
             return response;
 
         }
@@ -275,137 +233,94 @@ namespace WindowsPhoneJsonWireServer {
             });
         }
 
-        //ugly search workaround
-        private void FindElementByName(String elementName, DependencyObject relativeElement) {
-            FrameworkElement element = null;
-            //Used to wait until the element is actually added
-            EventWaitHandle wait = new AutoResetEvent(false);
-            Deployment.Current.Dispatcher.BeginInvoke(() => {
-                var grids = GetDescendants<Grid>(relativeElement);
-                var topGrid = grids.First() as FrameworkElement;
-                if (topGrid != null) {
-                    //element = topGrid.FindName(elementName) as FrameworkElement;
-                    element = GetDescendantsOfName(topGrid, elementName) as FrameworkElement;
-                    if (element != null)
-                        webElements.Add(elementName, element);
-                    wait.Set();
-                }
-            });
-            wait.WaitOne();
-        }
+        static int _safeInstanceCount = 0;
 
-        private void FindElementByType(String typeName, DependencyObject relativeElement) {
-            FrameworkElement element = null;
-            //Used to wait until the element is actually added
-            EventWaitHandle wait = new AutoResetEvent(false);
-            Deployment.Current.Dispatcher.BeginInvoke(() => {
-                var elements = GetDescendantsOfTypeName(relativeElement, typeName);
-                if (elements.Count() != 0) {
-                    element = elements.First() as FrameworkElement;
-                    if (element != null)
-                        webElements.Add(typeName, element);
-                }
-                wait.Set();
-            });
-            wait.WaitOne();
-        }
+        private string AddElementToWebElements(FrameworkElement element)
+        {
+            var webElementId = webElements.FirstOrDefault(x => x.Value == element).Key;
 
-        private void FindElementsByType(String typeName, DependencyObject relativeElement) {
-            FrameworkElement element = null;
-            //Used to wait until the element is actually added
-            EventWaitHandle wait = new AutoResetEvent(false);
-            Deployment.Current.Dispatcher.BeginInvoke(() => {
-                var elements = GetDescendantsOfTypeName(relativeElement, typeName);
-                if (elements.Count() != 0) {
-                    int count = 0;
-                    foreach (var nextElement in elements) {
-                        element = nextElement as FrameworkElement;
-                        String webElementName = typeName + count.ToString();
-                        if (element != null) {
-                            //if the webElement is already cached, don't add it again, but still count the found ones
-                            if (!webElements.ContainsKey(webElementName))
-                                webElements.Add(webElementName, element);
-                            count++;
-                        }
-                    }
-                    elementsCount = count;
-                }
-                wait.Set();
-            });
-            wait.WaitOne();
-        }
+            if (webElementId == null)
+            {
+                Interlocked.Increment(ref _safeInstanceCount);
 
-        private IEnumerable<DependencyObject> GetDescendants(DependencyObject item) {
-            int childrenCount = VisualTreeHelper.GetChildrenCount(item);
-            List<DependencyObject> children = new List<DependencyObject>();
-            for (int i = 0; i < childrenCount; i++) {
-                children.Add(VisualTreeHelper.GetChild(item, i));
+                webElementId = element.GetHashCode().ToString("")+"-"+_safeInstanceCount.ToString("");
+                webElements.Add(webElementId, element);
             }
+            return webElementId;
+        }
 
-            foreach (var child in children) {
-                yield return child;
+        private string FindElementByNameTest(string elementName, DependencyObject relativeElement)
+        {
+            string foundId = null;
+            UiHelpers.BeginInvokeSync(() =>
+            {
+                var element = (FrameworkElement) GetDescendantsOfNameByPredicate(relativeElement, elementName).FirstOrDefault();
+                if (element != null)
+                {
+                    foundId = AddElementToWebElements(element);
+                }
+            });
 
-                foreach (var grandChild in GetDescendants(child)) {
+            return foundId;
+        }
+
+//      TODO: Refactor. Use same signature for FindElementBy* and FindElementsBy
+//      TODO: Replace PerformElementCommand and PerformElementsCommand with single method
+
+        private string FindElementByType(string typeName, DependencyObject relativeElement)
+        {
+            string foundId = null;
+            UiHelpers.BeginInvokeSync(() =>
+            {
+                var element = (FrameworkElement)GetDescendantsOfTypeByPredicate(relativeElement, typeName).FirstOrDefault();
+                if (element != null)
+                {
+                    foundId = AddElementToWebElements(element);
+                }
+            });
+            return foundId;
+        }
+
+        private List<string> FindElementsByType(string typeName, DependencyObject relativeElement)
+        {
+            var foundIds = new List<string>();
+
+            UiHelpers.BeginInvokeSync(() =>
+            {
+                foreach (var element in GetDescendantsOfTypeByPredicate(relativeElement, typeName))
+                {
+                    foundIds.Add(AddElementToWebElements((FrameworkElement) element));
+                }
+            });
+            return foundIds;
+        }
+
+        private static IEnumerable<DependencyObject> GetDescendantsByPredicate(DependencyObject rootItem, Predicate<DependencyObject> predicate)
+        {
+            var childrenCount = VisualTreeHelper.GetChildrenCount(rootItem);
+            for (var i = 0; i < childrenCount; ++i)
+            {
+                var child = VisualTreeHelper.GetChild(rootItem, i);
+                if (predicate(child))
+                {
+                    yield return child;
+                }
+                foreach (var grandChild in GetDescendantsByPredicate(child, predicate))
+                {
                     yield return grandChild;
                 }
+                
             }
         }
 
-        private IEnumerable<DependencyObject> GetDescendants<T>(DependencyObject item) {
-            int childrenCount = VisualTreeHelper.GetChildrenCount(item);
-            List<DependencyObject> children = new List<DependencyObject>();
-            for (int i = 0; i < childrenCount; i++) {
-                children.Add(VisualTreeHelper.GetChild(item, i));
-            }
-
-            foreach (var child in children) {
-                if (child is T)
-                    yield return child;
-
-                foreach (var grandChild in GetDescendants(child)) {
-                    if (grandChild is T)
-                        yield return grandChild;
-                }
-            }
+        private static IEnumerable<DependencyObject> GetDescendantsOfNameByPredicate(DependencyObject item, String name)
+        {
+            return GetDescendantsByPredicate(item, x => ((FrameworkElement) x).Name.Equals(name));
         }
 
-        private IEnumerable<DependencyObject> GetDescendantsOfTypeName(DependencyObject item, String typeName) {
-            int childrenCount = VisualTreeHelper.GetChildrenCount(item);
-            List<DependencyObject> children = new List<DependencyObject>();
-            for (int i = 0; i < childrenCount; i++) {
-                children.Add(VisualTreeHelper.GetChild(item, i));
-            }
-
-            foreach (var child in children) {
-                if (child.GetType().ToString().Equals(typeName))
-                    yield return child;
-
-                foreach (var grandChild in GetDescendants(child)) {
-                    if (grandChild.GetType().ToString().Equals(typeName))
-                        yield return grandChild;
-                }
-            }
+        private static IEnumerable<DependencyObject> GetDescendantsOfTypeByPredicate(DependencyObject item, String typeName)
+        {
+            return GetDescendantsByPredicate(item, x => ((FrameworkElement)x).GetType().ToString().Equals(typeName));
         }
-
-        private DependencyObject GetDescendantsOfName(DependencyObject item, String name) {
-            int childrenCount = VisualTreeHelper.GetChildrenCount(item);
-            List<DependencyObject> children = new List<DependencyObject>();
-            for (int i = 0; i < childrenCount; i++) {
-                children.Add(VisualTreeHelper.GetChild(item, i));
-            }
-
-            foreach (var child in children) {
-                if (((FrameworkElement)child).Name.Equals(name))
-                    return child;
-
-                foreach (var grandChild in GetDescendants(child)) {
-                    if (((FrameworkElement)grandChild).Name.Equals(name))
-                        return grandChild;
-                }
-            }
-            return null;
-        }
-
-
     }
 }
