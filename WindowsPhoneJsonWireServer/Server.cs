@@ -127,7 +127,9 @@ namespace WindowsPhoneJsonWireServer {
                     break;
 
                 case "displayed":
-                    response = "Unimplemented";
+                    elementId = Parser.GetElementId(request);
+                    response = automator.PerformDisplayedCommand(elementId);
+                    // response = "Unimplemented";
                     break;
 
                 case "location":
