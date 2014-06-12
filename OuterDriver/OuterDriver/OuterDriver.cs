@@ -14,7 +14,7 @@ namespace OuterDriver {
 
         private static int borderXOffset = 35;
         private static int borderYOffset = 72;
-        private static int statusBarSize = 20;
+        // private static int statusBarSize = 20;
 
         public static void MoveCursorToEmulatorCoordinates(Point clientPoint) {
             const String emulatorProcessName = "XDE.exe";
@@ -34,7 +34,8 @@ namespace OuterDriver {
                         }
                     }
                     catch (Exception ex) {
-                        //Console.WriteLine(ex.GetType() + ex.Message);
+                        // TODO: Investigate Exceptions (something related to 32-bit process accessing 64-bit process)
+                        //Console.WriteLine(ex.Message);
                     }
                 }
             }
@@ -49,7 +50,7 @@ namespace OuterDriver {
             PointF iterPoint = start;
 
             // Find the slope of the line segment defined by start and newPosition
-            PointF slope = new PointF(newPosition.X - start.X, newPosition.Y - start.Y);
+            var slope = new PointF(newPosition.X - start.X, newPosition.Y - start.Y);
 
             // Divide by the number of steps
             slope.X = slope.X / steps;
@@ -91,6 +92,7 @@ namespace OuterDriver {
         }
 
         public static void ClickEnter() {
+            // TODO: Atleast replace with relative coordinates
             //ugly hardcoded stuff. I'm truly sorry
             int xOffset = 445;
             int yOffset = 760;
@@ -128,7 +130,8 @@ namespace OuterDriver {
                         }
                     }
                     catch (Exception ex) {
-                        //Console.WriteLine(ex.GetType() + ex.Message);
+                        // TODO: Investigate Exceptions (something related to 32-bit process accessing 64-bit process)
+                        //Console.WriteLine(ex.Message);
                     }
                 }
             }

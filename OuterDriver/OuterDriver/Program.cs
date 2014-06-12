@@ -11,7 +11,7 @@ namespace OuterDriver {
         static void Main(string[] args) {
             int listeningPort = 9999;
             var listener = new Listener(listeningPort);
-            Console.WriteLine("Starting listener on " + OuterServer.FindIPAddress() + ":" + listeningPort);
+            Console.WriteLine("Starting listener on " + OuterServer.FindIpAddress() + ":" + listeningPort);
             listener.StartListening();
 
             //String command = String.Empty;

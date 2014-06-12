@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
 using System.IO;
 
@@ -11,25 +12,34 @@ using System.Globalization;
 namespace OuterDriver {
     class Deployer {
 
-        private IDevice iDevice;
-        private String appIdString;
-        private String Wvga512DeviceId = "5E7661DF-D928-40ff-B747-A4B1957194F9";
+        private readonly IDevice _iDevice;
+        private readonly String _appIdString;
+        private readonly String _deviceId = "5E7661DF-D928-40ff-B747-A4B1957194F9";
 
         public Deployer(String appIdString) {
-            this.appIdString = appIdString;
-            MultiTargetingConnectivity connectivity = new MultiTargetingConnectivity(CultureInfo.CurrentUICulture.LCID);
-            ConnectableDevice connectableDevice = connectivity.GetConnectableDevice(Wvga512DeviceId);
-            this.iDevice = connectableDevice.Connect();
+            this._appIdString = appIdString;
+            var connectivity = new MultiTargetingConnectivity(CultureInfo.CurrentUICulture.LCID);
+            var devices = connectivity.GetConnectableDevices(false);
+            // TODO: Replace with searching based on desired capabilities
+            var device = devices.FirstOrDefault(x => x.IsEmulator() && x.Name.Equals("Emulator WVGA 512MB"));
+            if (device != null)
+            {
+                _deviceId = device.Id;
+                Console.WriteLine("Deploy target: " + device.Name + " id: " + device.Id);
+            }
+
+            var connectableDevice = connectivity.GetConnectableDevice(_deviceId);
+            this._iDevice = connectableDevice.Connect();
         }
 
-        public void Deploy() {
+        public void Deploy(string appPath ) {
 
             // Check if the application is already install, if it is remove it (From WMAppManifect.xml)
-            Guid appID = new Guid(appIdString);
+            Guid appID = new Guid(_appIdString);
 
-            if (iDevice.IsApplicationInstalled(appID)) {
+            if (_iDevice.IsApplicationInstalled(appID)) {
                 Console.WriteLine("Uninstalling application...");
-                iDevice.GetApplication(appID).Uninstall();
+                _iDevice.GetApplication(appID).Uninstall();
                 Console.WriteLine("Done!");
             }
 
@@ -37,11 +47,16 @@ namespace OuterDriver {
             Guid instanceId = appID;
             String applicationGenre = "NormalApp";
             String iconPath = @"C:\test\ApplicationIcon.png";
-            String xapPackage = @"C:\test\DoubleGis.WinPhone.App_Release_x86.xap";
+            var xapPackage = appPath;
+            if (String.IsNullOrEmpty(xapPackage))
+            {
+                // TODO: Come up with a reasonable default or throw exception instead 
+                xapPackage = @"C:\test\DoubleGis.WinPhone.App_Release_x86.xap";
+            }
 
             // Install the application 
             Console.WriteLine("Installing the application...");
-            IRemoteApplication remoteApplication = iDevice.InstallApplication(appID, appID, applicationGenre, iconPath, xapPackage);
+            IRemoteApplication remoteApplication = _iDevice.InstallApplication(appID, appID, applicationGenre, iconPath, xapPackage);
 
             Console.WriteLine("Done!");
 
@@ -50,7 +65,7 @@ namespace OuterDriver {
             remoteApplication.Launch();
 
             int startStopWaitTime = 3000;   // msec
-            int executionWaitTime = 5000; // msec
+            // int executionWaitTime = 5000; // msec
 
             // Note that IRemoteApplication has a 'IsRunning' method but it is not implemented.
             // So, for the moment we sleep few msec.
@@ -76,8 +91,11 @@ namespace OuterDriver {
 
         public String ReceiveIpAddress() {
             String ip = String.Empty;
-            IRemoteApplication remoteApplication = iDevice.GetApplication(new Guid(appIdString));
-            IRemoteIsolatedStorageFile remoteIsolatedStorageFile = remoteApplication.GetIsolatedStore();
+            IRemoteApplication remoteApplication = _iDevice.GetApplication(new Guid(_appIdString));
+            // TODO: Chekc if winphone 8.1 and switch ip to host, otherwise request ip address iDevice.GetSystemInfo()
+            // See social.msdn.microsoft.com/Forums/sqlserver/en-US/8902939b-233f-4075-99c3-5856f7e6ca6e/windows-phone-81-emulator-no-longer-uses-dhcp?forum=wpdevelop
+
+            IRemoteIsolatedStorageFile remoteIsolatedStorageFile = remoteApplication.GetIsolatedStore("Local");
             String sourceDeviceFilePath = (object)Path.DirectorySeparatorChar + "ip.txt";
             const String targetDesktopFilePath = @"C:\test\" + "test.txt";
             if (remoteIsolatedStorageFile.FileExists(sourceDeviceFilePath)) {

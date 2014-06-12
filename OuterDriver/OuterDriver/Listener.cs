@@ -4,8 +4,12 @@ using System.Drawing;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Web.Script.Serialization;
+using System.Windows.Forms.VisualStyles;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace OuterDriver {
 
@@ -72,28 +76,39 @@ namespace OuterDriver {
 
         }
 
-        private TcpListener listener;
-        private Requester phoneRequester;
-        private readonly int listeningPort;
+        private TcpListener _listener;
+        private Requester _phoneRequester;
+        private readonly int _listeningPort;
 
         public Listener(int listeningPort) {
-            this.listeningPort = listeningPort;
+            this._listeningPort = listeningPort;
+        }
+
+        public IPAddress IpAddress()
+        {
+            var endPoint = (IPEndPoint)_listener.LocalEndpoint;
+            return endPoint.Address;
+        }
+
+        public int Port()
+        {
+            return _listeningPort;
         }
 
         public void StartListening() {
             try {
-                IPAddress localAddr = IPAddress.Parse(OuterServer.FindIPAddress());
-                listener = new TcpListener(localAddr, this.listeningPort);
+                IPAddress localAddr = IPAddress.Parse(OuterServer.FindIpAddress());
+                _listener = new TcpListener(localAddr, this._listeningPort);
 
                 // Start listening for client requests.
-                listener.Start();
+                _listener.Start();
 
                 // Enter the listening loop
                 while (true) {
                     Console.Write("Waiting for a connection... ");
 
                     // Perform a blocking call to accept requests. 
-                    TcpClient client = listener.AcceptTcpClient();
+                    TcpClient client = _listener.AcceptTcpClient();
 
                     // Get a stream object for reading and writing
                     NetworkStream stream = client.GetStream();
@@ -117,7 +132,7 @@ namespace OuterDriver {
             }
             finally {
                 // Stop listening for new clients.
-                listener.Stop();
+                _listener.Stop();
             }
         }
 
@@ -126,7 +141,7 @@ namespace OuterDriver {
             String request = acceptedRequest.request;
             String content = acceptedRequest.content;
             if (Parser.ShouldProxy(request))
-                responseBody = phoneRequester.SendRequest(Parser.GetRequestUrn(request), content);
+                responseBody = _phoneRequester.SendRequest(Parser.GetRequestUrn(request), content);
             else
                 responseBody = HandleLocalRequest(acceptedRequest);
 
@@ -144,13 +159,15 @@ namespace OuterDriver {
             String command = Parser.GetRequestCommand(request);
             switch (command) {
                 case "session":
-                    String innerIp = InitializeApplication();
+                    var desiredCapabilities = ParseDesiredCapabilitiesJson(content);
+                    var innerIp = InitializeApplication(desiredCapabilities["app"].ToString());
                     //Console.WriteLine("Enter inner driver ip");
                     //String innerIp = Console.ReadLine();
+                    
                     Console.WriteLine("Inner ip: " + innerIp);
-                    phoneRequester = new Requester(innerIp, innerPort);
-                    String jsonResponse = Responder.CreateJsonResponse(sessionId,
-                        ResponseStatus.Sucess, new JsonCapabilities("WinPhone"));
+                    _phoneRequester = new Requester(innerIp, innerPort);
+                    var jsonResponse = Responder.CreateJsonResponse(sessionId,
+                        ResponseStatus.Sucess, desiredCapabilities);
                     responseBody = jsonResponse;
                     break;
 
@@ -164,7 +181,7 @@ namespace OuterDriver {
                         value = value.Where(val => val != ENTER).ToArray();
                     }
                     JsonValueContent newContent = new JsonValueContent(oldContent.sessionId, oldContent.id, value);
-                    responseBody = phoneRequester.SendRequest(Parser.GetRequestUrn(request), JsonConvert.SerializeObject(newContent));
+                    responseBody = _phoneRequester.SendRequest(Parser.GetRequestUrn(request), JsonConvert.SerializeObject(newContent));
                     if (needToClickEnter)
                         OuterDriver.ClickEnter();
                     break;
@@ -175,7 +192,7 @@ namespace OuterDriver {
                     Point coordinates = new Point();
                     if (elementId != null) {
                         String locationRequest = "/session/" + sessionId + "/element/" + elementId + "/location";
-                        String locationResponse = phoneRequester.SendRequest(locationRequest, String.Empty);
+                        String locationResponse = _phoneRequester.SendRequest(locationRequest, String.Empty);
                         JsonResponse JsonResponse = JsonConvert.DeserializeObject<JsonResponse>(locationResponse);
                         Dictionary<String, String> values = JsonConvert.DeserializeObject<Dictionary<String, String>>(JsonResponse.value.ToString());
                         coordinates.X = Convert.ToInt32(values["x"]);
@@ -194,7 +211,7 @@ namespace OuterDriver {
                         OuterDriver.ClickLeftMouseButton();
                         break;
                     }
-                    responseBody = phoneRequester.SendRequest(Parser.GetRequestUrn(request), content);
+                    responseBody = _phoneRequester.SendRequest(Parser.GetRequestUrn(request), content);
                     JsonResponse response = JsonConvert.DeserializeObject<JsonResponse>(responseBody);
                     var clickValue = (String)response.value;
                     if (clickValue != null) {
@@ -230,16 +247,44 @@ namespace OuterDriver {
             return responseBody;
         }
 
-        private String InitializeApplication() {
+        private String InitializeApplication(string appPath) {
             String appId = "69b4ce34-a3e0-414a-92d9-1302449f587c";
             var deployer = new Deployer(appId);
-            deployer.Deploy();
+            deployer.Deploy(appPath);
             String ip = deployer.ReceiveIpAddress();
             return ip;
         }
 
-        public void StopListening() {
-            listener.Stop();
+        public void StopListening()
+        {
+            _listener.Stop();
+        }
+
+        static private Dictionary<string, object> ParseDesiredCapabilitiesJson(string content)
+        {
+            // Pares Json and returns dictionary of supported capabilities and thier values (or default values if not set)
+            var supportedCapabilities = new Dictionary<string, object>() { { "app", string.Empty }, {"platform", "WinPhone"} };
+            var actualCapabilities = new Dictionary<string, object>();
+            var parsedContent = JObject.Parse(content);
+            var dcToken = parsedContent["desiredCapabilities"];
+            if (dcToken != null)
+            {
+                var desiredCapablilities = dcToken.ToObject<Dictionary<string, object>>();
+                foreach (var capability in supportedCapabilities)
+                {
+                    object value = null;
+                    if (!desiredCapablilities.TryGetValue(capability.Key, out value))
+                    {
+                        value = capability.Value;
+                    }
+                    actualCapabilities.Add(capability.Key, value);
+                }
+            }
+            else
+            {
+                actualCapabilities = supportedCapabilities;
+            }
+            return actualCapabilities;
         }
 
     }
