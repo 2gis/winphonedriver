@@ -17,11 +17,16 @@ namespace OuterDriver {
         private readonly String _deviceId = "5E7661DF-D928-40ff-B747-A4B1957194F9";
 
         public Deployer(String appIdString) {
-            this._appIdString = appIdString;
+            _appIdString = appIdString;
+            // TODO: Replace fixed current LCID with locale from desired capabiltites if possible
             var connectivity = new MultiTargetingConnectivity(CultureInfo.CurrentUICulture.LCID);
             var devices = connectivity.GetConnectableDevices(false);
             // TODO: Replace with searching based on desired capabilities
-            var device = devices.FirstOrDefault(x => x.IsEmulator() && x.Name.Equals("Emulator WVGA 512MB"));
+            const string desiredDevice = "Emulator WVGA 512MB";
+            var defaultDevice = connectivity.GetConnectableDevice(_deviceId); // Temporary solution until WP8.1 worked out
+            // var defaultDevice = connectivity.GetConnectableDevice(connectivity.GetDefaultDeviceId());
+            // Probably will have to replace with x.Name.StartsWith() due to device name ending with locale, e.g. ...(RU)
+            var device = devices.FirstOrDefault(x => x.IsEmulator() && x.Name.Equals(desiredDevice)) ?? defaultDevice;
             if (device != null)
             {
                 _deviceId = device.Id;
@@ -29,13 +34,13 @@ namespace OuterDriver {
             }
 
             var connectableDevice = connectivity.GetConnectableDevice(_deviceId);
-            this._iDevice = connectableDevice.Connect();
+            _iDevice = connectableDevice.Connect();
         }
 
         public void Deploy(string appPath ) {
 
             // Check if the application is already install, if it is remove it (From WMAppManifect.xml)
-            Guid appID = new Guid(_appIdString);
+            var appID = new Guid(_appIdString);
 
             if (_iDevice.IsApplicationInstalled(appID)) {
                 Console.WriteLine("Uninstalling application...");
@@ -94,9 +99,15 @@ namespace OuterDriver {
             IRemoteApplication remoteApplication = _iDevice.GetApplication(new Guid(_appIdString));
             // TODO: Chekc if winphone 8.1 and switch ip to host, otherwise request ip address iDevice.GetSystemInfo()
             // See social.msdn.microsoft.com/Forums/sqlserver/en-US/8902939b-233f-4075-99c3-5856f7e6ca6e/windows-phone-81-emulator-no-longer-uses-dhcp?forum=wpdevelop
+            /* TODO: Find better solution. Use something like RemoteAgent to exchange data or something like:
+            string pSourceIp, pDestinationIp;
+            int destinationPort;
+            _iDevice.GetEndPoints(9998, out pSourceIp, out pDestinationIp, out destinationPort); // looks like port value can be replaced with any value
+             // chances are it does not work correctly in some cases (check through RDP)
+            */
 
             IRemoteIsolatedStorageFile remoteIsolatedStorageFile = remoteApplication.GetIsolatedStore("Local");
-            String sourceDeviceFilePath = (object)Path.DirectorySeparatorChar + "ip.txt";
+            var sourceDeviceFilePath = (object)Path.DirectorySeparatorChar + "ip.txt";
             const String targetDesktopFilePath = @"C:\test\" + "test.txt";
             if (remoteIsolatedStorageFile.FileExists(sourceDeviceFilePath)) {
                 remoteIsolatedStorageFile.ReceiveFile(sourceDeviceFilePath, targetDesktopFilePath, true);
