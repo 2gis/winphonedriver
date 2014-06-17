@@ -10,6 +10,7 @@ using System.Web.Script.Serialization;
 using System.Windows.Forms.VisualStyles;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using OuterDriver.EmulatorHelpers;
 
 namespace OuterDriver {
 
@@ -79,6 +80,9 @@ namespace OuterDriver {
         private TcpListener _listener;
         private Requester _phoneRequester;
         private readonly int _listeningPort;
+
+        private EmulatorInputController _inputController;
+        private Deployer _deployer;
 
         public Listener(int listeningPort) {
             this._listeningPort = listeningPort;
@@ -183,7 +187,9 @@ namespace OuterDriver {
                     JsonValueContent newContent = new JsonValueContent(oldContent.sessionId, oldContent.id, value);
                     responseBody = _phoneRequester.SendRequest(Parser.GetRequestUrn(request), JsonConvert.SerializeObject(newContent));
                     if (needToClickEnter)
-                        OuterDriver.ClickEnter();
+                    {
+                        _inputController.ClickEnterKey();
+                    }
                     break;
 
                 case "moveto":
@@ -201,14 +207,14 @@ namespace OuterDriver {
                     else {
                         coordinates = new Point(Int32.Parse(moveToContent.xOffset), Int32.Parse(moveToContent.yOffset));
                     }
-                    OuterDriver.MoveCursorToEmulatorCoordinates(coordinates);
+                    _inputController.MoveCursorToPhoneScreenAtPoint(coordinates);
                     break;
 
                 case "click":
                     int requestLength = Parser.GetRequestLength(request);
                     if (requestLength == 3) {
                         //simple click command without element
-                        OuterDriver.ClickLeftMouseButton();
+                        _inputController.LeftClick();
                         break;
                     }
                     responseBody = _phoneRequester.SendRequest(Parser.GetRequestUrn(request), content);
@@ -216,27 +222,30 @@ namespace OuterDriver {
                     var clickValue = (String)response.value;
                     if (clickValue != null) {
                         String[] clickCoordinatesArray = ((String)clickValue).Split(':');
-                        int xOffset = Convert.ToInt32(clickCoordinatesArray[0]);
-                        int yOffset = Convert.ToInt32(clickCoordinatesArray[1]);
-                        Point point = new Point(xOffset, yOffset);
-                        OuterDriver.ClickEmulatorScreenPoint(point);
+                        var xOffset = Convert.ToInt32(clickCoordinatesArray[0]);
+                        var yOffset = Convert.ToInt32(clickCoordinatesArray[1]);
+                        var point = new Point(xOffset, yOffset);
+                        _inputController.LeftClickPhoneScreenAtPoint(point);
                         Console.WriteLine("Coordinates: " + xOffset + " " + yOffset);
                         responseBody = String.Empty;
                     }
                     break;
 
                 case "buttondown":
-                    OuterDriver.ButtonDown();
+                    _inputController.LeftButtonDown();
                     break;
 
                 case "buttonup":
-                    OuterDriver.ButtonUp();
+                    _inputController.LeftButtonUp();
                     break;
 
                 case "keys":
                     jsonValue = Parser.GetKeysString(content);
                     if (jsonValue.Equals(ENTER))
-                        OuterDriver.ClickEnter();
+                    {
+                        _inputController.ClickEnterKey();
+                        
+                    }
                     break;
 
                 default:
@@ -249,9 +258,12 @@ namespace OuterDriver {
 
         private String InitializeApplication(string appPath) {
             String appId = "69b4ce34-a3e0-414a-92d9-1302449f587c";
-            var deployer = new Deployer(appId);
-            deployer.Deploy(appPath);
-            String ip = deployer.ReceiveIpAddress();
+            _deployer = new Deployer(appId);
+            _deployer.Deploy(appPath);
+            String ip = _deployer.ReceiveIpAddress();
+            Console.WriteLine("Dev Name "+_deployer.DeviceName);
+            _inputController = new EmulatorInputController(_deployer.DeviceName);
+
             return ip;
         }
 
@@ -262,7 +274,7 @@ namespace OuterDriver {
 
         static private Dictionary<string, object> ParseDesiredCapabilitiesJson(string content)
         {
-            // Pares Json and returns dictionary of supported capabilities and thier values (or default values if not set)
+            // Parse JSON and returns dictionary of supported capabilities and their values (or default values if not set)
             var supportedCapabilities = new Dictionary<string, object>() { { "app", string.Empty }, {"platform", "WinPhone"} };
             var actualCapabilities = new Dictionary<string, object>();
             var parsedContent = JObject.Parse(content);

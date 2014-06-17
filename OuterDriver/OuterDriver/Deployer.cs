@@ -16,9 +16,13 @@ namespace OuterDriver {
         private readonly String _appIdString;
         private readonly String _deviceId = "5E7661DF-D928-40ff-B747-A4B1957194F9";
 
+        public string DeviceName {
+            get { return _iDevice != null? _iDevice.Name : string.Empty; }
+        }
+
         public Deployer(String appIdString) {
             _appIdString = appIdString;
-            // TODO: Replace fixed current LCID with locale from desired capabiltites if possible
+            // TODO: Replace fixed current LCID with locale from desired capabilities if possible
             var connectivity = new MultiTargetingConnectivity(CultureInfo.CurrentUICulture.LCID);
             var devices = connectivity.GetConnectableDevices(false);
             // TODO: Replace with searching based on desired capabilities
@@ -26,7 +30,7 @@ namespace OuterDriver {
             var defaultDevice = connectivity.GetConnectableDevice(_deviceId); // Temporary solution until WP8.1 worked out
             // var defaultDevice = connectivity.GetConnectableDevice(connectivity.GetDefaultDeviceId());
             // Probably will have to replace with x.Name.StartsWith() due to device name ending with locale, e.g. ...(RU)
-            var device = devices.FirstOrDefault(x => x.IsEmulator() && x.Name.Equals(desiredDevice)) ?? defaultDevice;
+            var device = devices.FirstOrDefault(x => x.IsEmulator() && x.Name.StartsWith(desiredDevice)) ?? defaultDevice;
             if (device != null)
             {
                 _deviceId = device.Id;
