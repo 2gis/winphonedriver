@@ -83,6 +83,7 @@ namespace OuterDriver {
 
         private EmulatorInputController _inputController;
         private Deployer _deployer;
+        private Dictionary<string, object> _desiredCapabilities;
 
         public Listener(int listeningPort) {
             this._listeningPort = listeningPort;
@@ -163,15 +164,15 @@ namespace OuterDriver {
             String command = Parser.GetRequestCommand(request);
             switch (command) {
                 case "session":
-                    var desiredCapabilities = ParseDesiredCapabilitiesJson(content);
-                    var innerIp = InitializeApplication(desiredCapabilities["app"].ToString());
+                    _desiredCapabilities = ParseDesiredCapabilitiesJson(content);
+                    var innerIp = InitializeApplication();
                     //Console.WriteLine("Enter inner driver ip");
                     //String innerIp = Console.ReadLine();
                     
                     Console.WriteLine("Inner ip: " + innerIp);
                     _phoneRequester = new Requester(innerIp, innerPort);
                     var jsonResponse = Responder.CreateJsonResponse(sessionId,
-                        ResponseStatus.Sucess, desiredCapabilities);
+                        ResponseStatus.Sucess, _desiredCapabilities);
                     responseBody = jsonResponse;
                     break;
 
@@ -256,13 +257,19 @@ namespace OuterDriver {
             return responseBody;
         }
 
-        private String InitializeApplication(string appPath) {
-            String appId = "69b4ce34-a3e0-414a-92d9-1302449f587c";
+        private String InitializeApplication()
+        {
+            var appPath = _desiredCapabilities["app"].ToString();
+            // TODO: There must be a way to get rid of hard coded app id
+            const string appId = "69b4ce34-a3e0-414a-92d9-1302449f587c";
             _deployer = new Deployer(appId);
             _deployer.Deploy(appPath);
             String ip = _deployer.ReceiveIpAddress();
             Console.WriteLine("Dev Name "+_deployer.DeviceName);
-            _inputController = new EmulatorInputController(_deployer.DeviceName);
+            _inputController = new EmulatorInputController(_deployer.DeviceName)
+            {
+                MouseMovmentSmoothing = Convert.ToInt32(_desiredCapabilities["emulatorMouseDelay"])
+            };
 
             return ip;
         }
@@ -275,7 +282,7 @@ namespace OuterDriver {
         static private Dictionary<string, object> ParseDesiredCapabilitiesJson(string content)
         {
             // Parse JSON and returns dictionary of supported capabilities and their values (or default values if not set)
-            var supportedCapabilities = new Dictionary<string, object>() { { "app", string.Empty }, {"platform", "WinPhone"} };
+            var supportedCapabilities = new Dictionary<string, object>() { { "app", string.Empty }, {"platform", "WinPhone"}, {"emulatorMouseDelay", 0} };
             var actualCapabilities = new Dictionary<string, object>();
             var parsedContent = JObject.Parse(content);
             var dcToken = parsedContent["desiredCapabilities"];
