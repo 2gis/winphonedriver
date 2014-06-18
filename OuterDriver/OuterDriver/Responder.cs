@@ -24,7 +24,7 @@ namespace OuterDriver {
                 writer.Close();
             }
             catch (Exception ex) {
-                Console.WriteLine("Exception occured " + ex.Message);
+                Console.WriteLine("Exception occurred " + ex.Message);
             }
         }
 

@@ -13,16 +13,18 @@ using Newtonsoft.Json.Linq;
 using OuterDriver.AutomationExceptions;
 using OuterDriver.EmulatorHelpers;
 
-namespace OuterDriver {
-
-    public class Listener {
-
-        private class AcceptedRequest {
+namespace OuterDriver
+{
+    public class Listener
+    {
+        private class AcceptedRequest
+        {
             public String request { get; set; }
             public Dictionary<String, String> headers { get; set; }
             public String content { get; set; }
 
-            public void AcceptRequest(NetworkStream stream) {
+            public void AcceptRequest(NetworkStream stream)
+            {
                 //read HTTP request
                 this.request = ReadString(stream);
                 Console.WriteLine("Request: " + request);
@@ -34,21 +36,25 @@ namespace OuterDriver {
                 this.content = ReadContent(stream, headers);
             }
 
-            private string ReadContent(NetworkStream stream, Dictionary<String, String> headers) {
+            private string ReadContent(NetworkStream stream, Dictionary<String, String> headers)
+            {
                 String contentLengthString;
                 bool hasContentLength = headers.TryGetValue("Content-Length", out contentLengthString);
                 String content = "";
-                if (hasContentLength) {
+                if (hasContentLength)
+                {
                     content = ReadContent(stream, Convert.ToInt32(contentLengthString));
                     Console.WriteLine("Content: " + content);
                 }
                 return content;
             }
 
-            private Dictionary<String, String> ReadHeaders(NetworkStream stream) {
+            private Dictionary<String, String> ReadHeaders(NetworkStream stream)
+            {
                 var headers = new Dictionary<String, String>();
                 String header;
-                while (!String.IsNullOrEmpty(header = ReadString(stream))) {
+                while (!String.IsNullOrEmpty(header = ReadString(stream)))
+                {
                     String[] splitHeader;
                     splitHeader = header.Split(':');
                     headers.Add(splitHeader[0], splitHeader[1].Trim(' '));
@@ -57,25 +63,33 @@ namespace OuterDriver {
             }
 
             //reads the content of a request depending on its length
-            private String ReadContent(NetworkStream s, int contentLength) {
+            private String ReadContent(NetworkStream s, int contentLength)
+            {
                 Byte[] readBuffer = new Byte[contentLength];
                 int readBytes = s.Read(readBuffer, 0, readBuffer.Length);
                 return System.Text.Encoding.ASCII.GetString(readBuffer, 0, readBytes);
             }
 
-            private String ReadString(NetworkStream stream) {
+            private String ReadString(NetworkStream stream)
+            {
                 //StreamReader reader = new StreamReader(stream);
                 int nextChar;
                 String data = "";
-                while (true) {
+                while (true)
+                {
                     nextChar = stream.ReadByte();
-                    if (nextChar == '\n') { break; }
-                    if (nextChar == '\r') { continue; }
+                    if (nextChar == '\n')
+                    {
+                        break;
+                    }
+                    if (nextChar == '\r')
+                    {
+                        continue;
+                    }
                     data += Convert.ToChar(nextChar);
                 }
                 return data;
             }
-
         }
 
         private TcpListener _listener;
@@ -85,14 +99,16 @@ namespace OuterDriver {
         private EmulatorInputController _inputController;
         private Deployer _deployer;
         private Dictionary<string, object> _desiredCapabilities;
+        private IPAddress _localAddr;
 
-        public Listener(int listeningPort) {
+        public Listener(int listeningPort)
+        {
             this._listeningPort = listeningPort;
         }
 
         public IPAddress IpAddress()
         {
-            var endPoint = (IPEndPoint)_listener.LocalEndpoint;
+            var endPoint = (IPEndPoint) _listener.LocalEndpoint;
             return endPoint.Address;
         }
 
@@ -101,16 +117,19 @@ namespace OuterDriver {
             return _listeningPort;
         }
 
-        public void StartListening() {
-            try {
-                IPAddress localAddr = IPAddress.Parse(OuterServer.FindIpAddress());
-                _listener = new TcpListener(localAddr, this._listeningPort);
+        public void StartListening()
+        {
+            try
+            {
+                _localAddr = IPAddress.Parse(OuterServer.FindIpAddress());
+                _listener = new TcpListener(_localAddr, this._listeningPort);
 
                 // Start listening for client requests.
                 _listener.Start();
 
                 // Enter the listening loop
-                while (true) {
+                while (true)
+                {
                     Console.Write("Waiting for a connection... ");
 
                     // Perform a blocking call to accept requests. 
@@ -133,16 +152,19 @@ namespace OuterDriver {
                     Console.WriteLine("Client closed\n");
                 }
             }
-            catch (SocketException ex) {
+            catch (SocketException ex)
+            {
                 Console.WriteLine("SocketException: {0}", ex);
             }
-            finally {
+            finally
+            {
                 // Stop listening for new clients.
                 _listener.Stop();
             }
         }
 
-        private String HandleRequest(AcceptedRequest acceptedRequest) {
+        private String HandleRequest(AcceptedRequest acceptedRequest)
+        {
             String responseBody = String.Empty;
             String request = acceptedRequest.request;
             String content = acceptedRequest.content;
@@ -154,7 +176,8 @@ namespace OuterDriver {
             return responseBody;
         }
 
-        private String HandleLocalRequest(AcceptedRequest acceptedRequest) {
+        private String HandleLocalRequest(AcceptedRequest acceptedRequest)
+        {
             String responseBody = String.Empty;
             String jsonValue = String.Empty;
             String ENTER = "\ue007";
@@ -165,101 +188,115 @@ namespace OuterDriver {
             String command = Parser.GetRequestCommand(request);
             try
             {
-                switch (command) {
-                case "session":
-                    _desiredCapabilities = ParseDesiredCapabilitiesJson(content);
-                    var innerIp = InitializeApplication();
-                    
-                    Console.WriteLine("Inner ip: " + innerIp);
-                    _phoneRequester = new Requester(innerIp, innerPort);
-                    var jsonResponse = Responder.CreateJsonResponse(sessionId,
-                        ResponseStatus.Sucess, _desiredCapabilities);
-                    responseBody = jsonResponse;
-                    break;
-
-                //if the text has the ENTER command in it, execute it after sending the rest of the text to the inner driver
-                case "value":
-                    bool needToClickEnter = false;
-                    JsonValueContent oldContent = JsonConvert.DeserializeObject<JsonValueContent>(content);
-                    String[] value = oldContent.GetValue();
-                    if (value.Contains(ENTER)) {
-                        needToClickEnter = true;
-                        value = value.Where(val => val != ENTER).ToArray();
-                    }
-                    JsonValueContent newContent = new JsonValueContent(oldContent.sessionId, oldContent.id, value);
-                    responseBody = _phoneRequester.SendRequest(Parser.GetRequestUrn(request), JsonConvert.SerializeObject(newContent));
-                    if (needToClickEnter)
-                    {
-                        _inputController.ClickEnterKey();
-                    }
-                    break;
-
-                case "moveto":
-                    JsonMovetoContent moveToContent = JsonConvert.DeserializeObject<JsonMovetoContent>(content);
-                    String elementId = moveToContent.element;
-                    Point coordinates = new Point();
-                    if (elementId != null) {
-                        String locationRequest = "/session/" + sessionId + "/element/" + elementId + "/location";
-                        String locationResponse = _phoneRequester.SendRequest(locationRequest, String.Empty);
-                        JsonResponse JsonResponse = JsonConvert.DeserializeObject<JsonResponse>(locationResponse);
-                        Dictionary<String, String> values = JsonConvert.DeserializeObject<Dictionary<String, String>>(JsonResponse.value.ToString());
-                        coordinates.X = Convert.ToInt32(values["x"]);
-                        coordinates.Y = Convert.ToInt32(values["y"]);
-                    }
-                    else {
-                        coordinates = new Point(Int32.Parse(moveToContent.xOffset), Int32.Parse(moveToContent.yOffset));
-                    }
-                    _inputController.MoveCursorToPhoneScreenAtPoint(coordinates);
-                    break;
-
-                case "click":
-                    int requestLength = Parser.GetRequestLength(request);
-                    if (requestLength == 3) {
-                        //simple click command without element
-                        _inputController.LeftClick();
-                        break;
-                    }
-                    responseBody = _phoneRequester.SendRequest(Parser.GetRequestUrn(request), content);
-                    JsonResponse response = JsonConvert.DeserializeObject<JsonResponse>(responseBody);
-                    var clickValue = (String)response.value;
-                    if (clickValue != null) {
-                        String[] clickCoordinatesArray = ((String)clickValue).Split(':');
-                        var xOffset = Convert.ToInt32(clickCoordinatesArray[0]);
-                        var yOffset = Convert.ToInt32(clickCoordinatesArray[1]);
-                        var point = new Point(xOffset, yOffset);
-                        _inputController.LeftClickPhoneScreenAtPoint(point);
-                        Console.WriteLine("Coordinates: " + xOffset + " " + yOffset);
-                        responseBody = String.Empty;
-                    }
-                    break;
-
-                case "buttondown":
-                    _inputController.LeftButtonDown();
-                    break;
-
-                case "buttonup":
-                    _inputController.LeftButtonUp();
-                    break;
-
-                case "keys":
-                    jsonValue = Parser.GetKeysString(content);
-                    if (jsonValue.Equals(ENTER))
-                    {
-                        _inputController.ClickEnterKey();
+                switch (command)
+                {
+                    case "session":
+                        _desiredCapabilities = ParseDesiredCapabilitiesJson(content);
+                        var innerIp = InitializeApplication();
                         
-                    }
-                    break;
 
-                default:
-                    Console.WriteLine("Not proxying. Unimplemented");
-                    responseBody = "Success";
-                    break;
-            }
+                        Console.WriteLine("Inner ip: " + innerIp);
+                        _phoneRequester = new Requester(innerIp, innerPort);
+                        var jsonResponse = Responder.CreateJsonResponse(sessionId,
+                            ResponseStatus.Sucess, _desiredCapabilities);
+                        responseBody = jsonResponse;
+                        break;
+
+                        //if the text has the ENTER command in it, execute it after sending the rest of the text to the inner driver
+                    case "value":
+                        bool needToClickEnter = false;
+                        JsonValueContent oldContent = JsonConvert.DeserializeObject<JsonValueContent>(content);
+                        String[] value = oldContent.GetValue();
+                        if (value.Contains(ENTER))
+                        {
+                            needToClickEnter = true;
+                            value = value.Where(val => val != ENTER).ToArray();
+                        }
+                        JsonValueContent newContent = new JsonValueContent(oldContent.sessionId, oldContent.id, value);
+                        responseBody = _phoneRequester.SendRequest(Parser.GetRequestUrn(request),
+                            JsonConvert.SerializeObject(newContent));
+                        if (needToClickEnter)
+                        {
+                            _inputController.ClickEnterKey();
+                        }
+                        break;
+
+                    case "moveto":
+                        JsonMovetoContent moveToContent = JsonConvert.DeserializeObject<JsonMovetoContent>(content);
+                        String elementId = moveToContent.element;
+                        Point coordinates = new Point();
+                        if (elementId != null)
+                        {
+                            String locationRequest = "/session/" + sessionId + "/element/" + elementId + "/location";
+                            String locationResponse = _phoneRequester.SendRequest(locationRequest, String.Empty);
+                            JsonResponse JsonResponse = JsonConvert.DeserializeObject<JsonResponse>(locationResponse);
+                            Dictionary<String, String> values =
+                                JsonConvert.DeserializeObject<Dictionary<String, String>>(JsonResponse.value.ToString());
+                            coordinates.X = Convert.ToInt32(values["x"]);
+                            coordinates.Y = Convert.ToInt32(values["y"]);
+                        }
+                        else
+                        {
+                            coordinates = new Point(Int32.Parse(moveToContent.xOffset),
+                                Int32.Parse(moveToContent.yOffset));
+                        }
+                        _inputController.MoveCursorToPhoneScreenAtPoint(coordinates);
+                        break;
+
+                    case "click":
+                        int requestLength = Parser.GetRequestLength(request);
+                        if (requestLength == 3)
+                        {
+                            //simple click command without element
+                            _inputController.LeftClick();
+                            break;
+                        }
+                        responseBody = _phoneRequester.SendRequest(Parser.GetRequestUrn(request), content);
+                        JsonResponse response = JsonConvert.DeserializeObject<JsonResponse>(responseBody);
+                        var clickValue = (String) response.value;
+                        if (clickValue != null)
+                        {
+                            String[] clickCoordinatesArray = ((String) clickValue).Split(':');
+                            var xOffset = Convert.ToInt32(clickCoordinatesArray[0]);
+                            var yOffset = Convert.ToInt32(clickCoordinatesArray[1]);
+                            var point = new Point(xOffset, yOffset);
+                            _inputController.LeftClickPhoneScreenAtPoint(point);
+                            Console.WriteLine("Coordinates: " + xOffset + " " + yOffset);
+                            responseBody = String.Empty;
+                        }
+                        break;
+
+                    case "buttondown":
+                        _inputController.LeftButtonDown();
+                        break;
+
+                    case "buttonup":
+                        _inputController.LeftButtonUp();
+                        break;
+
+                    case "keys":
+                        jsonValue = Parser.GetKeysString(content);
+                        if (jsonValue.Equals(ENTER))
+                        {
+                            _inputController.ClickEnterKey();
+                        }
+                        break;
+
+                    default:
+                        Console.WriteLine("Not proxying. Unimplemented");
+                        responseBody = "Success";
+                        break;
+                }
             }
             catch (MoveTargetOutOfBoundsException ex)
             {
                 responseBody = Responder.CreateJsonResponse(sessionId,
                     ResponseStatus.MoveTargetOutOfBounds, ex.Message);
+            }
+            catch (AutomationException ex)
+            {
+                responseBody = Responder.CreateJsonResponse(sessionId,
+                    ResponseStatus.UnknownError, ex.Message);
             }
             return responseBody;
         }
@@ -269,14 +306,19 @@ namespace OuterDriver {
             var appPath = _desiredCapabilities["app"].ToString();
             // TODO: There must be a way to get rid of hard coded app id
             const string appId = "69b4ce34-a3e0-414a-92d9-1302449f587c";
-            _deployer = new Deployer(appId);
-            _deployer.Deploy(appPath);
-            String ip = _deployer.ReceiveIpAddress();
-            Console.WriteLine("Dev Name "+_deployer.DeviceName);
+            _deployer = new Deployer(_desiredCapabilities["deviceName"].ToString());
+            _deployer.Deploy(appPath, appId, Convert.ToInt32(_desiredCapabilities["launchDelay"]));
+            var ip = _deployer.ReceiveIpAddress();
+            Console.WriteLine("Dev Name " + _deployer.DeviceName);
             _inputController = new EmulatorInputController(_deployer.DeviceName)
             {
                 MouseMovmentSmoothing = Convert.ToInt32(_desiredCapabilities["emulatorMouseDelay"])
             };
+
+            if (String.IsNullOrEmpty(ip))
+            {
+                ip = _localAddr.ToString();
+            }
 
             return ip;
         }
@@ -286,10 +328,17 @@ namespace OuterDriver {
             _listener.Stop();
         }
 
-        static private Dictionary<string, object> ParseDesiredCapabilitiesJson(string content)
+        private static Dictionary<string, object> ParseDesiredCapabilitiesJson(string content)
         {
             // Parses JSON and returns dictionary of supported capabilities and their values (or default values if not set)
-            var supportedCapabilities = new Dictionary<string, object>() { { "app", string.Empty }, {"platform", "WinPhone"}, {"emulatorMouseDelay", 0} };
+            var supportedCapabilities = new Dictionary<string, object>()
+            {
+                {"app", string.Empty},
+                {"platform", "WinPhone"},
+                {"emulatorMouseDelay", 0},
+                {"deviceName", string.Empty},
+                {"launchDelay", 3500},
+            };
             var actualCapabilities = new Dictionary<string, object>();
             var parsedContent = JObject.Parse(content);
             var dcToken = parsedContent["desiredCapabilities"];
@@ -312,7 +361,5 @@ namespace OuterDriver {
             }
             return actualCapabilities;
         }
-
     }
-
 }
