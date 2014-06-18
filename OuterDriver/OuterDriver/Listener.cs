@@ -10,6 +10,7 @@ using System.Web.Script.Serialization;
 using System.Windows.Forms.VisualStyles;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using OuterDriver.AutomationExceptions;
 using OuterDriver.EmulatorHelpers;
 
 namespace OuterDriver {
@@ -162,12 +163,12 @@ namespace OuterDriver {
             String request = acceptedRequest.request;
             String content = acceptedRequest.content;
             String command = Parser.GetRequestCommand(request);
-            switch (command) {
+            try
+            {
+                switch (command) {
                 case "session":
                     _desiredCapabilities = ParseDesiredCapabilitiesJson(content);
                     var innerIp = InitializeApplication();
-                    //Console.WriteLine("Enter inner driver ip");
-                    //String innerIp = Console.ReadLine();
                     
                     Console.WriteLine("Inner ip: " + innerIp);
                     _phoneRequester = new Requester(innerIp, innerPort);
@@ -254,6 +255,12 @@ namespace OuterDriver {
                     responseBody = "Success";
                     break;
             }
+            }
+            catch (MoveTargetOutOfBoundsException ex)
+            {
+                responseBody = Responder.CreateJsonResponse(sessionId,
+                    ResponseStatus.MoveTargetOutOfBounds, ex.Message);
+            }
             return responseBody;
         }
 
@@ -281,7 +288,7 @@ namespace OuterDriver {
 
         static private Dictionary<string, object> ParseDesiredCapabilitiesJson(string content)
         {
-            // Parse JSON and returns dictionary of supported capabilities and their values (or default values if not set)
+            // Parses JSON and returns dictionary of supported capabilities and their values (or default values if not set)
             var supportedCapabilities = new Dictionary<string, object>() { { "app", string.Empty }, {"platform", "WinPhone"}, {"emulatorMouseDelay", 0} };
             var actualCapabilities = new Dictionary<string, object>();
             var parsedContent = JObject.Parse(content);

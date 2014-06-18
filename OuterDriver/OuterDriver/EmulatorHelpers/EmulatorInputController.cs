@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
+using OuterDriver.AutomationExceptions;
 
 namespace OuterDriver.EmulatorHelpers
 {
@@ -32,7 +33,7 @@ namespace OuterDriver.EmulatorHelpers
                 if (isXdeOfInterest)
                 {
                     wnds.TryGetValue("XDE", out _xdeHandle);
-                        // Host XDE window, which allows determining Emulator screen size in terms of host screen
+                    // Host XDE window, which allows determining Emulator screen size in terms of host screen
                     _wpHandle =
                         NativeHelpers.GetChildWindowsFromHwnd(_xdeHandle)
                             .FirstOrDefault(x => x.Key.Equals("Output Painter Window"))
@@ -43,10 +44,17 @@ namespace OuterDriver.EmulatorHelpers
             }
         }
 
-        public void MoveCursorToPhoneScreenAtPoint(Point clientPoint)
+        public void MoveCursorToPhoneScreenAtPoint(Point phonePoint)
         {
             SwitchToEmulator();
-            var hostPoint = TranslatePhonePointToHostPoint(clientPoint);
+
+            var hostPoint = TranslatePhonePointToHostPoint(phonePoint);
+            if (!PhonePointVisibleOnScreen(phonePoint))
+            {
+                throw new MoveTargetOutOfBoundsException(String.Format(
+                    "Location {0}:{1} is out of phone screen bounds {2}:{3}. Scroll into view before clicking.", phonePoint.X,
+                    phonePoint.Y, PhoneScreenSize().Width, PhoneScreenSize().Height));
+            }
             LinearSmoothMoveCursorToHostAtPoint(new Point(hostPoint.X, hostPoint.Y));
         }
 
@@ -99,6 +107,12 @@ namespace OuterDriver.EmulatorHelpers
         {
             var screen = PhoneScreenSize();
             return screen.Width > screen.Height ? PhoneOrientation.Landscape : PhoneOrientation.Portrait;
+        }
+
+        public bool PhonePointVisibleOnScreen(Point phonePoint)
+        {
+            var phoneScreen = new Rectangle(new Point(0, 0), PhoneScreenSize());
+            return phoneScreen.Contains(phonePoint);
         }
 
         private Point TranslatePhonePointToHostPoint(Point phonePoint)
