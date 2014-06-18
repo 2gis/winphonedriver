@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 
 namespace OuterDriver {
     class OuterServer {
@@ -19,16 +20,16 @@ namespace OuterDriver {
             return requester.SendRequest(uri, String.Empty);
         }
 
-        public static String FindIPAddress() {
-            IPHostEntry host;
-            string localIP = "?";
-            host = Dns.GetHostEntry(Dns.GetHostName());
+        public static String FindIpAddress() {
+            string localIp = "localhost";
+            IPHostEntry host = Dns.GetHostEntry(Dns.GetHostName());
             foreach (IPAddress ip in host.AddressList) {
-                if (ip.AddressFamily.ToString() == "InterNetwork") {
-                    localIP = ip.ToString();
+                if (ip.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    localIp = ip.ToString();
                 }
             }
-            return localIP;
+            return localIp;
         }
 
     }

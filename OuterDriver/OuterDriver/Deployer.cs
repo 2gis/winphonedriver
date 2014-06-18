@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
 using System.IO;
 
@@ -11,25 +12,43 @@ using System.Globalization;
 namespace OuterDriver {
     class Deployer {
 
-        private IDevice iDevice;
-        private String appIdString;
-        private String Wvga512DeviceId = "5E7661DF-D928-40ff-B747-A4B1957194F9";
+        private readonly IDevice _iDevice;
+        private readonly String _appIdString;
+        private readonly String _deviceId = "5E7661DF-D928-40ff-B747-A4B1957194F9";
 
-        public Deployer(String appIdString) {
-            this.appIdString = appIdString;
-            MultiTargetingConnectivity connectivity = new MultiTargetingConnectivity(CultureInfo.CurrentUICulture.LCID);
-            ConnectableDevice connectableDevice = connectivity.GetConnectableDevice(Wvga512DeviceId);
-            this.iDevice = connectableDevice.Connect();
+        public string DeviceName {
+            get { return _iDevice != null? _iDevice.Name : string.Empty; }
         }
 
-        public void Deploy() {
+        public Deployer(String appIdString) {
+            _appIdString = appIdString;
+            // TODO: Replace fixed current LCID with locale from desired capabilities if possible
+            var connectivity = new MultiTargetingConnectivity(CultureInfo.CurrentUICulture.LCID);
+            var devices = connectivity.GetConnectableDevices(false);
+            // TODO: Replace with searching based on desired capabilities
+            const string desiredDevice = "Emulator WVGA 512MB";
+            var defaultDevice = connectivity.GetConnectableDevice(_deviceId); // Temporary solution until WP8.1 worked out
+            // var defaultDevice = connectivity.GetConnectableDevice(connectivity.GetDefaultDeviceId());
+            // Probably will have to replace with x.Name.StartsWith() due to device name ending with locale, e.g. ...(RU)
+            var device = devices.FirstOrDefault(x => x.IsEmulator() && x.Name.StartsWith(desiredDevice)) ?? defaultDevice;
+            if (device != null)
+            {
+                _deviceId = device.Id;
+                Console.WriteLine("Deploy target: " + device.Name + " id: " + device.Id);
+            }
+
+            var connectableDevice = connectivity.GetConnectableDevice(_deviceId);
+            _iDevice = connectableDevice.Connect();
+        }
+
+        public void Deploy(string appPath ) {
 
             // Check if the application is already install, if it is remove it (From WMAppManifect.xml)
-            Guid appID = new Guid(appIdString);
+            var appID = new Guid(_appIdString);
 
-            if (iDevice.IsApplicationInstalled(appID)) {
+            if (_iDevice.IsApplicationInstalled(appID)) {
                 Console.WriteLine("Uninstalling application...");
-                iDevice.GetApplication(appID).Uninstall();
+                _iDevice.GetApplication(appID).Uninstall();
                 Console.WriteLine("Done!");
             }
 
@@ -37,11 +56,16 @@ namespace OuterDriver {
             Guid instanceId = appID;
             String applicationGenre = "NormalApp";
             String iconPath = @"C:\test\ApplicationIcon.png";
-            String xapPackage = @"C:\test\DoubleGis.WinPhone.App_Release_x86.xap";
+            var xapPackage = appPath;
+            if (String.IsNullOrEmpty(xapPackage))
+            {
+                // TODO: Come up with a reasonable default or throw exception instead 
+                xapPackage = @"C:\test\DoubleGis.WinPhone.App_Release_x86.xap";
+            }
 
             // Install the application 
             Console.WriteLine("Installing the application...");
-            IRemoteApplication remoteApplication = iDevice.InstallApplication(appID, appID, applicationGenre, iconPath, xapPackage);
+            IRemoteApplication remoteApplication = _iDevice.InstallApplication(appID, appID, applicationGenre, iconPath, xapPackage);
 
             Console.WriteLine("Done!");
 
@@ -50,7 +74,7 @@ namespace OuterDriver {
             remoteApplication.Launch();
 
             int startStopWaitTime = 3000;   // msec
-            int executionWaitTime = 5000; // msec
+            // int executionWaitTime = 5000; // msec
 
             // Note that IRemoteApplication has a 'IsRunning' method but it is not implemented.
             // So, for the moment we sleep few msec.
@@ -76,9 +100,18 @@ namespace OuterDriver {
 
         public String ReceiveIpAddress() {
             String ip = String.Empty;
-            IRemoteApplication remoteApplication = iDevice.GetApplication(new Guid(appIdString));
-            IRemoteIsolatedStorageFile remoteIsolatedStorageFile = remoteApplication.GetIsolatedStore();
-            String sourceDeviceFilePath = (object)Path.DirectorySeparatorChar + "ip.txt";
+            IRemoteApplication remoteApplication = _iDevice.GetApplication(new Guid(_appIdString));
+            // TODO: Chekc if winphone 8.1 and switch ip to host, otherwise request ip address iDevice.GetSystemInfo()
+            // See social.msdn.microsoft.com/Forums/sqlserver/en-US/8902939b-233f-4075-99c3-5856f7e6ca6e/windows-phone-81-emulator-no-longer-uses-dhcp?forum=wpdevelop
+            /* TODO: Find better solution. Use something like RemoteAgent to exchange data or something like:
+            string pSourceIp, pDestinationIp;
+            int destinationPort;
+            _iDevice.GetEndPoints(9998, out pSourceIp, out pDestinationIp, out destinationPort); // looks like port value can be replaced with any value
+             // chances are it does not work correctly in some cases (check through RDP)
+            */
+
+            IRemoteIsolatedStorageFile remoteIsolatedStorageFile = remoteApplication.GetIsolatedStore("Local");
+            var sourceDeviceFilePath = (object)Path.DirectorySeparatorChar + "ip.txt";
             const String targetDesktopFilePath = @"C:\test\" + "test.txt";
             if (remoteIsolatedStorageFile.FileExists(sourceDeviceFilePath)) {
                 remoteIsolatedStorageFile.ReceiveFile(sourceDeviceFilePath, targetDesktopFilePath, true);
