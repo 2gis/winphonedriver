@@ -5,8 +5,6 @@ VisualStudioVersion = 12.0.30501.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OuterDriver", "OuterDriver\OuterDriver.csproj", "{3B1E2EBC-6036-4363-A4FD-70EF0679A873}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeployerApp", "Deployer\DeployerApp.csproj", "{43677BA0-7D21-4B9F-B703-C57B80E773E9}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -17,10 +15,6 @@ Global
 		{3B1E2EBC-6036-4363-A4FD-70EF0679A873}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3B1E2EBC-6036-4363-A4FD-70EF0679A873}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3B1E2EBC-6036-4363-A4FD-70EF0679A873}.Release|Any CPU.Build.0 = Release|Any CPU
-		{43677BA0-7D21-4B9F-B703-C57B80E773E9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{43677BA0-7D21-4B9F-B703-C57B80E773E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{43677BA0-7D21-4B9F-B703-C57B80E773E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{43677BA0-7D21-4B9F-B703-C57B80E773E9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

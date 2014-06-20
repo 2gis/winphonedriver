@@ -10,7 +10,7 @@ using OuterDriver.AutomationExceptions;
 
 
 namespace OuterDriver.EmulatorHelpers {
-    public class Deployer {
+    public class Deployer : IDeployer {
 
         private readonly IDevice _iDevice;
         private String _appIdString;
