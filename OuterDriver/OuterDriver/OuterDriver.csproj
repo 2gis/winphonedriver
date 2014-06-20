@@ -61,7 +61,7 @@
   <ItemGroup>
     <Compile Include="AutomationExceptions\AutomationException.cs" />
     <Compile Include="AutomationExceptions\MoveTargetOutOfBoundsException.cs" />
-    <Compile Include="Deployer.cs" />
+    <Compile Include="EmulatorHelpers\Deployer.cs" />
     <Compile Include="EmulatorHelpers\EmulatorInputController.cs" />
     <Compile Include="EmulatorHelpers\NativeHelpers.cs" />
     <Compile Include="JsonCapabilities.cs" />
