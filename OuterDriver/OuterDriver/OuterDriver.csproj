@@ -11,6 +11,7 @@
     <AssemblyName>OuterDriver</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -54,6 +55,7 @@
   <ItemGroup>
     <Reference Include="Microsoft.Phone.Tools.Deploy">
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Microsoft SDKs\Windows Phone\v8.1\Tools\AppDeploy\Microsoft.Phone.Tools.Deploy.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.Smartdevice.Connectivity, Version=12.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -85,7 +87,7 @@
     <Compile Include="AutomationExceptions\AutomationException.cs" />
     <Compile Include="AutomationExceptions\MoveTargetOutOfBoundsException.cs" />
     <Compile Include="EmulatorHelpers\Deployer.cs" />
-    <Compile Include="EmulatorHelpers\DeployerX.cs" />
+    <Compile Include="EmulatorHelpers\Deployer81.cs" />
     <Compile Include="EmulatorHelpers\EmulatorInputController.cs" />
     <Compile Include="EmulatorHelpers\IDeployer.cs" />
     <Compile Include="EmulatorHelpers\NativeHelpers.cs" />

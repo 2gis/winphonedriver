@@ -1,9 +1,10 @@
-﻿// Libraries needed to connect to the Windows Phone X Emulator
-using System;
+﻿using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
+
+// Libraries needed to connect to the Windows Phone X Emulator
 using Microsoft.SmartDevice.Connectivity.Interface;
 using Microsoft.SmartDevice.MultiTargeting.Connectivity;
 using OuterDriver.AutomationExceptions;

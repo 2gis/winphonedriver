@@ -306,7 +306,7 @@ namespace OuterDriver
             var appPath = _desiredCapabilities["app"].ToString();
             // TODO: There must be a way to get rid of hard coded app id
             const string appId = "69b4ce34-a3e0-414a-92d9-1302449f587c";
-            _deployer = new DeployerX(_desiredCapabilities["deviceName"].ToString());
+            _deployer = new Deployer81(_desiredCapabilities["deviceName"].ToString());
             _deployer.Deploy(appPath, appId, Convert.ToInt32(_desiredCapabilities["launchDelay"]));
             var ip = _deployer.ReceiveIpAddress();
             Console.WriteLine("Dev Name " + _deployer.DeviceName);
