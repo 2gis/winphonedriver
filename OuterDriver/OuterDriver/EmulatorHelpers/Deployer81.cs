@@ -33,7 +33,7 @@ namespace OuterDriver.EmulatorHelpers
             Console.WriteLine("Deploy target: " + _deviceInfo);
         }
 
-        public void Deploy(string appPath, String appIdString, int launchDelay = 3500)
+        public void Deploy(string appPath, int launchDelay = 4000)
         {
             
             var appManifestInfo = Utils.ReadAppManifestInfoFromPackage(appPath);
