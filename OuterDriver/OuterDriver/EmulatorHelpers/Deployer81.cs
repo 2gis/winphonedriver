@@ -33,7 +33,7 @@ namespace OuterDriver.EmulatorHelpers
             Console.WriteLine("Deploy target: " + _deviceInfo);
         }
 
-        public void Deploy(string appPath, int launchDelay = 4000)
+        public void Deploy(string appPath)
         {
             
             var appManifestInfo = Utils.ReadAppManifestInfoFromPackage(appPath);
@@ -41,7 +41,6 @@ namespace OuterDriver.EmulatorHelpers
             GlobalOptions.LaunchAfterInstall = true;
             Utils.InstallApplication(_deviceInfo, appManifestInfo, DeploymentOptions.None, appPath);
 
-            Thread.Sleep(launchDelay);
             Console.WriteLine("Successfully deployed using Microsoft.Phone.Tools.Deploy");
         }
 

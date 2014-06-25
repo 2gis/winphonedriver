@@ -8,14 +8,16 @@ using System.Windows.Automation.Provider;
 using System.Windows.Controls;
 using System.Windows.Media;
 
-namespace WindowsPhoneJsonWireServer {
-    class Automator {
-
+namespace WindowsPhoneJsonWireServer
+{
+    internal class Automator
+    {
         private Dictionary<string, FrameworkElement> webElements;
         private UIElement visualRoot;
         private List<Point> points; //ugly temporary (i hope) workaround to get objects from the UI thread
 
-        public Automator(UIElement visualRoot) {
+        public Automator(UIElement visualRoot)
+        {
             this.webElements = new Dictionary<string, FrameworkElement>();
             this.visualRoot = visualRoot;
             this.points = new List<Point>();
@@ -32,12 +34,19 @@ namespace WindowsPhoneJsonWireServer {
                 {
                     // TODO: Press x:Name:LeftButton instead of simple closing 
                     var popupChild = popup.Child;
-                    var element = (FrameworkElement)GetDescendantsOfNameByPredicate(popupChild, buttonName).FirstOrDefault();
-                    if (!(element is Button)) {continue;}
+                    var element =
+                        (FrameworkElement) GetDescendantsOfNameByPredicate(popupChild, buttonName).FirstOrDefault();
+                    if (!(element is Button))
+                    {
+                        continue;
+                    }
 
                     var peer = new ButtonAutomationPeer(element as Button);
                     var invokeProv = peer.GetPattern(PatternInterface.Invoke) as IInvokeProvider;
-                    if (invokeProv != null) { invokeProv.Invoke(); }
+                    if (invokeProv != null)
+                    {
+                        invokeProv.Invoke();
+                    }
                 }
             });
         }
@@ -53,17 +62,19 @@ namespace WindowsPhoneJsonWireServer {
                 {
                     var popupChild = popup.Child;
                     var elements = GetDescendantsOfTypeByPredicate(popupChild, "System.Windows.Controls.TextBlock");
-                    foreach (var dependencyObject in elements.OfType<TextBlock>())
+                    foreach (var textBlock in elements.Select(dependencyObject => dependencyObject as TextBlock))
                     {
-                        message = (dependencyObject as TextBlock).Text;
-                        if (String.IsNullOrEmpty(message))
+                        if (textBlock != null) message = textBlock.Text;
+                        if (!String.IsNullOrEmpty(message))
                         {
                             break;
                         }
                     }
                 }
             });
-            return message;
+            return String.IsNullOrEmpty(message)
+                ? Responder.CreateJsonResponse(ResponseStatus.NoAlertOpenError, null)
+                : Responder.CreateJsonResponse(ResponseStatus.Success, message);
         }
 
         public String PerformDisplayedCommand(String elementId)
@@ -75,10 +86,7 @@ namespace WindowsPhoneJsonWireServer {
             {
                 bool displayed = true;
 
-                UiHelpers.BeginInvokeSync(() =>
-                {
-                    displayed = element.IsUserVisible();
-                });
+                UiHelpers.BeginInvokeSync(() => { displayed = element.IsUserVisible(); });
 
                 response = Responder.CreateJsonResponse(ResponseStatus.Success, displayed);
             }
@@ -87,13 +95,14 @@ namespace WindowsPhoneJsonWireServer {
             return response;
         }
 
-        public String PerformTextCommand(String elementId) {
+        public String PerformTextCommand(String elementId)
+        {
             String text = String.Empty;
             String response = String.Empty;
             FrameworkElement element;
             if (webElements.TryGetValue(elementId, out element))
             {
-                var properyNames = new List<string>() { "Text", "Content" };
+                var properyNames = new List<string>() {"Text", "Content"};
                 System.Reflection.PropertyInfo textProperty = null;
 
                 foreach (var propertyName in properyNames)
@@ -102,38 +111,40 @@ namespace WindowsPhoneJsonWireServer {
                     textProperty = element.GetType().GetProperty(propertyName);
                     if (textProperty != null)
                     {
-                        UiHelpers.BeginInvokeSync(() =>
-                        {
-                            text = textProperty.GetValue(element, null).ToString();
-                        });
+                        UiHelpers.BeginInvokeSync(() => { text = textProperty.GetValue(element, null).ToString(); });
                         break;
                     }
                 }
 
                 response = Responder.CreateJsonResponse(ResponseStatus.Success, text);
             }
-            else {
+            else
+            {
                 response = Responder.CreateJsonResponse(ResponseStatus.NoSuchElement, null);
             }
             return response;
         }
 
-        public String PerformElementCommand(FindElementObject elementObject, String relativeElementId) {
+        public String PerformElementCommand(FindElementObject elementObject, String relativeElementId)
+        {
             String response = String.Empty;
             String elementId = elementObject.getValue();
             String searchPolicy = elementObject.usingMethod;
             DependencyObject relativeElement;
 
-            if (relativeElementId == null) {
+            if (relativeElementId == null)
+            {
                 relativeElement = visualRoot;
             }
-            else {
+            else
+            {
                 FrameworkElement possibleRelativeElement;
                 webElements.TryGetValue(relativeElementId, out possibleRelativeElement);
                 relativeElement = possibleRelativeElement ?? visualRoot;
             }
 
-            if (webElements.ContainsKey(elementId)) {
+            if (webElements.ContainsKey(elementId))
+            {
                 var webElement = new WebElement(elementId);
                 response = Responder.CreateJsonResponse(0, webElement);
             }
@@ -142,7 +153,7 @@ namespace WindowsPhoneJsonWireServer {
                 string webObjectId = null;
 
                 if (searchPolicy.Equals("name"))
-                    webObjectId = FindElementByNameTest(elementId, relativeElement);
+                    webObjectId = FindElementByName(elementId, relativeElement);
                 else if (searchPolicy.Equals("tag name"))
                     webObjectId = FindElementByType(elementId, relativeElement);
                 if (webObjectId != null)
@@ -156,16 +167,19 @@ namespace WindowsPhoneJsonWireServer {
             return response;
         }
 
-        public String PerformElementsCommand(FindElementObject elementObject, String relativeElementId) {
+        public String PerformElementsCommand(FindElementObject elementObject, String relativeElementId)
+        {
             String response = String.Empty;
             String elementId = elementObject.getValue();
-            String searchPolicy = elementObject.usingMethod; 
+            String searchPolicy = elementObject.usingMethod;
             DependencyObject relativeElement;
 
-            if (relativeElementId == null) {
+            if (relativeElementId == null)
+            {
                 relativeElement = visualRoot;
             }
-            else {
+            else
+            {
                 FrameworkElement possibleRelativeElement;
                 webElements.TryGetValue(relativeElementId, out possibleRelativeElement);
                 relativeElement = possibleRelativeElement ?? visualRoot;
@@ -182,13 +196,14 @@ namespace WindowsPhoneJsonWireServer {
             else
                 response = Responder.CreateJsonResponse(ResponseStatus.NoSuchElement, null);
             return response;
-
         }
 
-        public String PerformClickCommand(String elementId) {
+        public String PerformClickCommand(String elementId)
+        {
             String response = String.Empty;
             FrameworkElement element;
-            if (webElements.TryGetValue(elementId, out element)) {
+            if (webElements.TryGetValue(elementId, out element))
+            {
                 //commented part is working, but is disable so that click will work the same way for all the elements
 
                 //Button button = element as Button;
@@ -198,12 +213,12 @@ namespace WindowsPhoneJsonWireServer {
                 //}
                 //else {
 
-                    var coordinates = new Point();
-                    GetElementCoordinates(element);
-                    coordinates = points.First();
-                    points.RemoveAt(0);
-                    String strCoordinates = coordinates.X + ":" + coordinates.Y;
-                    response = Responder.CreateJsonResponse(ResponseStatus.UnknownError, strCoordinates);
+                var coordinates = new Point();
+                GetElementCoordinates(element);
+                coordinates = points.First();
+                points.RemoveAt(0);
+                String strCoordinates = coordinates.X + ":" + coordinates.Y;
+                response = Responder.CreateJsonResponse(ResponseStatus.UnknownError, strCoordinates);
                 //}
             }
             else
@@ -211,13 +226,16 @@ namespace WindowsPhoneJsonWireServer {
             return response;
         }
 
-        public String PerformValueCommand(String elementId, String content) {
+        public String PerformValueCommand(String elementId, String content)
+        {
             String response = String.Empty;
             FrameworkElement valueElement;
-            if (webElements.TryGetValue(elementId, out valueElement)) {
+            if (webElements.TryGetValue(elementId, out valueElement))
+            {
                 TextBox textbox = valueElement as TextBox;
                 String jsonValue = Parser.GetKeysString(content);
-                if (textbox != null) {
+                if (textbox != null)
+                {
                     TrySetText(textbox, jsonValue);
                     response = Responder.CreateJsonResponse(ResponseStatus.Success, null);
                 }
@@ -229,17 +247,19 @@ namespace WindowsPhoneJsonWireServer {
             return response;
         }
 
-        public String PerformLocationCommand(String elementId) {
+        public String PerformLocationCommand(String elementId)
+        {
             String response = String.Empty;
             FrameworkElement valueElement;
-            if (webElements.TryGetValue(elementId, out valueElement)) {
+            if (webElements.TryGetValue(elementId, out valueElement))
+            {
                 var coordinates = new Point();
                 GetElementCoordinates(valueElement);
                 coordinates = points.First();
                 points.RemoveAt(0);
                 var coordinatesDict = new Dictionary<String, Int32>();
-                coordinatesDict.Add("x", (int)coordinates.X);
-                coordinatesDict.Add("y", (int)coordinates.Y);
+                coordinatesDict.Add("x", (int) coordinates.X);
+                coordinatesDict.Add("y", (int) coordinates.Y);
                 response = Responder.CreateJsonResponse(ResponseStatus.Success, coordinatesDict);
             }
             else
@@ -247,28 +267,33 @@ namespace WindowsPhoneJsonWireServer {
             return response;
         }
 
-        private void GetElementCoordinates(FrameworkElement element) {
+        private void GetElementCoordinates(FrameworkElement element)
+        {
             EventWaitHandle wait = new AutoResetEvent(false);
-            Deployment.Current.Dispatcher.BeginInvoke(() => {
-
+            Deployment.Current.Dispatcher.BeginInvoke(() =>
+            {
                 var point = element.TransformToVisual(visualRoot).Transform(new Point(0, 0));
-                Point center = new Point(point.X + (int)element.ActualWidth / 2, point.Y + (int)element.ActualHeight / 2);
+                Point center = new Point(point.X + (int) element.ActualWidth/2, point.Y + (int) element.ActualHeight/2);
                 points.Add(center);
                 wait.Set();
             });
             wait.WaitOne();
         }
 
-        private void TryClick(Button button) {
-            Deployment.Current.Dispatcher.BeginInvoke(() => {
+        private void TryClick(Button button)
+        {
+            Deployment.Current.Dispatcher.BeginInvoke(() =>
+            {
                 ButtonAutomationPeer peer = new ButtonAutomationPeer(button);
                 IInvokeProvider invokeProv = peer.GetPattern(PatternInterface.Invoke) as IInvokeProvider;
                 invokeProv.Invoke();
             });
         }
 
-        private void TrySetText(TextBox textbox, String text) {
-            Deployment.Current.Dispatcher.BeginInvoke(() => {
+        private void TrySetText(TextBox textbox, String text)
+        {
+            Deployment.Current.Dispatcher.BeginInvoke(() =>
+            {
                 TextBoxAutomationPeer peer = new TextBoxAutomationPeer(textbox);
                 IValueProvider valueProvider = peer.GetPattern(PatternInterface.Value) as IValueProvider;
                 valueProvider.SetValue(text);
@@ -276,7 +301,7 @@ namespace WindowsPhoneJsonWireServer {
             });
         }
 
-        static int _safeInstanceCount = 0;
+        private static int _safeInstanceCount = 0;
 
         private string AddElementToWebElements(FrameworkElement element)
         {
@@ -286,18 +311,19 @@ namespace WindowsPhoneJsonWireServer {
             {
                 Interlocked.Increment(ref _safeInstanceCount);
 
-                webElementId = element.GetHashCode().ToString("")+"-"+_safeInstanceCount.ToString("");
+                webElementId = element.GetHashCode().ToString("") + "-" + _safeInstanceCount.ToString("");
                 webElements.Add(webElementId, element);
             }
             return webElementId;
         }
 
-        private string FindElementByNameTest(string elementName, DependencyObject relativeElement)
+        private string FindElementByName(string elementName, DependencyObject relativeElement)
         {
             string foundId = null;
             UiHelpers.BeginInvokeSync(() =>
             {
-                var element = (FrameworkElement) GetDescendantsOfNameByPredicate(relativeElement, elementName).FirstOrDefault();
+                var element =
+                    (FrameworkElement) GetDescendantsOfNameByPredicate(relativeElement, elementName).FirstOrDefault();
                 if (element != null)
                 {
                     foundId = AddElementToWebElements(element);
@@ -315,7 +341,8 @@ namespace WindowsPhoneJsonWireServer {
             string foundId = null;
             UiHelpers.BeginInvokeSync(() =>
             {
-                var element = (FrameworkElement)GetDescendantsOfTypeByPredicate(relativeElement, typeName).FirstOrDefault();
+                var element =
+                    (FrameworkElement) GetDescendantsOfTypeByPredicate(relativeElement, typeName).FirstOrDefault();
                 if (element != null)
                 {
                     foundId = AddElementToWebElements(element);
@@ -338,7 +365,8 @@ namespace WindowsPhoneJsonWireServer {
             return foundIds;
         }
 
-        private static IEnumerable<DependencyObject> GetDescendantsByPredicate(DependencyObject rootItem, Predicate<DependencyObject> predicate)
+        private static IEnumerable<DependencyObject> GetDescendantsByPredicate(DependencyObject rootItem,
+            Predicate<DependencyObject> predicate)
         {
             var childrenCount = VisualTreeHelper.GetChildrenCount(rootItem);
             for (var i = 0; i < childrenCount; ++i)
@@ -352,7 +380,6 @@ namespace WindowsPhoneJsonWireServer {
                 {
                     yield return grandChild;
                 }
-                
             }
         }
 
@@ -361,9 +388,10 @@ namespace WindowsPhoneJsonWireServer {
             return GetDescendantsByPredicate(item, x => ((FrameworkElement) x).Name.Equals(name));
         }
 
-        private static IEnumerable<DependencyObject> GetDescendantsOfTypeByPredicate(DependencyObject item, String typeName)
+        private static IEnumerable<DependencyObject> GetDescendantsOfTypeByPredicate(DependencyObject item,
+            String typeName)
         {
-            return GetDescendantsByPredicate(item, x => ((FrameworkElement)x).GetType().ToString().Equals(typeName));
+            return GetDescendantsByPredicate(item, x => ((FrameworkElement) x).GetType().ToString().Equals(typeName));
         }
     }
 }

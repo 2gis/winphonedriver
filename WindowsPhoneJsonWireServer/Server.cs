@@ -81,6 +81,10 @@ namespace WindowsPhoneJsonWireServer {
             String elementId = String.Empty;
             int urnLength = Parser.GetUrnTokensLength(request);
             switch (command) {
+                case "ping":
+                    response = Responder.CreateJsonResponse(ResponseStatus.Success, "ping");
+                    break;
+
                 case "status":
                     response = Responder.CreateJsonResponse(ResponseStatus.Success, FindIpAddress());
                     break;
