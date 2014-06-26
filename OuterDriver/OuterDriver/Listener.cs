@@ -108,12 +108,6 @@ namespace OuterDriver
             this._listeningPort = listeningPort;
         }
 
-        public IPAddress IpAddress()
-        {
-            var endPoint = (IPEndPoint) _listener.LocalEndpoint;
-            return endPoint.Address;
-        }
-
         public int Port()
         {
             return _listeningPort;
@@ -124,11 +118,10 @@ namespace OuterDriver
             try
             {
                 _localAddr = IPAddress.Parse(OuterServer.FindIpAddress());
-                _listener = new TcpListener(_localAddr, this._listeningPort);
+                _listener = new TcpListener(IPAddress.Any, this._listeningPort);
 
                 // Start listening for client requests.
                 _listener.Start();
-
                 // Enter the listening loop
                 while (true)
                 {
