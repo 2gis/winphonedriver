@@ -8,6 +8,7 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Web.Script.Serialization;
+using System.Windows.Forms;
 using System.Windows.Forms.VisualStyles;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -224,6 +225,10 @@ namespace OuterDriver
                             goto default;
                         } // We can do better than goto
 
+                        break;
+
+                    case "screenshot":
+                        responseBody = ScreenShoter.TakeScreenshot();
                         break;
 
                         //if the text has the ENTER command in it, execute it after sending the rest of the text to the inner driver
