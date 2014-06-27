@@ -81,8 +81,24 @@ namespace WindowsPhoneJsonWireServer {
             String elementId = String.Empty;
             int urnLength = Parser.GetUrnTokensLength(request);
             switch (command) {
+                case "ping":
+                    response = Responder.CreateJsonResponse(ResponseStatus.Success, "ping");
+                    break;
+
                 case "status":
                     response = Responder.CreateJsonResponse(ResponseStatus.Success, FindIpAddress());
+                    break;
+
+                case "alert_text":
+                    response = automator.FirstPopupText();
+                    break;
+
+                case "accept_alert":
+                    automator.ClosePopups();
+                    break;
+
+                case "dismiss_alert":
+                    automator.ClosePopups(false);
                     break;
 
                 case "element":

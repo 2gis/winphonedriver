@@ -11,7 +11,7 @@ namespace OuterDriver.EmulatorHelpers
 
         string DeviceName { get; }
 
-        void Deploy(string appPath, int launchDelay);
+        void Deploy(string appPath);
 
         String ReceiveIpAddress();
 

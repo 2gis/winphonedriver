@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
+using System.Threading;
 using System.Web.Script.Serialization;
 using System.Windows.Forms.VisualStyles;
 using Newtonsoft.Json;
@@ -100,16 +101,11 @@ namespace OuterDriver
         private IDeployer _deployer;
         private Dictionary<string, object> _desiredCapabilities;
         private IPAddress _localAddr;
+        private string _sessionId;
 
         public Listener(int listeningPort)
         {
             this._listeningPort = listeningPort;
-        }
-
-        public IPAddress IpAddress()
-        {
-            var endPoint = (IPEndPoint) _listener.LocalEndpoint;
-            return endPoint.Address;
         }
 
         public int Port()
@@ -122,11 +118,10 @@ namespace OuterDriver
             try
             {
                 _localAddr = IPAddress.Parse(OuterServer.FindIpAddress());
-                _listener = new TcpListener(_localAddr, this._listeningPort);
+                _listener = new TcpListener(IPAddress.Any, this._listeningPort);
 
                 // Start listening for client requests.
                 _listener.Start();
-
                 // Enter the listening loop
                 while (true)
                 {
@@ -182,7 +177,7 @@ namespace OuterDriver
             String jsonValue = String.Empty;
             String ENTER = "\ue007";
             int innerPort = 9998;
-            String sessionId = "awesomeSessionId";
+            _sessionId = "awesomeSessionId";
             String request = acceptedRequest.request;
             String content = acceptedRequest.content;
             String command = Parser.GetRequestCommand(request);
@@ -196,7 +191,11 @@ namespace OuterDriver
 
                         Console.WriteLine("Inner ip: " + innerIp);
                         _phoneRequester = new Requester(innerIp, innerPort);
-                        var jsonResponse = Responder.CreateJsonResponse(sessionId,
+
+                        WaitForApplicationToLaunch(Convert.ToInt32(_desiredCapabilities["launchTimeout"])); // waits for successful ping
+                        Thread.Sleep(Convert.ToInt32(_desiredCapabilities["launchDelay"])); // gives sometime to load visuals
+
+                        var jsonResponse = Responder.CreateJsonResponse(_sessionId,
                             ResponseStatus.Sucess, _desiredCapabilities);
                         responseBody = jsonResponse;
                         break;
@@ -213,7 +212,7 @@ namespace OuterDriver
                         if (tokens.Length == 5 && tokens[2].Equals("window"))
                         {
                             var phoneScreenSize = _inputController.PhoneScreenSize();
-                            responseBody = Responder.CreateJsonResponse(sessionId, ResponseStatus.Sucess,
+                            responseBody = Responder.CreateJsonResponse(_sessionId, ResponseStatus.Sucess,
                                 new Dictionary<string, int>
                                 {
                                     {"width", phoneScreenSize.Width},
@@ -252,7 +251,7 @@ namespace OuterDriver
                         Point coordinates = new Point();
                         if (elementId != null)
                         {
-                            String locationRequest = "/session/" + sessionId + "/element/" + elementId + "/location";
+                            String locationRequest = "/session/" + _sessionId + "/element/" + elementId + "/location";
                             String locationResponse = _phoneRequester.SendRequest(locationRequest, String.Empty);
                             JsonResponse JsonResponse = JsonConvert.DeserializeObject<JsonResponse>(locationResponse);
                             Dictionary<String, String> values =
@@ -315,12 +314,12 @@ namespace OuterDriver
             }
             catch (MoveTargetOutOfBoundsException ex)
             {
-                responseBody = Responder.CreateJsonResponse(sessionId,
+                responseBody = Responder.CreateJsonResponse(_sessionId,
                     ResponseStatus.MoveTargetOutOfBounds, ex.Message);
             }
             catch (AutomationException ex)
             {
-                responseBody = Responder.CreateJsonResponse(sessionId,
+                responseBody = Responder.CreateJsonResponse(_sessionId,
                     ResponseStatus.UnknownError, ex.Message);
             }
             return responseBody;
@@ -330,7 +329,8 @@ namespace OuterDriver
         {
             var appPath = _desiredCapabilities["app"].ToString();
             _deployer = new Deployer81(_desiredCapabilities["deviceName"].ToString());
-            _deployer.Deploy(appPath, Convert.ToInt32(_desiredCapabilities["launchDelay"]));
+            
+            _deployer.Deploy(appPath);
             var ip = _deployer.ReceiveIpAddress();
             Console.WriteLine("Dev Name " + _deployer.DeviceName);
             _inputController = new EmulatorInputController(_deployer.DeviceName)
@@ -344,6 +344,28 @@ namespace OuterDriver
             }
 
             return ip;
+        }
+
+        private void WaitForApplicationToLaunch(int timeout)
+        {
+            // Supposed to wait for application to launch, but ping response might come earlier than visual tree is build or something
+            const int stepDelay = 500;
+            var pingSuccess = false;
+            while (timeout > 0)
+            {
+                Thread.Sleep(stepDelay);
+                var urn = String.Format("/session/{0}/ping", _sessionId);
+                var pingResult = _phoneRequester.SendRequest(urn, string.Empty);
+                if (!String.IsNullOrEmpty(pingResult) && !pingResult.Equals("error"))
+                {
+                    pingSuccess = true;
+                    break;
+                }
+                timeout -= stepDelay;
+            }
+            if (pingSuccess) return;
+            Console.WriteLine("Timeout: Application is not running. Use launchTimeout desired capability to increase timeout.");
+            throw new AutomationException("Application is not running");
         }
 
         public void StopListening()
@@ -360,7 +382,8 @@ namespace OuterDriver
                 {"platform", "WinPhone"},
                 {"emulatorMouseDelay", 0},
                 {"deviceName", string.Empty},
-                {"launchDelay", 3500},
+                {"launchTimeout", 10000}, // How long will we wait for ping response from automator (app side) 
+                {"launchDelay", 1000}, // Lets give some time for visuals to appear after successful ping response
             };
             var actualCapabilities = new Dictionary<string, object>();
             var parsedContent = JObject.Parse(content);

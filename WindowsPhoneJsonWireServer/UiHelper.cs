@@ -7,7 +7,7 @@ namespace WindowsPhoneJsonWireServer
 {
     public static class UiHelpers
     {
-        // Temporary basic implimentation. Does not check if view out of bounds or covered by other view
+        // Temporary basic implementation. Does not check if view out of bounds or covered by other view
         public static bool IsUserVisible(this FrameworkElement element)
         {
             while (true)
