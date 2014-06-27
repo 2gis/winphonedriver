@@ -78,6 +78,7 @@
     <Compile Include="EmulatorHelpers\EmulatorInputController.cs" />
     <Compile Include="EmulatorHelpers\IDeployer.cs" />
     <Compile Include="EmulatorHelpers\NativeHelpers.cs" />
+    <Compile Include="EmulatorHelpers\ScreenShoter.cs" />
     <Compile Include="JsonCapabilities.cs" />
     <Compile Include="JsonResponseStatus.cs" />
     <Compile Include="JsonWireClasses.cs" />
