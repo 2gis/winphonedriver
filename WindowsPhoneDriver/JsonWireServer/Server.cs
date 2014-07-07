@@ -1,185 +1,248 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.IO.IsolatedStorage;
-using System.Threading.Tasks;
-using System.Windows;
-using Windows.Networking.Connectivity;
-using Windows.Networking.Sockets;
-using Windows.Storage.Streams;
+﻿namespace WindowsPhoneJsonWireServer
+{
+    using System;
+    using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
+    using System.Globalization;
+    using System.IO;
+    using System.IO.IsolatedStorage;
+    using System.Threading.Tasks;
+    using System.Windows;
 
-namespace WindowsPhoneJsonWireServer {
-    public class Server {
+    using Newtonsoft.Json;
+
+    using Windows.Networking.Connectivity;
+    using Windows.Networking.Sockets;
+    using Windows.Storage.Streams;
+
+    public class Server
+    {
+        #region Fields
 
         private readonly int listeningPort;
-        private StreamSocketListener listener;
-        private bool isServerActive = false;
+
         private Automator automator;
 
-        public Server(int port) {
-            listeningPort = port;
+        private bool isServerActive;
+
+        private StreamSocketListener listener;
+
+        #endregion
+
+        #region Constructors and Destructors
+
+        public Server(int port)
+        {
+            this.listeningPort = port;
         }
 
-        public void SetAutomator(UIElement visualRoot) {
-            automator = new Automator(visualRoot);
+        #endregion
+
+        #region Delegates
+
+        public delegate void Output(string data);
+
+        #endregion
+
+        #region Public Methods and Operators
+
+        [SuppressMessage("StyleCop.CSharp.NamingRules", "SA1305:FieldNamesMustNotUseHungarianNotation", 
+            Justification = "Reviewed. Suppression is OK here.")]
+        public string FindIpAddress()
+        {
+            var ipAddresses = new List<string>();
+            var hostnames = NetworkInformation.GetHostNames();
+            const int IanaInterfaceTypeWiFi = 71; // IanaInterfaceType == 71 => Wifi
+            const int IanaInterfaceTypeEthernet = 6; // IanaInterfaceType == 6 => Ethernet (Emulator)
+            foreach (var hn in hostnames)
+            {
+                if (hn.IPInformation != null
+                    && (hn.IPInformation.NetworkAdapter.IanaInterfaceType == IanaInterfaceTypeWiFi
+                        || hn.IPInformation.NetworkAdapter.IanaInterfaceType == IanaInterfaceTypeEthernet))
+                {
+                    var ipAddress = hn.DisplayName;
+                    ipAddresses.Add(ipAddress);
+                }
+            }
+
+            if (ipAddresses.Count < 1)
+            {
+                return null;
+            }
+
+            return ipAddresses.Count == 1 ? ipAddresses[0] : ipAddresses[ipAddresses.Count - 1];
         }
 
-        public delegate void Output(String data);
-
-        public async void Start() {
-            if (isServerActive) return;
-            isServerActive = true;
-            listener = new StreamSocketListener();
-            listener.Control.QualityOfService = SocketQualityOfService.Normal;
-            listener.ConnectionReceived += ListenerConnectionReceived;
-            await listener.BindServiceNameAsync(listeningPort.ToString());
-            WriteIpAddress();
+        public void SetAutomator(UIElement visualRoot)
+        {
+            this.automator = new Automator(visualRoot);
         }
 
-        public void Stop() {
-            if (isServerActive) {
-                listener.Dispose();
-                isServerActive = false;
+        public async void Start()
+        {
+            if (this.isServerActive)
+            {
+                return;
+            }
+
+            this.isServerActive = true;
+            this.listener = new StreamSocketListener();
+            this.listener.Control.QualityOfService = SocketQualityOfService.Normal;
+            this.listener.ConnectionReceived += this.ListenerConnectionReceived;
+            await this.listener.BindServiceNameAsync(this.listeningPort.ToString(CultureInfo.InvariantCulture));
+            this.WriteIpAddress();
+        }
+
+        public void Stop()
+        {
+            if (this.isServerActive)
+            {
+                this.listener.Dispose();
+                this.isServerActive = false;
             }
         }
 
-        async void ListenerConnectionReceived(StreamSocketListener sender, StreamSocketListenerConnectionReceivedEventArgs args) {
-            await Task.Run(() => HandleRequest(args.Socket));
+        public void WriteIpAddress()
+        {
+            using (var isoStore = IsolatedStorageFile.GetUserStoreForApplication())
+            {
+                using (var sw = new StreamWriter(isoStore.OpenFile("ip.txt", FileMode.OpenOrCreate, FileAccess.Write)))
+                {
+                    sw.Write(this.FindIpAddress());
+                }
+            }
         }
 
+        #endregion
 
-        private async void HandleRequest(StreamSocket socket) {
-            //Initialize IO classes
+        #region Methods
+
+        private async void HandleRequest(StreamSocket socket)
+        {
+            // Initialize IO classes
             var reader = new DataReader(socket.InputStream) { InputStreamOptions = InputStreamOptions.Partial };
-            var writer = new DataWriter(socket.OutputStream) {
-                UnicodeEncoding = UnicodeEncoding.Utf8
-            };
+            var writer = new DataWriter(socket.OutputStream) { UnicodeEncoding = UnicodeEncoding.Utf8 };
 
             var acceptedRequest = new AcceptedRequest();
             await acceptedRequest.AcceptRequest(reader);
 
-            String response = ProcessRequest(acceptedRequest.request, acceptedRequest.content);
+            var response = this.ProcessRequest(acceptedRequest.Request, acceptedRequest.Content);
 
-            //create response
+            // create response
             writer.WriteString(Responder.CreateResponse(response));
             await writer.StoreAsync();
 
             socket.Dispose();
         }
 
-        public void WriteIpAddress() {
-            using (var isoStore = IsolatedStorageFile.GetUserStoreForApplication())
-            using (var sw = new StreamWriter(isoStore.OpenFile("ip.txt", FileMode.OpenOrCreate, FileAccess.Write))) {
-                sw.Write(FindIpAddress());
-            }
+        private async void ListenerConnectionReceived(
+            StreamSocketListener sender, 
+            StreamSocketListenerConnectionReceivedEventArgs args)
+        {
+            await Task.Run(() => this.HandleRequest(args.Socket));
         }
 
-        private String ProcessRequest(String request, String content) {
-            String response = String.Empty;
-            String command = Parser.GetRequestCommand(request);
-            String elementId = String.Empty;
-            int urnLength = Parser.GetUrnTokensLength(request);
-            switch (command) {
+        private string ProcessRequest(string request, string content)
+        {
+            var response = string.Empty;
+            var command = Parser.GetRequestCommand(request);
+            string elementId;
+            var urnLength = Parser.GetUrnTokensLength(request);
+            switch (command)
+            {
                 case "ping":
                     response = Responder.CreateJsonResponse(ResponseStatus.Success, "ping");
                     break;
 
                 case "status":
-                    response = Responder.CreateJsonResponse(ResponseStatus.Success, FindIpAddress());
+                    response = Responder.CreateJsonResponse(ResponseStatus.Success, this.FindIpAddress());
                     break;
 
                 case "alert_text":
-                    response = automator.FirstPopupText();
+                    response = this.automator.FirstPopupText();
                     break;
 
                 case "accept_alert":
-                    automator.ClosePopups();
+                    this.automator.ClosePopups();
                     break;
 
                 case "dismiss_alert":
-                    automator.ClosePopups(false);
+                    this.automator.ClosePopups(false);
                     break;
 
                 case "element":
-                    FindElementObject elementObject = JsonConvert.DeserializeObject<FindElementObject>(content);
-                    //this is an absolute elements command ("/session/:sessionId/element"), search from root
-                    if (urnLength == 3) {
-                        response = automator.PerformElementCommand(elementObject, null);
+                    var elementObject = JsonConvert.DeserializeObject<FindElementObject>(content);
+
+                    switch (urnLength)
+                    {
+                        case 3:
+
+                            // this is an absolute elements command ("/session/:sessionId/element"), search from root
+                            response = this.automator.PerformElementCommand(elementObject, null);
+                            break;
+                        case 5:
+
+                            // this is a relative elements command("/session/:sessionId/element/:id/element"), search from specific element
+                            var relativeElementId = Parser.GetElementId(request);
+                            response = this.automator.PerformElementCommand(elementObject, relativeElementId);
+                            break;
                     }
-                    //this is a relative elements command("/session/:sessionId/element/:id/element"), search from specific element
-                    else if (urnLength == 5) {
-                        String relativeElementId = Parser.GetElementId(request);
-                        response = automator.PerformElementCommand(elementObject, relativeElementId);
-                    }
+
                     break;
 
                 case "elements":
-                    FindElementObject elementsObject = JsonConvert.DeserializeObject<FindElementObject>(content);
-                    //this is an absolute elements command ("/session/:sessionId/element"), search from root
-                    if (urnLength == 3) {
-                        response = automator.PerformElementsCommand(elementsObject, null);
+                    var elementsObject = JsonConvert.DeserializeObject<FindElementObject>(content);
+
+                    switch (urnLength)
+                    {
+                        case 3:
+
+                            // this is an absolute elements command ("/session/:sessionId/element"), search from root
+                            response = this.automator.PerformElementsCommand(elementsObject, null);
+                            break;
+                        case 5:
+
+                            // this is a relative elements command("/session/:sessionId/element/:id/element"), search from specific element
+                            var relativeElementId = Parser.GetElementId(request);
+                            response = this.automator.PerformElementsCommand(elementsObject, relativeElementId);
+                            break;
                     }
-                    //this is a relative elements command("/session/:sessionId/element/:id/element"), search from specific element
-                    else if (urnLength == 5) {
-                        String relativeElementId = Parser.GetElementId(request);
-                        response = automator.PerformElementsCommand(elementsObject, relativeElementId);
-                    }
+
                     break;
 
                 case "click":
                     elementId = Parser.GetElementId(request);
-                    response = automator.PerformClickCommand(elementId);
+                    response = this.automator.PerformClickCommand(elementId);
                     break;
 
                 case "value":
                     elementId = Parser.GetElementId(request);
-                    response = automator.PerformValueCommand(elementId, content);
+                    response = this.automator.PerformValueCommand(elementId, content);
                     break;
 
                 case "text":
                     elementId = Parser.GetElementId(request);
-                    response = automator.PerformTextCommand(elementId);
+                    response = this.automator.PerformTextCommand(elementId);
                     break;
 
                 case "displayed":
                     elementId = Parser.GetElementId(request);
-                    response = automator.PerformDisplayedCommand(elementId);
-                    // response = "Unimplemented";
+                    response = this.automator.PerformDisplayedCommand(elementId);
                     break;
 
                 case "location":
                     elementId = Parser.GetElementId(request);
-                    response = automator.PerformLocationCommand(elementId);
+                    response = this.automator.PerformLocationCommand(elementId);
                     break;
 
                 default:
                     response = "Unimplemented";
                     break;
             }
+
             return response;
         }
 
-        public String FindIpAddress() {
-            List<String> ipAddresses = new List<String>();
-            var hostnames = NetworkInformation.GetHostNames();
-            foreach (var hn in hostnames) {
-                //IanaInterfaceType == 71 => Wifi
-                //IanaInterfaceType == 6 => Ethernet (Emulator)
-                if (hn.IPInformation != null &&
-                    (hn.IPInformation.NetworkAdapter.IanaInterfaceType == 71
-                    || hn.IPInformation.NetworkAdapter.IanaInterfaceType == 6)) {
-                    String ipAddress = hn.DisplayName;
-                    ipAddresses.Add(ipAddress);
-                }
-            }
-
-            if (ipAddresses.Count < 1)
-                return null;
-            if (ipAddresses.Count == 1)
-                return ipAddresses[0];
-            return ipAddresses[ipAddresses.Count - 1];
-        }
-
+        #endregion
     }
 }

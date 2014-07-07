@@ -1,36 +1,54 @@
-﻿using System;
-using System.Linq;
-using System.Net;
-using System.Net.Sockets;
+﻿namespace OuterDriver
+{
+    #region using
 
-namespace OuterDriver {
-    class OuterServer {
+    using System.Linq;
+    using System.Net;
+    using System.Net.Sockets;
 
-        private Requester requester;
+    #endregion
 
-        public OuterServer(String innerIp, int innerPort) {
+    internal class OuterServer
+    {
+        #region Fields
+
+        private readonly Requester requester;
+
+        #endregion
+
+        #region Constructors and Destructors
+
+        public OuterServer(string innerIp, int innerPort)
+        {
             this.requester = new Requester(innerIp, innerPort);
         }
 
-        public String SendRequest(String uri, String requestBody) {
-            return requester.SendRequest(uri, requestBody);
-        }
+        #endregion
 
-        public String SendRequest(String uri) {
-            return requester.SendRequest(uri, String.Empty);
-        }
+        #region Public Methods and Operators
 
-        public static String FindIpAddress() {
-            string localIp = "localhost";
-            IPHostEntry host = Dns.GetHostEntry(Dns.GetHostName());
-            foreach (IPAddress ip in host.AddressList) {
-                if (ip.AddressFamily == AddressFamily.InterNetwork)
-                {
-                    localIp = ip.ToString();
-                }
+        public static string FindIpAddress()
+        {
+            var localIp = "localhost";
+            var host = Dns.GetHostEntry(Dns.GetHostName());
+            foreach (var ip in host.AddressList.Where(ip => ip.AddressFamily == AddressFamily.InterNetwork))
+            {
+                localIp = ip.ToString();
             }
+
             return localIp;
         }
 
+        public string SendRequest(string uri, string requestBody)
+        {
+            return this.requester.SendRequest(uri, requestBody);
+        }
+
+        public string SendRequest(string uri)
+        {
+            return this.requester.SendRequest(uri, string.Empty);
+        }
+
+        #endregion
     }
 }

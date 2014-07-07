@@ -1,75 +1,111 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Windows.Storage.Streams;
+﻿namespace WindowsPhoneJsonWireServer
+{
+    using System;
+    using System.Collections.Generic;
+    using System.Threading.Tasks;
 
-namespace WindowsPhoneJsonWireServer {
-    class AcceptedRequest {
-        public String request { get; set; }
-        public Dictionary<String, String> headers { get; set; }
-        public String content { get; set; }
+    using Windows.Storage.Streams;
 
-        public AcceptedRequest() {
-            this.request = String.Empty;
-            this.headers = new Dictionary<string, string>();
-            this.content = String.Empty;
+    internal class AcceptedRequest
+    {
+        #region Constructors and Destructors
+
+        public AcceptedRequest()
+        {
+            this.Request = string.Empty;
+            this.Headers = new Dictionary<string, string>();
+            this.Content = string.Empty;
         }
 
-        public async Task AcceptRequest(DataReader reader) {
+        #endregion
 
-            this.request = await StreamReadLine(reader);
+        #region Public Properties
 
-            //read HTTP headers
-            this.headers = await ReadHeaders(reader);
+        public string Content { get; set; }
 
-            //read request contents
-            uint contentLength = GetContentLength(headers);
-            String content = String.Empty;
-            if (contentLength != 0) {
-                this.content = await ReadContent(reader, contentLength);
+        public Dictionary<string, string> Headers { get; set; }
+
+        public string Request { get; set; }
+
+        #endregion
+
+        #region Public Methods and Operators
+
+        public async Task AcceptRequest(DataReader reader)
+        {
+            this.Request = await StreamReadLine(reader);
+
+            // read HTTP headers
+            this.Headers = await this.ReadHeaders(reader);
+
+            // read request contents
+            var contentLength = this.GetContentLength(this.Headers);
+            if (contentLength != 0)
+            {
+                this.Content = await this.ReadContent(reader, contentLength);
             }
         }
 
-        private async Task<Dictionary<String, String>> ReadHeaders(DataReader reader) {
-            var headers = new Dictionary<string, string>();
-            String header;
-            while (!String.IsNullOrEmpty(header = await StreamReadLine(reader))) {
-                String[] splitHeader;
-                splitHeader = header.Split(':');
-                headers.Add(splitHeader[0], splitHeader[1].Trim(' '));
+        #endregion
+
+        #region Methods
+
+        private static async Task<string> StreamReadLine(DataReader reader)
+        {
+            var data = string.Empty;
+            while (true)
+            {
+                await reader.LoadAsync(1);
+                int nextChar = reader.ReadByte();
+                if (nextChar == '\n')
+                {
+                    break;
+                }
+
+                if (nextChar == '\r')
+                {
+                    continue;
+                }
+
+                data += Convert.ToChar(nextChar);
             }
-            return headers;
+
+            return data;
         }
 
-        private uint GetContentLength(Dictionary<String, String> headers) {
+        private uint GetContentLength(Dictionary<string, string> headers)
+        {
             uint contentLength = 0;
-            String contentLengthString;
-            bool hasContentLength = headers.TryGetValue("Content-Length", out contentLengthString);
-            if (hasContentLength) {
+            string contentLengthString;
+            var hasContentLength = headers.TryGetValue("Content-Length", out contentLengthString);
+            if (hasContentLength)
+            {
                 contentLength = Convert.ToUInt32(contentLengthString);
             }
+
             return contentLength;
         }
 
-        private async Task<String> ReadContent(DataReader reader, uint contentLength) {
+        private async Task<string> ReadContent(DataReader reader, uint contentLength)
+        {
             await reader.LoadAsync(contentLength);
-            String content = reader.ReadString(contentLength);
+            string content = reader.ReadString(contentLength);
             return content;
         }
 
-        private static async Task<String> StreamReadLine(DataReader reader) {
-            int next_char;
-            String data = "";
-            while (true) {
-                await reader.LoadAsync(1);
-                next_char = reader.ReadByte();
-                if (next_char == '\n') { break; }
-                if (next_char == '\r') { continue; }
-                data += Convert.ToChar(next_char);
+        private async Task<Dictionary<string, string>> ReadHeaders(DataReader reader)
+        {
+            var headers = new Dictionary<string, string>();
+            string header;
+            while (!string.IsNullOrEmpty(header = await StreamReadLine(reader)))
+            {
+                string[] splitHeader = header.Split(':');
+                headers.Add(splitHeader[0], splitHeader[1].Trim(' '));
             }
-            return data;
+
+            return headers;
         }
+
+        #endregion
     }
 }
