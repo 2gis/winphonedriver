@@ -1,12 +1,13 @@
-﻿using System;
-using System.Runtime.Serialization;
-
-
-namespace OuterDriver.AutomationExceptions
+﻿namespace OuterDriver.AutomationExceptions
 {
+    using System;
+    using System.Runtime.Serialization;
+
     [Serializable]
     public class AutomationException : Exception
     {
+        #region Constructors and Destructors
+
         public AutomationException()
         {
         }
@@ -25,5 +26,7 @@ namespace OuterDriver.AutomationExceptions
             : base(info, context)
         {
         }
+
+        #endregion
     }
 }

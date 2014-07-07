@@ -1,12 +1,13 @@
-﻿using System;
-using System.Runtime.Serialization;
-
-
-namespace OuterDriver.AutomationExceptions
+﻿namespace OuterDriver.AutomationExceptions
 {
+    using System;
+    using System.Runtime.Serialization;
+
     [Serializable]
     public class MoveTargetOutOfBoundsException : Exception
     {
+        #region Constructors and Destructors
+
         public MoveTargetOutOfBoundsException()
         {
         }
@@ -25,5 +26,7 @@ namespace OuterDriver.AutomationExceptions
             : base(info, context)
         {
         }
+
+        #endregion
     }
 }

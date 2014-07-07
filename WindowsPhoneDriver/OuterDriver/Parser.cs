@@ -1,74 +1,102 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace OuterDriver
+﻿namespace OuterDriver
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
 
-    class Parser
+    using Newtonsoft.Json;
+
+    internal class Parser
     {
+        #region Static Fields
 
-        private static readonly List<String> CommandsToProxy = new List<String> { "element", "elements", "text", "displayed", "location", "accept_alert", "dismiss_alert", "alert_text" };
-        private static readonly List<String> CommandsWithGet = new List<String> { "text", "displayed", "location", "alert_text" };
+        private static readonly List<string> CommandsToProxy = new List<string>
+                                                                   {
+                                                                       "element", 
+                                                                       "elements", 
+                                                                       "text", 
+                                                                       "displayed", 
+                                                                       "location", 
+                                                                       "accept_alert", 
+                                                                       "dismiss_alert", 
+                                                                       "alert_text"
+                                                                   };
 
-        public static String GetRequestUrn(String request)
+        private static readonly List<string> CommandsWithGet = new List<string>
+                                                                   {
+                                                                       "text", 
+                                                                       "displayed", 
+                                                                       "location", 
+                                                                       "alert_text"
+                                                                   };
+
+        #endregion
+
+        #region Public Methods and Operators
+
+        public static string ChooseRequestMethod(string uri)
         {
-            var firstHeaderTokens = request.Split(' ');
-            return firstHeaderTokens[1];
+            return CommandsWithGet.Contains(GetLastToken(uri)) ? "GET" : "POST";
         }
 
-        public static String GetLastToken(String urn)
+        public static string GetKeysString(string requestContent)
+        {
+            var result = string.Empty;
+            var jsonContent = JsonConvert.DeserializeObject<JsonKeysContent>(requestContent);
+            var value = jsonContent.Value;
+            return value.Aggregate(result, (current, str) => current + str);
+        }
+
+        public static string GetLastToken(string urn)
         {
             var urnTokens = SplitTokens(urn);
             var command = urnTokens[urnTokens.Length - 1];
             return command;
         }
 
-        public static String GetRequestCommand(String request)
+        public static string GetRequestCommand(string request)
         {
             var tokens = GetUrnTokens(request);
             var command = tokens[tokens.Length - 1];
             return command;
         }
 
-        //decides if the request should be simply proxied by looking at the last command token
-        public static bool ShouldProxy(String request)
-        {
-            var urn = GetRequestUrn(request);
-            return CommandsToProxy.Contains(GetLastToken(urn));
-        }
-
-        //deserializes json string array and returns a single String
-        public static String GetKeysString(String requestContent)
-        {
-            var result = String.Empty;
-            var jsonContent = JsonConvert.DeserializeObject<JsonKeysContent>(requestContent);
-            var value = jsonContent.GetValue();
-            return value.Aggregate(result, (current, str) => current + str);
-        }
-
-        public static int GetRequestLength(String request)
+        // decides if the request should be simply proxied by looking at the last command token
+        public static int GetRequestLength(string request)
         {
             return GetUrnTokens(request).Length;
         }
 
-        private static String[] SplitTokens(String urn)
+        public static string GetRequestUrn(string request)
         {
-            var urnTokens = urn.Split(new[] { "/" }, StringSplitOptions.RemoveEmptyEntries);
-            return urnTokens;
+            var firstHeaderTokens = request.Split(' ');
+            return firstHeaderTokens[1];
         }
 
-        public static String[] GetUrnTokens(String request)
+        public static string[] GetUrnTokens(string request)
         {
             var urn = GetRequestUrn(request);
             return SplitTokens(urn);
         }
 
-        //chooses the request method by looking at the last command token
-        public static String ChooseRequestMethod(String uri)
+        public static bool ShouldProxy(string request)
         {
-            return CommandsWithGet.Contains(GetLastToken(uri)) ? "GET" : "POST";
+            var urn = GetRequestUrn(request);
+            return CommandsToProxy.Contains(GetLastToken(urn));
         }
+
+        #endregion
+
+        #region Methods
+
+        private static string[] SplitTokens(string urn)
+        {
+            var urnTokens = urn.Split(new[] { "/" }, StringSplitOptions.RemoveEmptyEntries);
+            return urnTokens;
+        }
+
+        #endregion
+
+        // chooses the request method by looking at the last command token
     }
 }

@@ -1,20 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace OuterDriver.EmulatorHelpers
+﻿namespace OuterDriver.EmulatorHelpers
 {
-    interface IDeployer
+    using System;
+
+    internal interface IDeployer
     {
+        #region Public Properties
 
         string DeviceName { get; }
 
+        #endregion
+
+        #region Public Methods and Operators
+
         void Deploy(string appPath);
 
-        String ReceiveIpAddress();
-
         void Disconnect();
+
+        string ReceiveIpAddress();
+
+        #endregion
     }
 }

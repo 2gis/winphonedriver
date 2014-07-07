@@ -77,10 +77,11 @@
     <Compile Include="AutomationExceptions\MoveTargetOutOfBoundsException.cs" />
     <Compile Include="EmulatorHelpers\Deployer81.cs" />
     <Compile Include="EmulatorHelpers\EmulatorInputController.cs" />
+    <Compile Include="EmulatorHelpers\NativeWrapper.cs" />
     <Compile Include="EmulatorHelpers\IDeployer.cs" />
-    <Compile Include="EmulatorHelpers\NativeHelpers.cs" />
+    <Compile Include="EmulatorHelpers\NativeMethods\NativeMethodsUser32.cs" />
+    <Compile Include="EmulatorHelpers\NativeMethods\NativeMethodsGdi32.cs" />
     <Compile Include="EmulatorHelpers\ScreenShoter.cs" />
-    <Compile Include="JsonCapabilities.cs" />
     <Compile Include="JsonResponseStatus.cs" />
     <Compile Include="JsonWireClasses.cs" />
     <Compile Include="Listener.cs" />
@@ -94,7 +95,9 @@
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
+    <None Include="Settings.StyleCop" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
