@@ -30,13 +30,36 @@
                                                                        "alert_text"
                                                                    };
 
+        private static string urnPrefix;
+
+        #endregion
+
+        #region Public Properties
+
+        public static string UrnPrefix
+        {
+            get
+            {
+                return urnPrefix ?? string.Empty;
+            }
+
+            set
+            {
+                if (!string.IsNullOrEmpty(value))
+                {
+                    // Normalize prefix
+                    urnPrefix = "/" + value.Trim('/');
+                }
+            }
+        }
+
         #endregion
 
         #region Public Methods and Operators
 
         public static string ChooseRequestMethod(string uri)
         {
-            return CommandsWithGet.Contains(GetLastToken(uri)) ? "GET" : "POST";
+            return CommandsWithGet.Contains(GetUrnLastToken(uri)) ? "GET" : "POST";
         }
 
         public static string GetKeysString(string requestContent)
@@ -47,56 +70,45 @@
             return value.Aggregate(result, (current, str) => current + str);
         }
 
-        public static string GetLastToken(string urn)
+        public static string GetRequestUrn(string request)
         {
-            var urnTokens = SplitTokens(urn);
+            var firstHeaderTokens = request.Split(' ');
+            var urn = firstHeaderTokens[1];
+            if (!string.IsNullOrEmpty(UrnPrefix))
+            {
+                if (urn.StartsWith(UrnPrefix))
+                {
+                    urn = urn.Remove(0, UrnPrefix.Length);
+                }
+            }
+
+            Console.WriteLine("Fixed urn " + urn + " prefix " + UrnPrefix);
+            return urn;
+        }
+
+        public static string GetUrnLastToken(string urn)
+        {
+            var urnTokens = GetUrnTokens(urn);
             var command = urnTokens[urnTokens.Length - 1];
             return command;
         }
 
-        public static string GetRequestCommand(string request)
-        {
-            var tokens = GetUrnTokens(request);
-            var command = tokens[tokens.Length - 1];
-            return command;
-        }
-
-        // decides if the request should be simply proxied by looking at the last command token
-        public static int GetRequestLength(string request)
-        {
-            return GetUrnTokens(request).Length;
-        }
-
-        public static string GetRequestUrn(string request)
-        {
-            var firstHeaderTokens = request.Split(' ');
-            return firstHeaderTokens[1];
-        }
-
-        public static string[] GetUrnTokens(string request)
-        {
-            var urn = GetRequestUrn(request);
-            return SplitTokens(urn);
-        }
-
-        public static bool ShouldProxy(string request)
-        {
-            var urn = GetRequestUrn(request);
-            return CommandsToProxy.Contains(GetLastToken(urn));
-        }
-
-        #endregion
-
-        #region Methods
-
-        private static string[] SplitTokens(string urn)
+        public static string[] GetUrnTokens(string urn)
         {
             var urnTokens = urn.Split(new[] { "/" }, StringSplitOptions.RemoveEmptyEntries);
             return urnTokens;
         }
 
-        #endregion
+        public static int GetUrnTokensCount(string urn)
+        {
+            return GetUrnTokens(urn).Length;
+        }
 
-        // chooses the request method by looking at the last command token
+        public static bool ShouldProxyUrn(string urn)
+        {
+            return CommandsToProxy.Contains(GetUrnLastToken(urn));
+        }
+
+        #endregion
     }
 }

@@ -53,6 +53,9 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="CommandLine">
+      <HintPath>..\packages\CommandLineParser.1.9.71\lib\net45\CommandLine.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Phone.Tools.Deploy">
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Microsoft SDKs\Windows Phone\v8.1\Tools\AppDeploy\Microsoft.Phone.Tools.Deploy.dll</HintPath>
       <Private>True</Private>
@@ -75,6 +78,7 @@
   <ItemGroup>
     <Compile Include="AutomationExceptions\AutomationException.cs" />
     <Compile Include="AutomationExceptions\MoveTargetOutOfBoundsException.cs" />
+    <Compile Include="CommandLineOptions.cs" />
     <Compile Include="EmulatorHelpers\Deployer81.cs" />
     <Compile Include="EmulatorHelpers\EmulatorInputController.cs" />
     <Compile Include="EmulatorHelpers\NativeWrapper.cs" />

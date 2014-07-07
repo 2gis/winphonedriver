@@ -154,7 +154,8 @@
             this.sessionId = "awesomeSessionId";
             var request = acceptedRequest.Request;
             var content = acceptedRequest.Content;
-            var command = Parser.GetRequestCommand(request);
+            var urn = Parser.GetRequestUrn(request);
+            var command = Parser.GetUrnLastToken(urn);
             try
             {
                 switch (command)
@@ -189,7 +190,7 @@
 
                         // Window size is partially implemented
                         // TODO: Handle windows handles? 
-                        var tokens = Parser.GetUrnTokens(request);
+                        var tokens = Parser.GetUrnTokens(urn);
                         if (tokens.Length == 5 && tokens[2].Equals("window"))
                         {
                             var phoneScreenSize = this.inputController.PhoneScreenSize();
@@ -266,7 +267,7 @@
                         break;
 
                     case "click":
-                        var requestLength = Parser.GetRequestLength(request);
+                        var requestLength = Parser.GetUrnTokensCount(urn);
                         if (requestLength == 3)
                         {
                             // simple click command without element
@@ -334,9 +335,10 @@
             string responseBody;
             var request = acceptedRequest.Request;
             var content = acceptedRequest.Content;
-            if (Parser.ShouldProxy(request))
+            var urn = Parser.GetRequestUrn(request);
+            if (Parser.ShouldProxyUrn(urn))
             {
-                responseBody = this.phoneRequester.SendRequest(Parser.GetRequestUrn(request), content);
+                responseBody = this.phoneRequester.SendRequest(urn, content);
             }
             else
             {
