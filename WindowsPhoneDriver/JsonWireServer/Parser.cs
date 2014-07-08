@@ -9,13 +9,9 @@
     {
         #region Public Methods and Operators
 
-        public static string GetElementId(string request)
+        public static string GetElementId(string urn)
         {
-            var requestTokens = request.Split(' ');
-            var urn = requestTokens[1];
-
-            // take care of the slash in the end of the string
-            var urnTokens = urn.Split(new[] { "/" }, StringSplitOptions.RemoveEmptyEntries);
+            var urnTokens = GetUrnTokens(urn);
             var elementId = urnTokens[urnTokens.Length - 2];
             return elementId;
         }
@@ -29,25 +25,29 @@
             return value.Aggregate(result, (current, str) => current + str);
         }
 
-        public static string GetRequestCommand(string request)
+        public static string GetRequestUrn(string request)
         {
-            var requestTokens = request.Split(' ');
-            var urn = requestTokens[1];
+            var firstHeaderTokens = request.Split(' ');
+            var urn = firstHeaderTokens[1];
+            return urn;
+        }
 
-            // take care of the slash in the end of the string
-            var urnTokens = urn.Split(new[] { "/" }, StringSplitOptions.RemoveEmptyEntries);
+        public static string GetUrnLastToken(string urn)
+        {
+            var urnTokens = GetUrnTokens(urn);
             var command = urnTokens[urnTokens.Length - 1];
             return command;
         }
 
-        public static int GetUrnTokensLength(string request)
+        public static string[] GetUrnTokens(string urn)
         {
-            var requestTokens = request.Split(' ');
-            var urn = requestTokens[1];
-
-            // take care of the slash in the end of the string
             var urnTokens = urn.Split(new[] { "/" }, StringSplitOptions.RemoveEmptyEntries);
-            return urnTokens.Length;
+            return urnTokens;
+        }
+
+        public static int GetUrnTokensCount(string urn)
+        {
+            return GetUrnTokens(urn).Length;
         }
 
         #endregion

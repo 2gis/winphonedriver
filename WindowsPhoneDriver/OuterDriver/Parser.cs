@@ -82,7 +82,6 @@
                 }
             }
 
-            Console.WriteLine("Fixed urn " + urn + " prefix " + UrnPrefix);
             return urn;
         }
 

@@ -46,8 +46,6 @@
 
         #region Public Methods and Operators
 
-        [SuppressMessage("StyleCop.CSharp.NamingRules", "SA1305:FieldNamesMustNotUseHungarianNotation", 
-            Justification = "Reviewed. Suppression is OK here.")]
         public string FindIpAddress()
         {
             var ipAddresses = new List<string>();
@@ -145,9 +143,10 @@
         private string ProcessRequest(string request, string content)
         {
             var response = string.Empty;
-            var command = Parser.GetRequestCommand(request);
+            var urn = Parser.GetRequestUrn(request);
+            var command = Parser.GetUrnLastToken(urn);
             string elementId;
-            var urnLength = Parser.GetUrnTokensLength(request);
+            var urnLength = Parser.GetUrnTokensCount(urn);
             switch (command)
             {
                 case "ping":
@@ -183,7 +182,7 @@
                         case 5:
 
                             // this is a relative elements command("/session/:sessionId/element/:id/element"), search from specific element
-                            var relativeElementId = Parser.GetElementId(request);
+                            var relativeElementId = Parser.GetElementId(urn);
                             response = this.automator.PerformElementCommand(elementObject, relativeElementId);
                             break;
                     }
@@ -203,7 +202,7 @@
                         case 5:
 
                             // this is a relative elements command("/session/:sessionId/element/:id/element"), search from specific element
-                            var relativeElementId = Parser.GetElementId(request);
+                            var relativeElementId = Parser.GetElementId(urn);
                             response = this.automator.PerformElementsCommand(elementsObject, relativeElementId);
                             break;
                     }
@@ -211,27 +210,27 @@
                     break;
 
                 case "click":
-                    elementId = Parser.GetElementId(request);
+                    elementId = Parser.GetElementId(urn);
                     response = this.automator.PerformClickCommand(elementId);
                     break;
 
                 case "value":
-                    elementId = Parser.GetElementId(request);
+                    elementId = Parser.GetElementId(urn);
                     response = this.automator.PerformValueCommand(elementId, content);
                     break;
 
                 case "text":
-                    elementId = Parser.GetElementId(request);
+                    elementId = Parser.GetElementId(urn);
                     response = this.automator.PerformTextCommand(elementId);
                     break;
 
                 case "displayed":
-                    elementId = Parser.GetElementId(request);
+                    elementId = Parser.GetElementId(urn);
                     response = this.automator.PerformDisplayedCommand(elementId);
                     break;
 
                 case "location":
-                    elementId = Parser.GetElementId(request);
+                    elementId = Parser.GetElementId(urn);
                     response = this.automator.PerformLocationCommand(elementId);
                     break;
 
