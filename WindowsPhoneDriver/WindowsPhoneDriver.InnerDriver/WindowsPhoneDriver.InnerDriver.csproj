@@ -94,7 +94,7 @@
     <Compile Include="Automator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Responder.cs" />
-    <Compile Include="Server.cs" />
+    <Compile Include="AutomationServer.cs" />
     <Compile Include="UiHelper.cs" />
   </ItemGroup>
   <ItemGroup>

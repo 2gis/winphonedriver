@@ -16,7 +16,7 @@
 
     using WindowsPhoneDriver.Common;
 
-    public class Server
+    public class AutomationServer
     {
         #region Fields
 
@@ -32,7 +32,7 @@
 
         #region Constructors and Destructors
 
-        public Server(int port)
+        public AutomationServer(int port)
         {
             this.listeningPort = port;
         }
@@ -46,6 +46,15 @@
         #endregion
 
         #region Public Methods and Operators
+
+        public static AutomationServer CreateAndStart(int port, UIElement visualRoot)
+        {
+            var automationServer = new AutomationServer(port);
+            automationServer.SetAutomator(visualRoot);
+            automationServer.Start();
+
+            return automationServer;
+        }
 
         public string FindIpAddress()
         {
