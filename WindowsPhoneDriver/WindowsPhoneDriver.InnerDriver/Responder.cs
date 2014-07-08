@@ -1,4 +1,4 @@
-﻿namespace WindowsPhoneJsonWireServer
+﻿namespace WindowsPhoneDriver.InnerDriver
 {
     using System;
     using System.Text;

@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.30501.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OuterDriver", "OuterDriver\OuterDriver.csproj", "{3B1E2EBC-6036-4363-A4FD-70EF0679A873}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WindowsPhoneDriver.OuterDriver", "WindowsPhoneDriver.OuterDriver\WindowsPhoneDriver.OuterDriver.csproj", "{3B1E2EBC-6036-4363-A4FD-70EF0679A873}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JsonWireServer", "JsonWireServer\JsonWireServer.csproj", "{BC2B2946-0F51-4C34-B8EB-1331BF076A70}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WindowsPhoneDriver.InnerDriver", "JsonWireServer\WindowsPhoneDriver.InnerDriver.csproj", "{BC2B2946-0F51-4C34-B8EB-1331BF076A70}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{96587DE9-4F92-4855-B830-8F2CCC7DE68F}"
 	ProjectSection(SolutionItems) = preProject
