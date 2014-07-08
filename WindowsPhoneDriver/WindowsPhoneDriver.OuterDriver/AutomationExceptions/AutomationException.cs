@@ -1,4 +1,4 @@
-﻿namespace OuterDriver.AutomationExceptions
+﻿namespace WindowsPhoneDriver.OuterDriver.AutomationExceptions
 {
     using System;
     using System.Runtime.Serialization;

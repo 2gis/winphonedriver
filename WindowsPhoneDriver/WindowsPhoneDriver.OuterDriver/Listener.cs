@@ -1,4 +1,4 @@
-﻿namespace OuterDriver
+﻿namespace WindowsPhoneDriver.OuterDriver
 {
     using System;
     using System.Collections.Generic;
@@ -11,10 +11,9 @@
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
 
-    using OuterDriver.AutomationExceptions;
-    using OuterDriver.EmulatorHelpers;
-
     using WindowsPhoneDriver.Common;
+    using WindowsPhoneDriver.OuterDriver.AutomationExceptions;
+    using WindowsPhoneDriver.OuterDriver.EmulatorHelpers;
 
     public class Listener
     {
@@ -277,7 +276,9 @@
                         }
                         else
                         {
-                            responseBody = this.phoneRequester.SendRequest(RequestParserEx.GetRequestUrn(request), content);
+                            responseBody = this.phoneRequester.SendRequest(
+                                RequestParserEx.GetRequestUrn(request), 
+                                content);
                             var deserializeObject = JsonConvert.DeserializeObject<JsonResponse>(responseBody);
                             var clickValue = deserializeObject.Value.ToString();
                             if (!string.IsNullOrEmpty(clickValue))

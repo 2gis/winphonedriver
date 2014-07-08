@@ -1,4 +1,4 @@
-﻿namespace OuterDriver
+﻿namespace WindowsPhoneDriver.OuterDriver
 {
     using CommandLine;
     using CommandLine.Text;

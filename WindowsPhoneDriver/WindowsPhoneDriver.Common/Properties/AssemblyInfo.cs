@@ -27,5 +27,5 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyVersion("1.0.0.0")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
 
-[assembly: InternalsVisibleTo("OuterDriver")]
-[assembly: InternalsVisibleTo("WindowsPhoneJsonWireServer")]
+[assembly: InternalsVisibleTo("WindowsPhoneDriver.OuterDriver")]
+[assembly: InternalsVisibleTo("WindowsPhoneDriver.InnerDriver")]

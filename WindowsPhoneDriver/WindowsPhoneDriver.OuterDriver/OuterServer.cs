@@ -1,10 +1,12 @@
-﻿namespace OuterDriver
+﻿namespace WindowsPhoneDriver.OuterDriver
 {
     #region using
 
     using System.Linq;
     using System.Net;
     using System.Net.Sockets;
+
+    using global::WindowsPhoneDriver.OuterDriver;
 
     #endregion
 

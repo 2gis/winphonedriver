@@ -1,4 +1,4 @@
-﻿namespace OuterDriver.EmulatorHelpers
+﻿namespace WindowsPhoneDriver.OuterDriver.EmulatorHelpers
 {
     using System;
     using System.Diagnostics;
@@ -7,7 +7,7 @@
     using System.Threading;
     using System.Windows.Forms;
 
-    using OuterDriver.AutomationExceptions;
+    using WindowsPhoneDriver.OuterDriver.AutomationExceptions;
 
     internal class EmulatorInputController
     {

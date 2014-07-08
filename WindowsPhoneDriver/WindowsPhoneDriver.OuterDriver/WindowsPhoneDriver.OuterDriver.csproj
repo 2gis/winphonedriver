@@ -7,8 +7,8 @@
     <ProjectGuid>{3B1E2EBC-6036-4363-A4FD-70EF0679A873}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>OuterDriver</RootNamespace>
-    <AssemblyName>OuterDriver</AssemblyName>
+    <RootNamespace>WindowsPhoneDriver.OuterDriver</RootNamespace>
+    <AssemblyName>WindowsPhoneDriver.OuterDriver</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>

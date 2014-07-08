@@ -1,4 +1,4 @@
-﻿namespace OuterDriver.EmulatorHelpers.NativeMethods
+﻿namespace WindowsPhoneDriver.OuterDriver.EmulatorHelpers.NativeMethods
 {
     using System;
     using System.Drawing;

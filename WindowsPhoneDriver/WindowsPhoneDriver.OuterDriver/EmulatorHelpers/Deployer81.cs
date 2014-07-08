@@ -1,6 +1,6 @@
 ﻿ // Library needed to connect to the Windows Phone X Emulator
 
-namespace OuterDriver.EmulatorHelpers
+namespace WindowsPhoneDriver.OuterDriver.EmulatorHelpers
 {
     using System;
     using System.Linq;
