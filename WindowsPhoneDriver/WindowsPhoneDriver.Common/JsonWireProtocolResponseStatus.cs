@@ -1,4 +1,4 @@
-﻿namespace WindowsPhoneJsonWireServer
+﻿namespace WindowsPhoneDriver.Common
 {
     public enum ResponseStatus
     {

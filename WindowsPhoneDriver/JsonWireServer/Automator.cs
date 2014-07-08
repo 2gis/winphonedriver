@@ -10,6 +10,8 @@
     using System.Windows.Controls;
     using System.Windows.Media;
 
+    using WindowsPhoneDriver.Common;
+
     internal class Automator
     {
         #region Static Fields
@@ -155,7 +157,7 @@
             return response;
         }
 
-        public string PerformElementCommand(FindElementObject elementObject, string relativeElementId)
+        public string PerformElementCommand(JsonFindElementObjectContent elementObject, string relativeElementId)
         {
             string response;
             var elementId = elementObject.Value;
@@ -175,7 +177,7 @@
 
             if (this.webElements.ContainsKey(elementId))
             {
-                var webElement = new WebElement(elementId);
+                var webElement = new JsonWebElementContent(elementId);
                 response = Responder.CreateJsonResponse(0, webElement);
             }
             else
@@ -193,7 +195,7 @@
 
                 if (webObjectId != null)
                 {
-                    var webElement = new WebElement(webObjectId);
+                    var webElement = new JsonWebElementContent(webObjectId);
                     response = Responder.CreateJsonResponse(ResponseStatus.Success, webElement);
                 }
                 else
@@ -205,7 +207,7 @@
             return response;
         }
 
-        public string PerformElementsCommand(FindElementObject elementObject, string relativeElementId)
+        public string PerformElementsCommand(JsonFindElementObjectContent elementObject, string relativeElementId)
         {
             string response;
             var elementId = elementObject.Value;
@@ -224,11 +226,11 @@
             }
 
             // think of a prettier way to do this - without modifying names
-            var result = new List<WebElement>();
+            var result = new List<JsonWebElementContent>();
             if (searchPolicy.Equals("tag name"))
             {
                 var foundObjectsIdList = this.FindElementsByType(elementId, relativeElement);
-                result.AddRange(foundObjectsIdList.Select(foundObjectId => new WebElement(foundObjectId)));
+                result.AddRange(foundObjectsIdList.Select(foundObjectId => new JsonWebElementContent(foundObjectId)));
             }
 
             if (result.Count != 0)
@@ -305,7 +307,7 @@
             if (this.webElements.TryGetValue(elementId, out valueElement))
             {
                 var textbox = valueElement as TextBox;
-                string jsonValue = Parser.GetKeysString(content);
+                string jsonValue = RequestParser.GetKeysString(content);
                 if (textbox != null)
                 {
                     this.TrySetText(textbox, jsonValue);

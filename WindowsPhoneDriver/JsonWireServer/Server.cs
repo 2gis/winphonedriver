@@ -2,7 +2,6 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using System.IO;
     using System.IO.IsolatedStorage;
@@ -14,6 +13,8 @@
     using Windows.Networking.Connectivity;
     using Windows.Networking.Sockets;
     using Windows.Storage.Streams;
+
+    using WindowsPhoneDriver.Common;
 
     public class Server
     {
@@ -143,10 +144,10 @@
         private string ProcessRequest(string request, string content)
         {
             var response = string.Empty;
-            var urn = Parser.GetRequestUrn(request);
-            var command = Parser.GetUrnLastToken(urn);
+            var urn = RequestParser.GetRequestUrn(request);
+            var command = RequestParser.GetUrnLastToken(urn);
             string elementId;
-            var urnLength = Parser.GetUrnTokensCount(urn);
+            var urnLength = RequestParser.GetUrnTokensCount(urn);
             switch (command)
             {
                 case "ping":
@@ -170,7 +171,7 @@
                     break;
 
                 case "element":
-                    var elementObject = JsonConvert.DeserializeObject<FindElementObject>(content);
+                    var elementObject = JsonConvert.DeserializeObject<JsonFindElementObjectContent>(content);
 
                     switch (urnLength)
                     {
@@ -182,7 +183,7 @@
                         case 5:
 
                             // this is a relative elements command("/session/:sessionId/element/:id/element"), search from specific element
-                            var relativeElementId = Parser.GetElementId(urn);
+                            var relativeElementId = RequestParser.GetElementId(urn);
                             response = this.automator.PerformElementCommand(elementObject, relativeElementId);
                             break;
                     }
@@ -190,7 +191,7 @@
                     break;
 
                 case "elements":
-                    var elementsObject = JsonConvert.DeserializeObject<FindElementObject>(content);
+                    var elementsObject = JsonConvert.DeserializeObject<JsonFindElementObjectContent>(content);
 
                     switch (urnLength)
                     {
@@ -202,7 +203,7 @@
                         case 5:
 
                             // this is a relative elements command("/session/:sessionId/element/:id/element"), search from specific element
-                            var relativeElementId = Parser.GetElementId(urn);
+                            var relativeElementId = RequestParser.GetElementId(urn);
                             response = this.automator.PerformElementsCommand(elementsObject, relativeElementId);
                             break;
                     }
@@ -210,27 +211,27 @@
                     break;
 
                 case "click":
-                    elementId = Parser.GetElementId(urn);
+                    elementId = RequestParser.GetElementId(urn);
                     response = this.automator.PerformClickCommand(elementId);
                     break;
 
                 case "value":
-                    elementId = Parser.GetElementId(urn);
+                    elementId = RequestParser.GetElementId(urn);
                     response = this.automator.PerformValueCommand(elementId, content);
                     break;
 
                 case "text":
-                    elementId = Parser.GetElementId(urn);
+                    elementId = RequestParser.GetElementId(urn);
                     response = this.automator.PerformTextCommand(elementId);
                     break;
 
                 case "displayed":
-                    elementId = Parser.GetElementId(urn);
+                    elementId = RequestParser.GetElementId(urn);
                     response = this.automator.PerformDisplayedCommand(elementId);
                     break;
 
                 case "location":
-                    elementId = Parser.GetElementId(urn);
+                    elementId = RequestParser.GetElementId(urn);
                     response = this.automator.PerformLocationCommand(elementId);
                     break;
 

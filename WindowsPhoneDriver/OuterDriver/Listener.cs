@@ -14,6 +14,8 @@
     using OuterDriver.AutomationExceptions;
     using OuterDriver.EmulatorHelpers;
 
+    using WindowsPhoneDriver.Common;
+
     public class Listener
     {
         #region Fields
@@ -154,8 +156,8 @@
             this.sessionId = "awesomeSessionId";
             var request = acceptedRequest.Request;
             var content = acceptedRequest.Content;
-            var urn = Parser.GetRequestUrn(request);
-            var command = Parser.GetUrnLastToken(urn);
+            var urn = RequestParserEx.GetRequestUrn(request);
+            var command = RequestParserEx.GetUrnLastToken(urn);
             try
             {
                 switch (command)
@@ -175,7 +177,7 @@
                         // gives sometime to load visuals
                         var jsonResponse = Responder.CreateJsonResponse(
                             this.sessionId, 
-                            ResponseStatus.Sucess, 
+                            ResponseStatus.Success, 
                             this.actualCapabilities);
                         responseBody = jsonResponse;
                         break;
@@ -190,13 +192,13 @@
 
                         // Window size is partially implemented
                         // TODO: Handle windows handles? 
-                        var tokens = Parser.GetUrnTokens(urn);
+                        var tokens = RequestParserEx.GetUrnTokens(urn);
                         if (tokens.Length == 5 && tokens[2].Equals("window"))
                         {
                             var phoneScreenSize = this.inputController.PhoneScreenSize();
                             responseBody = Responder.CreateJsonResponse(
                                 this.sessionId, 
-                                ResponseStatus.Sucess, 
+                                ResponseStatus.Success, 
                                 new Dictionary<string, int>
                                     {
                                         { "width", phoneScreenSize.Width }, 
@@ -228,7 +230,7 @@
 
                         var newContent = new JsonValueContent(oldContent.SessionId, oldContent.Id, value);
                         responseBody = this.phoneRequester.SendRequest(
-                            Parser.GetRequestUrn(request), 
+                            RequestParserEx.GetRequestUrn(request), 
                             JsonConvert.SerializeObject(newContent));
                         if (needToClickEnter)
                         {
@@ -267,7 +269,7 @@
                         break;
 
                     case "click":
-                        var requestLength = Parser.GetUrnTokensCount(urn);
+                        var requestLength = RequestParserEx.GetUrnTokensCount(urn);
                         if (requestLength == 3)
                         {
                             // simple click command without element
@@ -275,7 +277,7 @@
                         }
                         else
                         {
-                            responseBody = this.phoneRequester.SendRequest(Parser.GetRequestUrn(request), content);
+                            responseBody = this.phoneRequester.SendRequest(RequestParserEx.GetRequestUrn(request), content);
                             var deserializeObject = JsonConvert.DeserializeObject<JsonResponse>(responseBody);
                             var clickValue = deserializeObject.Value.ToString();
                             if (!string.IsNullOrEmpty(clickValue))
@@ -301,7 +303,7 @@
                         break;
 
                     case "keys":
-                        var jsonValue = Parser.GetKeysString(content);
+                        var jsonValue = RequestParserEx.GetKeysString(content);
                         if (jsonValue.Equals(EnterKey))
                         {
                             this.inputController.ClickEnterKey();
@@ -335,8 +337,8 @@
             string responseBody;
             var request = acceptedRequest.Request;
             var content = acceptedRequest.Content;
-            var urn = Parser.GetRequestUrn(request);
-            if (Parser.ShouldProxyUrn(urn))
+            var urn = RequestParserEx.GetRequestUrn(request);
+            if (RequestParserEx.ShouldProxyUrn(urn))
             {
                 responseBody = this.phoneRequester.SendRequest(urn, content);
             }

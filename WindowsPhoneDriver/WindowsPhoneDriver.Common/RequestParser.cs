@@ -1,34 +1,13 @@
-﻿namespace OuterDriver
+﻿namespace WindowsPhoneDriver.Common
 {
     using System;
-    using System.Collections.Generic;
     using System.Linq;
 
     using Newtonsoft.Json;
 
-    internal class Parser
+    public class RequestParser
     {
         #region Static Fields
-
-        private static readonly List<string> CommandsToProxy = new List<string>
-                                                                   {
-                                                                       "element", 
-                                                                       "elements", 
-                                                                       "text", 
-                                                                       "displayed", 
-                                                                       "location", 
-                                                                       "accept_alert", 
-                                                                       "dismiss_alert", 
-                                                                       "alert_text"
-                                                                   };
-
-        private static readonly List<string> CommandsWithGet = new List<string>
-                                                                   {
-                                                                       "text", 
-                                                                       "displayed", 
-                                                                       "location", 
-                                                                       "alert_text"
-                                                                   };
 
         private static string urnPrefix;
 
@@ -40,7 +19,7 @@
         {
             get
             {
-                return urnPrefix ?? string.Empty;
+                return urnPrefix;
             }
 
             set
@@ -57,16 +36,20 @@
 
         #region Public Methods and Operators
 
-        public static string ChooseRequestMethod(string uri)
+        public static string GetElementId(string urn)
         {
-            return CommandsWithGet.Contains(GetUrnLastToken(uri)) ? "GET" : "POST";
+            var urnTokens = GetUrnTokens(urn);
+            var elementId = urnTokens[urnTokens.Length - 2];
+            return elementId;
         }
 
         public static string GetKeysString(string requestContent)
         {
             var result = string.Empty;
+
             var jsonContent = JsonConvert.DeserializeObject<JsonKeysContent>(requestContent);
             var value = jsonContent.Value;
+
             return value.Aggregate(result, (current, str) => current + str);
         }
 
@@ -101,11 +84,6 @@
         public static int GetUrnTokensCount(string urn)
         {
             return GetUrnTokens(urn).Length;
-        }
-
-        public static bool ShouldProxyUrn(string urn)
-        {
-            return CommandsToProxy.Contains(GetUrnLastToken(urn));
         }
 
         #endregion

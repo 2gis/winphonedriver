@@ -80,7 +80,7 @@
             // create request
             var request = (HttpWebRequest)WebRequest.Create(uri);
             request.ContentType = "application/json";
-            request.Method = Parser.ChooseRequestMethod(uri);
+            request.Method = RequestParserEx.ChooseRequestMethod(uri);
             request.KeepAlive = false;
 
             // write request body

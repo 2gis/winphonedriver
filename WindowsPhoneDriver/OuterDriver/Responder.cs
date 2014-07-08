@@ -7,6 +7,8 @@
 
     using Newtonsoft.Json;
 
+    using WindowsPhoneDriver.Common;
+
     internal class Responder
     {
         #region Public Methods and Operators

@@ -5,18 +5,21 @@
 
     using Newtonsoft.Json;
 
+    using WindowsPhoneDriver.Common;
+
     internal class Responder
     {
         #region Public Methods and Operators
 
         public static string CreateJsonResponse(ResponseStatus status, object value)
         {
+            const string SessionId = "awesomeSessionId";
             if (status != ResponseStatus.Success && value == null)
             {
                 value = ErrorMessage(status);
             }
 
-            return JsonConvert.SerializeObject(new JsonResponse(status, value));
+            return JsonConvert.SerializeObject(new JsonResponse(SessionId, status, value));
         }
 
         public static string CreateResponse(string response)
