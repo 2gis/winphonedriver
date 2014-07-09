@@ -60,7 +60,7 @@
         {
             var ipAddresses = new List<string>();
             var hostnames = NetworkInformation.GetHostNames();
-            const int IanaInterfaceTypeWiFi = 71; // IanaInterfaceType == 71 => Wifi
+            const int IanaInterfaceTypeWiFi = 71; // IanaInterfaceType == 71 => WiFi
             const int IanaInterfaceTypeEthernet = 6; // IanaInterfaceType == 6 => Ethernet (Emulator)
             foreach (var hn in hostnames)
             {

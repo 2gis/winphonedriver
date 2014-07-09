@@ -28,7 +28,7 @@
 
         public string SendRequest(string urn, string requestContent)
         {
-            string result = "error";
+            var result = "error";
             StreamReader reader = null;
             WebResponse response = null;
             try
@@ -40,9 +40,14 @@
 
                 // send the request and get the response
                 response = request.GetResponse();
+                var stream = response.GetResponseStream();
+                if (stream == null)
+                {
+                    throw new NullReferenceException();
+                }
 
                 // read and return the response
-                reader = new StreamReader(response.GetResponseStream());
+                reader = new StreamReader(stream);
                 result = reader.ReadToEnd();
             }
             catch (Exception ex)

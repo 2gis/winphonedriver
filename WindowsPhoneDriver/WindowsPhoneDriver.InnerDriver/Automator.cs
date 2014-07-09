@@ -43,10 +43,10 @@
 
         #region Public Methods and Operators
 
-        public void ClosePopups(bool accert = true)
+        public void ClosePopups(bool accept = true)
         {
             // Will work only with CustomMessageBox or other types of pop-us that have left and right button
-            var buttonName = accert ? "LeftButton" : "RightButton";
+            var buttonName = accept ? "LeftButton" : "RightButton";
             UiHelpers.BeginInvokeSync(
                 () =>
                     {
@@ -87,7 +87,7 @@
                             var elements = GetDescendantsOfTypeByPredicate(
                                 popupChild, 
                                 "System.Windows.Controls.TextBlock");
-                            foreach (var textBlock in elements.Select(dependencyObject => dependencyObject as TextBlock))
+                            foreach (var textBlock in elements.Select(o => o as TextBlock))
                             {
                                 if (textBlock != null)
                                 {
@@ -209,7 +209,6 @@
 
         public string PerformElementsCommand(JsonFindElementObjectContent elementObject, string relativeElementId)
         {
-            string response;
             var elementId = elementObject.Value;
             var searchPolicy = elementObject.UsingMethod;
             DependencyObject relativeElement;
@@ -233,14 +232,9 @@
                 result.AddRange(foundObjectsIdList.Select(foundObjectId => new JsonWebElementContent(foundObjectId)));
             }
 
-            if (result.Count != 0)
-            {
-                response = Responder.CreateJsonResponse(ResponseStatus.Success, result.ToArray());
-            }
-            else
-            {
-                response = Responder.CreateJsonResponse(ResponseStatus.NoSuchElement, null);
-            }
+            var response = result.Count != 0
+                               ? Responder.CreateJsonResponse(ResponseStatus.Success, result.ToArray())
+                               : Responder.CreateJsonResponse(ResponseStatus.NoSuchElement, null);
 
             return response;
         }
@@ -277,9 +271,9 @@
             FrameworkElement element;
             if (this.webElements.TryGetValue(elementId, out element))
             {
-                var properyNames = new List<string> { "Text", "Content" };
+                var propertyNames = new List<string> { "Text", "Content" };
 
-                foreach (var propertyName in properyNames)
+                foreach (var propertyName in propertyNames)
                 {
                     // list of Text property aliases. Use "Text" for TextBox, TextBlock, etc. Use "Content" as fallback if there is no "Text" property
                     var textProperty = element.GetType().GetProperty(propertyName);

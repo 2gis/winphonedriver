@@ -128,11 +128,11 @@
             var desiredCapabilitiesToken = parsedContent["desiredCapabilities"];
             if (desiredCapabilitiesToken != null)
             {
-                var desiredCapablilities = desiredCapabilitiesToken.ToObject<Dictionary<string, object>>();
+                var desiredCapabilities = desiredCapabilitiesToken.ToObject<Dictionary<string, object>>();
                 foreach (var capability in supportedCapabilities)
                 {
                     object value;
-                    if (!desiredCapablilities.TryGetValue(capability.Key, out value))
+                    if (!desiredCapabilities.TryGetValue(capability.Key, out value))
                     {
                         value = capability.Value;
                     }
@@ -155,8 +155,8 @@
             this.sessionId = "awesomeSessionId";
             var request = acceptedRequest.Request;
             var content = acceptedRequest.Content;
-            var urn = RequestParserEx.GetRequestUrn(request);
-            var command = RequestParserEx.GetUrnLastToken(urn);
+            var urn = RequestParser.GetRequestUrn(request);
+            var command = RequestParser.GetUrnLastToken(urn);
             try
             {
                 switch (command)
@@ -191,7 +191,7 @@
 
                         // Window size is partially implemented
                         // TODO: Handle windows handles? 
-                        var tokens = RequestParserEx.GetUrnTokens(urn);
+                        var tokens = RequestParser.GetUrnTokens(urn);
                         if (tokens.Length == 5 && tokens[2].Equals("window"))
                         {
                             var phoneScreenSize = this.inputController.PhoneScreenSize();
@@ -229,7 +229,7 @@
 
                         var newContent = new JsonValueContent(oldContent.SessionId, oldContent.Id, value);
                         responseBody = this.phoneRequester.SendRequest(
-                            RequestParserEx.GetRequestUrn(request), 
+                            RequestParser.GetRequestUrn(request), 
                             JsonConvert.SerializeObject(newContent));
                         if (needToClickEnter)
                         {
@@ -268,7 +268,7 @@
                         break;
 
                     case "click":
-                        var requestLength = RequestParserEx.GetUrnTokensCount(urn);
+                        var requestLength = RequestParser.GetUrnTokensCount(urn);
                         if (requestLength == 3)
                         {
                             // simple click command without element
@@ -277,7 +277,7 @@
                         else
                         {
                             responseBody = this.phoneRequester.SendRequest(
-                                RequestParserEx.GetRequestUrn(request), 
+                                RequestParser.GetRequestUrn(request), 
                                 content);
                             var deserializeObject = JsonConvert.DeserializeObject<JsonResponse>(responseBody);
                             var clickValue = deserializeObject.Value.ToString();
@@ -304,7 +304,7 @@
                         break;
 
                     case "keys":
-                        var jsonValue = RequestParserEx.GetKeysString(content);
+                        var jsonValue = RequestParser.GetKeysString(content);
                         if (jsonValue.Equals(EnterKey))
                         {
                             this.inputController.ClickEnterKey();
@@ -338,7 +338,7 @@
             string responseBody;
             var request = acceptedRequest.Request;
             var content = acceptedRequest.Content;
-            var urn = RequestParserEx.GetRequestUrn(request);
+            var urn = RequestParser.GetRequestUrn(request);
             if (RequestParserEx.ShouldProxyUrn(urn))
             {
                 responseBody = this.phoneRequester.SendRequest(urn, content);
@@ -362,7 +362,7 @@
             var desiredsmoothing = Convert.ToInt32(this.actualCapabilities["emulatorMouseDelay"]);
             this.inputController = new EmulatorInputController(this.deployer.DeviceName)
                                        {
-                                           MouseMovmentSmoothing =
+                                           MouseMovementSmoothing =
                                                desiredsmoothing
                                        };
 

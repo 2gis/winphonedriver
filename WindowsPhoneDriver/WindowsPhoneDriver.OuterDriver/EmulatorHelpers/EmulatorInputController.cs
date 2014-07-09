@@ -65,7 +65,7 @@
 
         #region Public Properties
 
-        public int MouseMovmentSmoothing
+        public int MouseMovementSmoothing
         {
             // Mouse movement delay that can be used in tests debugging
             get
@@ -185,7 +185,7 @@
             {
                 iterPoint = new PointF(iterPoint.X + slope.X, iterPoint.Y + slope.Y);
                 Cursor.Position = Point.Round(iterPoint);
-                Thread.Sleep(this.MouseMovmentSmoothing);
+                Thread.Sleep(this.MouseMovementSmoothing);
             }
 
             // Move the mouse to the final destination.

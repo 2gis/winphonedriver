@@ -24,7 +24,7 @@
             }
 
             var listener = new Listener(listeningPort);
-            RequestParserEx.UrnPrefix = options.UrlBase;
+            RequestParser.UrnPrefix = options.UrlBase;
 
             listener.StartListening();
         }

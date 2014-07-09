@@ -1,7 +1,5 @@
 ﻿namespace WindowsPhoneDriver.OuterDriver.EmulatorHelpers
 {
-    using System;
-
     internal interface IDeployer
     {
         #region Public Properties

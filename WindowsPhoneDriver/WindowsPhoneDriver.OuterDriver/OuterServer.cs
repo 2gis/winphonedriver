@@ -6,8 +6,6 @@
     using System.Net;
     using System.Net.Sockets;
 
-    using global::WindowsPhoneDriver.OuterDriver;
-
     #endregion
 
     internal class OuterServer
