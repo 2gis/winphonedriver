@@ -57,7 +57,7 @@
       <HintPath>..\packages\CommandLineParser.1.9.71\lib\net45\CommandLine.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Phone.Tools.Deploy">
-      <HintPath>..\..\..\..\..\..\Program Files (x86)\Microsoft SDKs\Windows Phone\v8.1\Tools\AppDeploy\Microsoft.Phone.Tools.Deploy.dll</HintPath>
+      <HintPath>C:\Program Files (x86)\Microsoft SDKs\Windows Phone\v8.1\Tools\AppDeploy\Microsoft.Phone.Tools.Deploy.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
