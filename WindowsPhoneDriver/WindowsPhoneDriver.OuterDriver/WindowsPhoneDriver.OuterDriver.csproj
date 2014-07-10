@@ -76,8 +76,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AutomationExceptions\AutomationException.cs" />
-    <Compile Include="AutomationExceptions\MoveTargetOutOfBoundsException.cs" />
     <Compile Include="CommandLineOptions.cs" />
     <Compile Include="EmulatorHelpers\Deployer81.cs" />
     <Compile Include="EmulatorHelpers\EmulatorInputController.cs" />

@@ -1,15 +1,19 @@
-﻿namespace WindowsPhoneDriver.OuterDriver.AutomationExceptions
+﻿namespace WindowsPhoneDriver.Common
 {
     using System;
-    using System.Runtime.Serialization;
 
-    [Serializable]
     public class AutomationException : Exception
     {
         #region Constructors and Destructors
 
         public AutomationException()
         {
+        }
+
+        public AutomationException(string message, ResponseStatus status)
+            : base(message)
+        {
+            this.Status = status;
         }
 
         public AutomationException(string message, params object[] args)
@@ -22,10 +26,11 @@
         {
         }
 
-        public AutomationException(SerializationInfo info, StreamingContext context)
-            : base(info, context)
-        {
-        }
+        #endregion
+
+        #region Public Properties
+
+        public ResponseStatus Status { get; set; }
 
         #endregion
     }

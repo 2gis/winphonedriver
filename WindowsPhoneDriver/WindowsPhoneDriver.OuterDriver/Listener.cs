@@ -12,7 +12,6 @@
     using Newtonsoft.Json.Linq;
 
     using WindowsPhoneDriver.Common;
-    using WindowsPhoneDriver.OuterDriver.AutomationExceptions;
     using WindowsPhoneDriver.OuterDriver.EmulatorHelpers;
 
     public class Listener
@@ -318,16 +317,9 @@
                         break;
                 }
             }
-            catch (MoveTargetOutOfBoundsException ex)
-            {
-                responseBody = Responder.CreateJsonResponse(
-                    this.sessionId, 
-                    ResponseStatus.MoveTargetOutOfBounds, 
-                    ex.Message);
-            }
             catch (AutomationException ex)
             {
-                responseBody = Responder.CreateJsonResponse(this.sessionId, ResponseStatus.UnknownError, ex.Message);
+                responseBody = Responder.CreateJsonResponse(this.sessionId, ex.Status, ex.Message);
             }
 
             return responseBody;
