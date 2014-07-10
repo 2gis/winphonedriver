@@ -92,10 +92,22 @@
   <ItemGroup>
     <Compile Include="AcceptedRequest.cs" />
     <Compile Include="Automator.cs" />
+    <Compile Include="Automator.FindElementBy.cs" />
+    <Compile Include="Automator.FindelementsBy.cs" />
+    <Compile Include="Commands\AlertCommand.cs" />
+    <Compile Include="Commands\AlertTextCommand.cs" />
+    <Compile Include="Commands\DisplayedCommand.cs" />
+    <Compile Include="Commands\ClickCommand.cs" />
+    <Compile Include="Commands\CommandBase.cs" />
+    <Compile Include="Commands\LocationCommand.cs" />
+    <Compile Include="Commands\NullCommand.cs" />
+    <Compile Include="Commands\TextCommand.cs" />
+    <Compile Include="Commands\ValueCommand.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Responder.cs" />
     <Compile Include="AutomationServer.cs" />
     <Compile Include="UiHelper.cs" />
+    <Compile Include="Commands\VisualTreeHelperMethods.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">

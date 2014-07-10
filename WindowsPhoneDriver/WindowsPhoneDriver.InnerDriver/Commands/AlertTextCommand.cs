@@ -1,0 +1,56 @@
+﻿namespace WindowsPhoneDriver.InnerDriver.Commands
+{
+    using System.Linq;
+    using System.Windows;
+    using System.Windows.Controls;
+    using System.Windows.Media;
+
+    using WindowsPhoneDriver.Common;
+
+    internal class AlertTextCommand : CommandBase
+    {
+        #region Public Methods and Operators
+
+        public override string DoImpl()
+        {
+            var message = string.Empty;
+
+            var popups = VisualTreeHelper.GetOpenPopups().ToList();
+            var children = popups.Select(x => x.Child).ToList();
+            if (!children.Any())
+            {
+                throw new AutomationException("No alert is displayed", ResponseStatus.NoAlertOpenError);
+            }
+
+            foreach (var popupChild in children)
+            {
+                message += FirstTextInChild(popupChild);
+
+                if (!string.IsNullOrEmpty(message))
+                {
+                    break;
+                }
+            }
+
+            return Responder.CreateJsonResponse(ResponseStatus.Success, message);
+        }
+
+        #endregion
+
+        #region Methods
+
+        private static string FirstTextInChild(DependencyObject popupChild)
+        {
+            var elements = VisualTreeHelperMethods.GetDescendantsOfTypeByPredicate(
+                popupChild, 
+                "System.Windows.Controls.TextBlock");
+            return
+                elements.Select(o => o as TextBlock)
+                    .Where(textBlock => textBlock != null)
+                    .Select(textBlock => textBlock.Text)
+                    .FirstOrDefault(x => !string.IsNullOrEmpty(x));
+        }
+
+        #endregion
+    }
+}
