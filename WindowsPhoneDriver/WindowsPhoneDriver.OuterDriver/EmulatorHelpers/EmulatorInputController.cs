@@ -7,7 +7,7 @@
     using System.Threading;
     using System.Windows.Forms;
 
-    using WindowsPhoneDriver.OuterDriver.AutomationExceptions;
+    using WindowsPhoneDriver.Common;
 
     internal class EmulatorInputController
     {
@@ -135,13 +135,14 @@
             var hostPoint = this.TranslatePhonePointToHostPoint(phonePoint);
             if (!this.PhonePointVisibleOnScreen(phonePoint))
             {
-                throw new MoveTargetOutOfBoundsException(
+                throw new AutomationException(
                     string.Format(
                         "Location {0}:{1} is out of phone screen bounds {2}:{3}. Scroll into view before clicking.", 
                         phonePoint.X, 
                         phonePoint.Y, 
                         this.PhoneScreenSize().Width, 
-                        this.PhoneScreenSize().Height));
+                        this.PhoneScreenSize().Height), 
+                    ResponseStatus.MoveTargetOutOfBounds);
             }
 
             this.LinearSmoothMoveCursorToHostAtPoint(new Point(hostPoint.X, hostPoint.Y));
