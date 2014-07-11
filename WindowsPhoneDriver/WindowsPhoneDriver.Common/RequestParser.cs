@@ -39,8 +39,7 @@
         public static string GetElementId(string urn)
         {
             var urnTokens = GetUrnTokens(urn);
-            var elementId = urnTokens[urnTokens.Length - 2];
-            return elementId;
+            return urnTokens.Length > 3 ? urnTokens[3] : null;
         }
 
         public static string GetKeysString(string requestContent)

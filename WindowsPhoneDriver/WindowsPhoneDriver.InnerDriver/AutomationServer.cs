@@ -1,14 +1,12 @@
 ﻿namespace WindowsPhoneDriver.InnerDriver
 {
     using System;
-    using System.Collections.Generic;
     using System.Globalization;
     using System.IO;
     using System.IO.IsolatedStorage;
+    using System.Linq;
     using System.Threading.Tasks;
     using System.Windows;
-
-    using Newtonsoft.Json;
 
     using Windows.Networking.Connectivity;
     using Windows.Networking.Sockets;
@@ -58,20 +56,15 @@
 
         public string FindIpAddress()
         {
-            var ipAddresses = new List<string>();
             var hostnames = NetworkInformation.GetHostNames();
             const int IanaInterfaceTypeWiFi = 71; // IanaInterfaceType == 71 => WiFi
             const int IanaInterfaceTypeEthernet = 6; // IanaInterfaceType == 6 => Ethernet (Emulator)
-            foreach (var hn in hostnames)
-            {
-                if (hn.IPInformation != null
-                    && (hn.IPInformation.NetworkAdapter.IanaInterfaceType == IanaInterfaceTypeWiFi
-                        || hn.IPInformation.NetworkAdapter.IanaInterfaceType == IanaInterfaceTypeEthernet))
-                {
-                    var ipAddress = hn.DisplayName;
-                    ipAddresses.Add(ipAddress);
-                }
-            }
+            var ipAddresses = (from hn in hostnames
+                               where
+                                   hn.IPInformation != null
+                                   && (hn.IPInformation.NetworkAdapter.IanaInterfaceType == IanaInterfaceTypeWiFi
+                                       || hn.IPInformation.NetworkAdapter.IanaInterfaceType == IanaInterfaceTypeEthernet)
+                               select hn.DisplayName).ToList();
 
             if (ipAddresses.Count < 1)
             {
@@ -152,104 +145,9 @@
 
         private string ProcessRequest(string request, string content)
         {
-            var response = string.Empty;
             var urn = RequestParser.GetRequestUrn(request);
-            var command = RequestParser.GetUrnLastToken(urn);
-            string elementId;
-            var urnLength = RequestParser.GetUrnTokensCount(urn);
-            switch (command)
-            {
-                case "ping":
-                    response = Responder.CreateJsonResponse(ResponseStatus.Success, "ping");
-                    break;
 
-                case "status":
-                    response = Responder.CreateJsonResponse(ResponseStatus.Success, this.FindIpAddress());
-                    break;
-
-                case "alert_text":
-                    response = this.automator.FirstPopupText();
-                    break;
-
-                case "accept_alert":
-                    this.automator.ClosePopups();
-                    break;
-
-                case "dismiss_alert":
-                    this.automator.ClosePopups(false);
-                    break;
-
-                case "element":
-                    var elementObject = JsonConvert.DeserializeObject<JsonFindElementObjectContent>(content);
-
-                    switch (urnLength)
-                    {
-                        case 3:
-
-                            // this is an absolute elements command ("/session/:sessionId/element"), search from root
-                            response = this.automator.PerformElementCommand(elementObject, null);
-                            break;
-                        case 5:
-
-                            // this is a relative elements command("/session/:sessionId/element/:id/element"), search from specific element
-                            var relativeElementId = RequestParser.GetElementId(urn);
-                            response = this.automator.PerformElementCommand(elementObject, relativeElementId);
-                            break;
-                    }
-
-                    break;
-
-                case "elements":
-                    var elementsObject = JsonConvert.DeserializeObject<JsonFindElementObjectContent>(content);
-
-                    switch (urnLength)
-                    {
-                        case 3:
-
-                            // this is an absolute elements command ("/session/:sessionId/element"), search from root
-                            response = this.automator.PerformElementsCommand(elementsObject, null);
-                            break;
-                        case 5:
-
-                            // this is a relative elements command("/session/:sessionId/element/:id/element"), search from specific element
-                            var relativeElementId = RequestParser.GetElementId(urn);
-                            response = this.automator.PerformElementsCommand(elementsObject, relativeElementId);
-                            break;
-                    }
-
-                    break;
-
-                case "click":
-                    elementId = RequestParser.GetElementId(urn);
-                    response = this.automator.PerformClickCommand(elementId);
-                    break;
-
-                case "value":
-                    elementId = RequestParser.GetElementId(urn);
-                    response = this.automator.PerformValueCommand(elementId, content);
-                    break;
-
-                case "text":
-                    elementId = RequestParser.GetElementId(urn);
-                    response = this.automator.PerformTextCommand(elementId);
-                    break;
-
-                case "displayed":
-                    elementId = RequestParser.GetElementId(urn);
-                    response = this.automator.PerformDisplayedCommand(elementId);
-                    break;
-
-                case "location":
-                    elementId = RequestParser.GetElementId(urn);
-                    response = this.automator.PerformLocationCommand(elementId);
-                    break;
-
-                default:
-                    response = "Unimplemented";
-                    break;
-            }
-
-            return response;
+            return this.automator.ProcessCommand(urn, content);
         }
 
         #endregion
