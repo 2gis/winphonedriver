@@ -21,7 +21,7 @@
 
         public override string DoImpl()
         {
-            var webElements = this.WebElements;
+            var webElements = this.Automator.WebElements;
             string response;
             FrameworkElement valueElement;
             if (webElements.TryGetValue(this.ElementId, out valueElement))

@@ -1,10 +1,10 @@
 ﻿namespace WindowsPhoneDriver.InnerDriver
 {
     using System;
-    using System.Collections.Generic;
     using System.Globalization;
     using System.IO;
     using System.IO.IsolatedStorage;
+    using System.Linq;
     using System.Threading.Tasks;
     using System.Windows;
 
@@ -56,20 +56,15 @@
 
         public string FindIpAddress()
         {
-            var ipAddresses = new List<string>();
             var hostnames = NetworkInformation.GetHostNames();
             const int IanaInterfaceTypeWiFi = 71; // IanaInterfaceType == 71 => WiFi
             const int IanaInterfaceTypeEthernet = 6; // IanaInterfaceType == 6 => Ethernet (Emulator)
-            foreach (var hn in hostnames)
-            {
-                if (hn.IPInformation != null
-                    && (hn.IPInformation.NetworkAdapter.IanaInterfaceType == IanaInterfaceTypeWiFi
-                        || hn.IPInformation.NetworkAdapter.IanaInterfaceType == IanaInterfaceTypeEthernet))
-                {
-                    var ipAddress = hn.DisplayName;
-                    ipAddresses.Add(ipAddress);
-                }
-            }
+            var ipAddresses = (from hn in hostnames
+                               where
+                                   hn.IPInformation != null
+                                   && (hn.IPInformation.NetworkAdapter.IanaInterfaceType == IanaInterfaceTypeWiFi
+                                       || hn.IPInformation.NetworkAdapter.IanaInterfaceType == IanaInterfaceTypeEthernet)
+                               select hn.DisplayName).ToList();
 
             if (ipAddresses.Count < 1)
             {

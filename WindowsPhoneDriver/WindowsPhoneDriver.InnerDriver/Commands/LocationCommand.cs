@@ -19,9 +19,9 @@
         {
             string response;
             FrameworkElement valueElement;
-            if (this.WebElements.TryGetValue(this.ElementId, out valueElement))
+            if (this.Automator.WebElements.TryGetValue(this.ElementId, out valueElement))
             {
-                var coordinates = VisualTreeHelperMethods.GetCoordinates(valueElement, this.VisualRoot);
+                var coordinates = VisualTreeHelperMethods.GetCoordinates(valueElement, this.Automator.VisualRoot);
                 var coordinatesDict = new Dictionary<string, int>
                                           {
                                               { "x", (int)coordinates.X }, 

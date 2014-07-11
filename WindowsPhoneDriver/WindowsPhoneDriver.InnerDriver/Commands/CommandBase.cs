@@ -1,8 +1,6 @@
 ﻿namespace WindowsPhoneDriver.InnerDriver.Commands
 {
     using System;
-    using System.Collections.Generic;
-    using System.Windows;
 
     using WindowsPhoneDriver.Common;
 
@@ -10,9 +8,7 @@
     {
         #region Public Properties
 
-        public UIElement VisualRoot { get; set; }
-
-        public Dictionary<string, FrameworkElement> WebElements { get; set; }
+        public Automator Automator { get; set; }
 
         #endregion
 
@@ -20,14 +16,9 @@
 
         public string Do()
         {
-            if (this.WebElements == null)
+            if (this.Automator == null)
             {
-                throw new InvalidOperationException("WebElements must be set before Do() is called");
-            }
-
-            if (this.VisualRoot == null)
-            {
-                throw new InvalidOperationException("VisualRoot must be set before Do() is called");
+                throw new InvalidOperationException("Automator must be set before Do() is called");
             }
 
             var response = string.Empty;

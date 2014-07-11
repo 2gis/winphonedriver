@@ -17,7 +17,7 @@
 
         public override string DoImpl()
         {
-            var webElements = this.WebElements;
+            var webElements = this.Automator.WebElements;
             var text = string.Empty;
             string response;
             FrameworkElement element;

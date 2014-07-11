@@ -19,10 +19,10 @@
             // Warning: this method does not actually click, it gets coordinates for use in outerdriver.
             string response;
             FrameworkElement element;
-            if (this.WebElements.TryGetValue(this.ElementId, out element))
+            if (this.Automator.WebElements.TryGetValue(this.ElementId, out element))
             {
                 // TODO: Replace with implementation using AutomationPeer
-                var coordinates = VisualTreeHelperMethods.GetCoordinates(element, this.VisualRoot);
+                var coordinates = VisualTreeHelperMethods.GetCoordinates(element, this.Automator.VisualRoot);
                 var strCoordinates = coordinates.X + ":" + coordinates.Y;
                 response = Responder.CreateJsonResponse(ResponseStatus.UnknownError, strCoordinates);
             }

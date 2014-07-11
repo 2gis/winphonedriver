@@ -8,6 +8,7 @@
     using System.Windows.Media;
 
     using WindowsPhoneDriver.Common;
+    using WindowsPhoneDriver.InnerDriver.Commands.FindByHelpers;
 
     internal class AlertCommand : CommandBase
     {
@@ -38,9 +39,7 @@
             foreach (var popup in popups)
             {
                 var popupChild = popup.Child;
-                var element =
-                    (FrameworkElement)
-                    VisualTreeHelperMethods.GetDescendantsOfNameByPredicate(popupChild, buttonName).FirstOrDefault();
+                var element = (FrameworkElement)Finder.GetDescendantsBy(popupChild, new By("name", buttonName)).FirstOrDefault();
                 if (!(element is Button))
                 {
                     continue;

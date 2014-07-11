@@ -6,6 +6,7 @@
     using System.Windows.Media;
 
     using WindowsPhoneDriver.Common;
+    using WindowsPhoneDriver.InnerDriver.Commands.FindByHelpers;
 
     internal class AlertTextCommand : CommandBase
     {
@@ -41,9 +42,9 @@
 
         private static string FirstTextInChild(DependencyObject popupChild)
         {
-            var elements = VisualTreeHelperMethods.GetDescendantsOfTypeByPredicate(
-                popupChild, 
-                "System.Windows.Controls.TextBlock");
+            var elements = Finder.GetDescendantsBy(
+                popupChild,
+                new By("name", "System.Windows.Controls.TextBlock"));
             return
                 elements.Select(o => o as TextBlock)
                     .Where(textBlock => textBlock != null)

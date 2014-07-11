@@ -10,7 +10,7 @@
     using WindowsPhoneDriver.Common;
     using WindowsPhoneDriver.InnerDriver.Commands;
 
-    internal partial class Automator
+    internal class Automator
     {
         #region Static Fields
 
@@ -18,97 +18,40 @@
 
         #endregion
 
-        #region Fields
-
-        private readonly UIElement visualRoot;
-
-        private readonly Dictionary<string, FrameworkElement> webElements;
-
-        #endregion
-
         #region Constructors and Destructors
 
         public Automator(UIElement visualRoot)
         {
-            this.webElements = new Dictionary<string, FrameworkElement>();
-            this.visualRoot = visualRoot;
+            this.VisualRoot = visualRoot;
+            this.WebElements = new Dictionary<string, FrameworkElement>();
         }
+
+        #endregion
+
+        #region Public Properties
+
+        public UIElement VisualRoot { get; private set; }
+
+        // TODO: Replace with special class (with WeakReference dict inside)
+        public Dictionary<string, FrameworkElement> WebElements { get; private set; }
 
         #endregion
 
         #region Public Methods and Operators
 
-        public string PerformAlertCommand(bool accept)
+        public string AddElementToWebElements(FrameworkElement element)
         {
-            var command = new AlertCommand
-                              {
-                                  WebElements = this.webElements, 
-                                  VisualRoot = this.visualRoot, 
-                                  Action = accept ? AlertCommand.With.Accept : AlertCommand.With.Dismiss, 
-                              };
-            return command.Do();
-        }
+            var webElementId = this.WebElements.FirstOrDefault(x => x.Value == element).Key;
 
-        public string PerformClickCommand(string elementId)
-        {
-            var command = new ClickCommand
-                              {
-                                  WebElements = this.webElements, 
-                                  VisualRoot = this.visualRoot, 
-                                  ElementId = elementId
-                              };
-            return command.Do();
-        }
+            if (webElementId == null)
+            {
+                Interlocked.Increment(ref safeInstanceCount);
 
-        public string PerformDisplayedCommand(string elementId)
-        {
-            var command = new DisplayedCommand
-                              {
-                                  WebElements = this.webElements, 
-                                  VisualRoot = this.visualRoot, 
-                                  ElementId = elementId
-                              };
-            return command.Do();
-        }
+                webElementId = element.GetHashCode() + "-" + safeInstanceCount.ToString(string.Empty);
+                this.WebElements.Add(webElementId, element);
+            }
 
-        public string PerformLocationCommand(string elementId)
-        {
-            var command = new LocationCommand
-                              {
-                                  WebElements = this.webElements, 
-                                  VisualRoot = this.visualRoot, 
-                                  ElementId = elementId
-                              };
-            return command.Do();
-        }
-
-        public string PerformTextCommand(string elementId)
-        {
-            var command = new TextCommand
-                              {
-                                  WebElements = this.webElements, 
-                                  VisualRoot = this.visualRoot, 
-                                  ElementId = elementId
-                              };
-            return command.Do();
-        }
-
-        public string PerformValueCommand(string elementId, string content)
-        {
-            var command = new ValueCommand
-                              {
-                                  WebElements = this.webElements, 
-                                  VisualRoot = this.visualRoot, 
-                                  ElementId = elementId, 
-                                  KeyString = RequestParser.GetKeysString(content)
-                              };
-            return command.Do();
-        }
-
-        public string PerfromAlertTextCommand()
-        {
-            var command = new AlertTextCommand { WebElements = this.webElements, VisualRoot = this.visualRoot, };
-            return command.Do();
+            return webElementId;
         }
 
         public string ProcessCommand(string urn, string content)
@@ -116,7 +59,6 @@
             var response = string.Empty;
             var command = RequestParser.GetUrnLastToken(urn);
             string elementId;
-            var urnLength = RequestParser.GetUrnTokensCount(urn);
             CommandBase commandToExecute = null;
             switch (command)
             {
@@ -137,42 +79,28 @@
                     break;
 
                 case "element":
-                    var elementObject = JsonConvert.DeserializeObject<JsonFindElementObjectContent>(content);
-
-                    switch (urnLength)
-                    {
-                        case 3:
-
-                            // this is an absolute elements command ("/session/:sessionId/element"), search from root
-                            response = this.PerformElementCommand(elementObject, null);
-                            break;
-                        case 5:
-
-                            // this is a relative elements command("/session/:sessionId/element/:id/element"), search from specific element
-                            var relativeElementId = RequestParser.GetElementId(urn);
-                            response = this.PerformElementCommand(elementObject, relativeElementId);
-                            break;
-                    }
+                    elementId = RequestParser.GetElementId(urn);
+                    commandToExecute = new ElementCommand
+                                           {
+                                               ElementId = elementId, 
+                                               SearchParameters =
+                                                   JsonConvert
+                                                   .DeserializeObject<JsonFindElementObjectContent>(
+                                                       content)
+                                           };
 
                     break;
 
                 case "elements":
-                    var elementsObject = JsonConvert.DeserializeObject<JsonFindElementObjectContent>(content);
-
-                    switch (urnLength)
-                    {
-                        case 3:
-
-                            // this is an absolute elements command ("/session/:sessionId/element"), search from root
-                            response = this.PerformElementsCommand(elementsObject, null);
-                            break;
-                        case 5:
-
-                            // this is a relative elements command("/session/:sessionId/element/:id/element"), search from specific element
-                            var relativeElementId = RequestParser.GetElementId(urn);
-                            response = this.PerformElementsCommand(elementsObject, relativeElementId);
-                            break;
-                    }
+                    elementId = RequestParser.GetElementId(urn);
+                    commandToExecute = new ElementsCommand
+                                           {
+                                               ElementId = elementId, 
+                                               SearchParameters =
+                                                   JsonConvert
+                                                   .DeserializeObject<JsonFindElementObjectContent>(
+                                                       content)
+                                           };
 
                     break;
 
@@ -215,30 +143,12 @@
                 return response;
             }
 
-            commandToExecute.VisualRoot = this.visualRoot;
-            commandToExecute.WebElements = this.webElements;
+            // TODO: Replace passing Automator to command with passing some kind of configuration
+            // Probably will need a separate implementation of WebElements class
+            commandToExecute.Automator = this;
 
             response = commandToExecute.Do();
             return response;
-        }
-
-        #endregion
-
-        #region Methods
-
-        private string AddElementToWebElements(FrameworkElement element)
-        {
-            var webElementId = this.webElements.FirstOrDefault(x => x.Value == element).Key;
-
-            if (webElementId == null)
-            {
-                Interlocked.Increment(ref safeInstanceCount);
-
-                webElementId = element.GetHashCode() + "-" + safeInstanceCount.ToString(string.Empty);
-                this.webElements.Add(webElementId, element);
-            }
-
-            return webElementId;
         }
 
         #endregion

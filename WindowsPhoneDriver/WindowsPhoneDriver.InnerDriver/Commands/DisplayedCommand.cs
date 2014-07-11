@@ -18,7 +18,7 @@
         {
             string response;
             FrameworkElement element;
-            if (this.WebElements.TryGetValue(this.ElementId, out element))
+            if (this.Automator.WebElements.TryGetValue(this.ElementId, out element))
             {
                 var displayed = element.IsUserVisible();
 
