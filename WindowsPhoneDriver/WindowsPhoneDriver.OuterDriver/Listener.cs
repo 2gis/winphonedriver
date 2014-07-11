@@ -246,13 +246,17 @@
                             {
                                 var locationRequest = "/session/" + this.sessionId + "/element/" + elementId
                                                       + "/location";
-                                var locationResponse = this.phoneRequester.SendRequest(locationRequest, string.Empty);
-                                var deserializeObject = JsonConvert.DeserializeObject<JsonResponse>(locationResponse);
-                                var values =
-                                    JsonConvert.DeserializeObject<Dictionary<string, string>>(
-                                        deserializeObject.Value.ToString());
-                                coordinates.X = Convert.ToInt32(values["x"]);
-                                coordinates.Y = Convert.ToInt32(values["y"]);
+                                responseBody = this.phoneRequester.SendRequest(locationRequest, string.Empty);
+
+                                var deserializeObject = JsonConvert.DeserializeObject<JsonResponse>(responseBody);
+                                if (deserializeObject.Status == ResponseStatus.Success)
+                                {
+                                    var values =
+                                        JsonConvert.DeserializeObject<Dictionary<string, string>>(
+                                            deserializeObject.Value.ToString());
+                                    coordinates.X = Convert.ToInt32(values["x"]);
+                                    coordinates.Y = Convert.ToInt32(values["y"]);
+                                }
                             }
                             else
                             {
@@ -279,16 +283,19 @@
                                 RequestParser.GetRequestUrn(request), 
                                 content);
                             var deserializeObject = JsonConvert.DeserializeObject<JsonResponse>(responseBody);
-                            var clickValue = deserializeObject.Value.ToString();
-                            if (!string.IsNullOrEmpty(clickValue))
+                            if (deserializeObject.Status == ResponseStatus.Success)
                             {
-                                var clickCoordinatesArray = clickValue.Split(':');
-                                var offsetX = Convert.ToInt32(clickCoordinatesArray[0]);
-                                var offsetY = Convert.ToInt32(clickCoordinatesArray[1]);
-                                var point = new Point(offsetX, offsetY);
-                                this.inputController.LeftClickPhoneScreenAtPoint(point);
-                                Console.WriteLine("Coordinates: " + offsetX + " " + offsetY);
-                                responseBody = string.Empty;
+                                var clickValue = deserializeObject.Value.ToString();
+                                if (!string.IsNullOrEmpty(clickValue))
+                                {
+                                    var clickCoordinatesArray = clickValue.Split(':');
+                                    var offsetX = Convert.ToInt32(clickCoordinatesArray[0]);
+                                    var offsetY = Convert.ToInt32(clickCoordinatesArray[1]);
+                                    var point = new Point(offsetX, offsetY);
+                                    this.inputController.LeftClickPhoneScreenAtPoint(point);
+                                    Console.WriteLine("Coordinates: " + offsetX + " " + offsetY);
+                                    responseBody = string.Empty;
+                                }
                             }
                         }
 
@@ -327,20 +334,13 @@
 
         private string HandleRequest(AcceptedRequest acceptedRequest)
         {
-            string responseBody;
             var request = acceptedRequest.Request;
             var content = acceptedRequest.Content;
             var urn = RequestParser.GetRequestUrn(request);
-            if (RequestParserEx.ShouldProxyUrn(urn))
-            {
-                responseBody = this.phoneRequester.SendRequest(urn, content);
-            }
-            else
-            {
-                responseBody = this.HandleLocalRequest(acceptedRequest);
-            }
 
-            return responseBody;
+            return RequestParserEx.ShouldProxyUrn(urn)
+                       ? this.phoneRequester.SendRequest(urn, content)
+                       : this.HandleLocalRequest(acceptedRequest);
         }
 
         private string InitializeApplication()

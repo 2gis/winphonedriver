@@ -21,7 +21,7 @@
             var coordinates = VisualTreeHelperMethods.GetCoordinates(element, this.Automator.VisualRoot);
             var strCoordinates = coordinates.X + ":" + coordinates.Y;
 
-            return Responder.CreateJsonResponse(ResponseStatus.UnknownError, strCoordinates);
+            return Responder.CreateJsonResponse(ResponseStatus.Success, strCoordinates);
         }
 
         #endregion
