@@ -1,7 +1,6 @@
 ﻿namespace WindowsPhoneDriver.InnerDriver.Commands
 {
     using System.Collections.Generic;
-    using System.Windows;
 
     using WindowsPhoneDriver.Common;
 
@@ -17,24 +16,15 @@
 
         public override string DoImpl()
         {
-            string response;
-            FrameworkElement valueElement;
-            if (this.Automator.WebElements.TryGetValue(this.ElementId, out valueElement))
-            {
-                var coordinates = VisualTreeHelperMethods.GetCoordinates(valueElement, this.Automator.VisualRoot);
-                var coordinatesDict = new Dictionary<string, int>
-                                          {
-                                              { "x", (int)coordinates.X }, 
-                                              { "y", (int)coordinates.Y }
-                                          };
-                response = Responder.CreateJsonResponse(ResponseStatus.Success, coordinatesDict);
-            }
-            else
-            {
-                throw new AutomationException("Element referenced is no longer attached to the page's DOM.", ResponseStatus.StaleElementReference);
-            }
+            var element = this.Automator.WebElements.GetRegisteredElement(this.ElementId);
+            var coordinates = VisualTreeHelperMethods.GetCoordinates(element, this.Automator.VisualRoot);
+            var coordinatesDict = new Dictionary<string, int>
+                                      {
+                                          { "x", (int)coordinates.X }, 
+                                          { "y", (int)coordinates.Y }
+                                      };
 
-            return response;
+            return Responder.CreateJsonResponse(ResponseStatus.Success, coordinatesDict);
         }
 
         #endregion
