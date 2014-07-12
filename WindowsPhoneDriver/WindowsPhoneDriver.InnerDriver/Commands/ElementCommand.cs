@@ -26,44 +26,23 @@
                 throw new InvalidOperationException("SearchParameters must be set before Do() is called");
             }
 
-            string response;
             var searchValue = this.SearchParameters.Value;
             var searchPolicy = this.SearchParameters.UsingMethod;
-            DependencyObject relativeElement;
 
-            if (this.ElementId == null)
-            {
-                relativeElement = this.Automator.VisualRoot;
-            }
-            else
-            {
-                FrameworkElement possibleRelativeElement;
-                this.Automator.WebElements.TryGetValue(this.ElementId, out possibleRelativeElement);
-                relativeElement = possibleRelativeElement ?? this.Automator.VisualRoot;
-            }
+            DependencyObject relativeElement = this.ElementId == null
+                                                   ? this.Automator.VisualRoot
+                                                   : this.Automator.WebElements.GetRegisteredElement(this.ElementId);
 
-            if (this.Automator.WebElements.ContainsKey(searchValue))
-            {
-                var webElement = new JsonWebElementContent(searchValue);
-                response = Responder.CreateJsonResponse(ResponseStatus.Success, webElement);
-            }
-            else
-            {
-                var searchStrategy = new By(searchPolicy, searchValue);
-                var webObjectId = this.FindElementBy(relativeElement, searchStrategy);
+            var searchStrategy = new By(searchPolicy, searchValue);
+            var webObjectId = this.FindElementBy(relativeElement, searchStrategy);
 
-                if (webObjectId != null)
-                {
-                    var webElement = new JsonWebElementContent(webObjectId);
-                    response = Responder.CreateJsonResponse(ResponseStatus.Success, webElement);
-                }
-                else
-                {
-                    throw new AutomationException("Element cannot be found", ResponseStatus.NoSuchElement);
-                }
+            if (webObjectId == null)
+            {
+                throw new AutomationException("Element cannot be found", ResponseStatus.NoSuchElement);
             }
 
-            return response;
+            var webElement = new JsonWebElementContent(webObjectId);
+            return Responder.CreateJsonResponse(ResponseStatus.Success, webElement);
         }
 
         #endregion
@@ -77,7 +56,7 @@
             var element = (FrameworkElement)Finder.GetDescendantsBy(relativeElement, searchStrategy).FirstOrDefault();
             if (element != null)
             {
-                foundId = this.Automator.AddElementToWebElements(element);
+                foundId = this.Automator.WebElements.RegisterElement(element);
             }
 
             return foundId;

@@ -1,8 +1,5 @@
 ﻿namespace WindowsPhoneDriver.InnerDriver
 {
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Threading;
     using System.Windows;
 
     using Newtonsoft.Json;
@@ -12,18 +9,12 @@
 
     internal class Automator
     {
-        #region Static Fields
-
-        private static int safeInstanceCount;
-
-        #endregion
-
         #region Constructors and Destructors
 
         public Automator(UIElement visualRoot)
         {
             this.VisualRoot = visualRoot;
-            this.WebElements = new Dictionary<string, FrameworkElement>();
+            this.WebElements = new AutomatorElements();
         }
 
         #endregion
@@ -32,27 +23,11 @@
 
         public UIElement VisualRoot { get; private set; }
 
-        // TODO: Replace with special class (with WeakReference dict inside)
-        public Dictionary<string, FrameworkElement> WebElements { get; private set; }
+        public AutomatorElements WebElements { get; private set; }
 
         #endregion
 
         #region Public Methods and Operators
-
-        public string AddElementToWebElements(FrameworkElement element)
-        {
-            var webElementId = this.WebElements.FirstOrDefault(x => x.Value == element).Key;
-
-            if (webElementId == null)
-            {
-                Interlocked.Increment(ref safeInstanceCount);
-
-                webElementId = element.GetHashCode() + "-" + safeInstanceCount.ToString(string.Empty);
-                this.WebElements.Add(webElementId, element);
-            }
-
-            return webElementId;
-        }
 
         public string ProcessCommand(string urn, string content)
         {
@@ -144,7 +119,6 @@
             }
 
             // TODO: Replace passing Automator to command with passing some kind of configuration
-            // Probably will need a separate implementation of WebElements class
             commandToExecute.Automator = this;
 
             response = commandToExecute.Do();

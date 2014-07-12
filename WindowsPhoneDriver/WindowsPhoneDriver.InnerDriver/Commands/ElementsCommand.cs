@@ -29,18 +29,10 @@
 
             var searchValue = this.SearchParameters.Value;
             var searchPolicy = this.SearchParameters.UsingMethod;
-            DependencyObject relativeElement;
 
-            if (this.ElementId == null)
-            {
-                relativeElement = this.Automator.VisualRoot;
-            }
-            else
-            {
-                FrameworkElement possibleRelativeElement;
-                this.Automator.WebElements.TryGetValue(this.ElementId, out possibleRelativeElement);
-                relativeElement = possibleRelativeElement ?? this.Automator.VisualRoot;
-            }
+            DependencyObject relativeElement = this.ElementId == null
+                                                   ? this.Automator.VisualRoot
+                                                   : this.Automator.WebElements.GetRegisteredElement(this.ElementId);
 
             var result = new List<JsonWebElementContent>();
             var searchStrategy = new By(searchPolicy, searchValue);
@@ -60,7 +52,7 @@
 
             foundIds.AddRange(
                 Finder.GetDescendantsBy(relativeElement, searchStrategy)
-                    .Select(element => this.Automator.AddElementToWebElements((FrameworkElement)element)));
+                    .Select(element => this.Automator.WebElements.RegisterElement((FrameworkElement)element)));
             return foundIds;
         }
 
