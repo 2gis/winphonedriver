@@ -16,9 +16,13 @@
 
     public class AutomationServer
     {
-        #region Fields
+        #region Static Fields
 
-        private readonly int listeningPort;
+        public static readonly AutomationServer Instance = new AutomationServer();
+
+        #endregion
+
+        #region Fields
 
         private Automator automator;
 
@@ -26,14 +30,7 @@
 
         private StreamSocketListener listener;
 
-        #endregion
-
-        #region Constructors and Destructors
-
-        public AutomationServer(int port)
-        {
-            this.listeningPort = port;
-        }
+        private int listeningPort;
 
         #endregion
 
@@ -45,16 +42,54 @@
 
         #region Public Methods and Operators
 
-        public static AutomationServer CreateAndStart(int port, UIElement visualRoot)
+        /// <summary>
+        /// Initializes and starts <see cref="AutomationServer"/> with specified parameters.
+        /// </summary>
+        /// <remarks>Use it in conjuction with <see cref="Instance"/> to simplify inclusion of server in tested app.</remarks>
+        /// <param name="port"></param>
+        /// <param name="visualRoot"></param>
+        public void InitializeAndStart(UIElement visualRoot, int port = 9998)
         {
-            var automationServer = new AutomationServer(port);
-            automationServer.SetAutomator(visualRoot);
-            automationServer.Start();
-
-            return automationServer;
+            this.SetAutomator(visualRoot);
+            this.Start(port);
         }
 
-        public string FindIpAddress()
+        public void SetAutomator(UIElement visualRoot)
+        {
+            this.automator = new Automator(visualRoot);
+        }
+
+        public async void Start(int port)
+        {
+            if (this.isServerActive)
+            {
+                return;
+            }
+
+            this.listeningPort = port;
+
+            this.isServerActive = true;
+            this.listener = new StreamSocketListener();
+            this.listener.Control.QualityOfService = SocketQualityOfService.Normal;
+            this.listener.ConnectionReceived += this.ListenerConnectionReceived;
+            await this.listener.BindServiceNameAsync(this.listeningPort.ToString(CultureInfo.InvariantCulture));
+            this.WriteIpAddress();
+        }
+
+        public void Stop()
+        {
+            if (this.isServerActive)
+            {
+                this.listener.Dispose();
+                this.isServerActive = false;
+            }
+        }
+
+        #endregion
+
+        #region Methods
+
+        internal string FindIpAddress()
         {
             var hostnames = NetworkInformation.GetHostNames();
             const int IanaInterfaceTypeWiFi = 71; // IanaInterfaceType == 71 => WiFi
@@ -74,36 +109,7 @@
             return ipAddresses.Count == 1 ? ipAddresses[0] : ipAddresses[ipAddresses.Count - 1];
         }
 
-        public void SetAutomator(UIElement visualRoot)
-        {
-            this.automator = new Automator(visualRoot);
-        }
-
-        public async void Start()
-        {
-            if (this.isServerActive)
-            {
-                return;
-            }
-
-            this.isServerActive = true;
-            this.listener = new StreamSocketListener();
-            this.listener.Control.QualityOfService = SocketQualityOfService.Normal;
-            this.listener.ConnectionReceived += this.ListenerConnectionReceived;
-            await this.listener.BindServiceNameAsync(this.listeningPort.ToString(CultureInfo.InvariantCulture));
-            this.WriteIpAddress();
-        }
-
-        public void Stop()
-        {
-            if (this.isServerActive)
-            {
-                this.listener.Dispose();
-                this.isServerActive = false;
-            }
-        }
-
-        public void WriteIpAddress()
+        internal void WriteIpAddress()
         {
             using (var isoStore = IsolatedStorageFile.GetUserStoreForApplication())
             {
@@ -113,10 +119,6 @@
                 }
             }
         }
-
-        #endregion
-
-        #region Methods
 
         private async void HandleRequest(StreamSocket socket)
         {
