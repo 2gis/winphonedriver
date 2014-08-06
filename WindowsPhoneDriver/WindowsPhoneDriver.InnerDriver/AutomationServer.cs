@@ -12,8 +12,6 @@
     using Windows.Networking.Sockets;
     using Windows.Storage.Streams;
 
-    using WindowsPhoneDriver.Common;
-
     public class AutomationServer
     {
         #region Static Fields
@@ -45,9 +43,13 @@
         /// <summary>
         /// Initializes and starts <see cref="AutomationServer"/> with specified parameters.
         /// </summary>
-        /// <remarks>Use it in conjuction with <see cref="Instance"/> to simplify inclusion of server in tested app.</remarks>
-        /// <param name="port"></param>
-        /// <param name="visualRoot"></param>
+        /// <remarks>
+        /// Use it in conjuction with <see cref="Instance"/> to simplify inclusion of server in tested app.
+        /// </remarks>
+        /// <param name="visualRoot">
+        /// </param>
+        /// <param name="port">
+        /// </param>
         public void InitializeAndStart(UIElement visualRoot, int port = 9998)
         {
             this.SetAutomator(visualRoot);
@@ -129,7 +131,7 @@
             var acceptedRequest = new AcceptedRequest();
             await acceptedRequest.AcceptRequest(reader);
 
-            var response = this.ProcessRequest(acceptedRequest.Request, acceptedRequest.Content);
+            var response = this.automator.ProcessCommand(acceptedRequest.Content);
 
             // create response
             writer.WriteString(Responder.CreateResponse(response));
@@ -143,13 +145,6 @@
             StreamSocketListenerConnectionReceivedEventArgs args)
         {
             await Task.Run(() => this.HandleRequest(args.Socket));
-        }
-
-        private string ProcessRequest(string request, string content)
-        {
-            var urn = RequestParser.GetRequestUrn(request);
-
-            return this.automator.ProcessCommand(urn, content);
         }
 
         #endregion

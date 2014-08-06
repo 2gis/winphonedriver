@@ -1,6 +1,5 @@
 ﻿namespace WindowsPhoneDriver.InnerDriver.Commands
 {
-    using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Windows;
@@ -14,21 +13,14 @@
 
         public string ElementId { get; set; }
 
-        public JsonFindElementObjectContent SearchParameters { get; set; }
-
         #endregion
 
         #region Public Methods and Operators
 
         public override string DoImpl()
         {
-            if (this.SearchParameters == null)
-            {
-                throw new InvalidOperationException("SearchParameters must be set before Do() is called");
-            }
-
-            var searchValue = this.SearchParameters.Value;
-            var searchPolicy = this.SearchParameters.UsingMethod;
+            var searchValue = this.Parameters["value"].ToString();
+            var searchPolicy = this.Parameters["using"].ToString();
 
             DependencyObject relativeElement = this.ElementId == null
                                                    ? this.Automator.VisualRoot

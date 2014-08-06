@@ -4,6 +4,10 @@
     using System.IO;
     using System.Net;
 
+    using Newtonsoft.Json;
+
+    using OpenQA.Selenium.Remote;
+
     internal class Requester
     {
         #region Fields
@@ -26,16 +30,23 @@
 
         #region Public Methods and Operators
 
-        public string SendRequest(string urn, string requestContent)
+        public string ForwardCommand(Command commandToForward)
         {
-            var result = "error";
+            var serializedCommand = JsonConvert.SerializeObject(commandToForward);
+
+            return this.SendRequest(serializedCommand);
+        }
+
+        public string SendRequest(string requestContent)
+        {
+            var result = "UnknownError";
             StreamReader reader = null;
             WebResponse response = null;
             try
             {
                 // create the request
-                string uri = this.CreateUri(urn);
-                HttpWebRequest request = this.CreateWebRequest(uri, requestContent);
+                var uri = string.Format("http://{0}:{1}", this.ip, this.port);
+                var request = CreateWebRequest(uri, requestContent);
                 Console.WriteLine("Sending request: " + requestContent + " to " + uri);
 
                 // send the request and get the response
@@ -74,18 +85,12 @@
 
         #region Methods
 
-        private string CreateUri(string urn)
-        {
-            var uri = "http://" + this.ip + ":" + this.port + urn;
-            return uri;
-        }
-
-        private HttpWebRequest CreateWebRequest(string uri, string content)
+        private static HttpWebRequest CreateWebRequest(string uri, string content)
         {
             // create request
             var request = (HttpWebRequest)WebRequest.Create(uri);
             request.ContentType = "application/json";
-            request.Method = RequestParserEx.ChooseRequestMethod(uri);
+            request.Method = "POST";
             request.KeepAlive = false;
 
             // write request body

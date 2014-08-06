@@ -2,8 +2,6 @@
 {
     using System;
 
-    using WindowsPhoneDriver.Common;
-
     internal class Program
     {
         #region Methods
@@ -24,7 +22,7 @@
             }
 
             var listener = new Listener(listeningPort);
-            RequestParser.UrnPrefix = options.UrlBase;
+            Listener.UrnPrefix = options.UrlBase;
 
             listener.StartListening();
         }

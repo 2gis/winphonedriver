@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Drawing;
+    using System.Globalization;
     using System.Linq;
     using System.Net;
     using System.Net.Sockets;
@@ -11,24 +12,30 @@
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
 
+    using OpenQA.Selenium.Remote;
+
     using WindowsPhoneDriver.Common;
     using WindowsPhoneDriver.OuterDriver.EmulatorHelpers;
 
     public class Listener
     {
-        #region Fields
+        #region Static Fields
 
-        private readonly int listeningPort;
+        private static string urnPrefix;
+
+        #endregion
+
+        #region Fields
 
         private Dictionary<string, object> actualCapabilities;
 
         private IDeployer deployer;
 
+        private DispatchTables dispatcher;
+
         private EmulatorInputController inputController;
 
         private TcpListener listener;
-
-        private IPAddress localAddress;
 
         private Requester phoneRequester;
 
@@ -38,26 +45,60 @@
 
         #region Constructors and Destructors
 
-        public Listener(int listeningPort)
+        public Listener(int listenerPort)
         {
-            this.listeningPort = listeningPort;
+            this.Port = listenerPort;
         }
+
+        #endregion
+
+        #region Public Properties
+
+        public static string UrnPrefix
+        {
+            get
+            {
+                return urnPrefix;
+            }
+
+            set
+            {
+                if (!string.IsNullOrEmpty(value))
+                {
+                    // Normalize prefix
+                    urnPrefix = "/" + value.Trim('/');
+                }
+            }
+        }
+
+        public int Port { get; private set; }
+
+        public Uri Prefix { get; private set; }
 
         #endregion
 
         #region Public Methods and Operators
 
-        public int Port()
+        public static string FindIpAddress()
         {
-            return this.listeningPort;
+            var localIp = "localhost";
+            var host = Dns.GetHostEntry(Dns.GetHostName());
+            foreach (var ip in host.AddressList.Where(ip => ip.AddressFamily == AddressFamily.InterNetwork))
+            {
+                localIp = ip.ToString();
+            }
+
+            return localIp;
         }
 
         public void StartListening()
         {
             try
             {
-                this.localAddress = IPAddress.Parse(OuterServer.FindIpAddress());
-                this.listener = new TcpListener(IPAddress.Any, this.listeningPort);
+                this.listener = new TcpListener(IPAddress.Any, this.Port);
+
+                this.Prefix = new Uri(string.Format(CultureInfo.InvariantCulture, "http://localhost:{0}", this.Port));
+                this.dispatcher = new DispatchTables(new Uri(this.Prefix, UrnPrefix));
 
                 // Start listening for client requests.
                 this.listener.Start();
@@ -77,8 +118,17 @@
                     acceptedRequest.AcceptRequest(stream);
 
                     var responseBody = this.HandleRequest(acceptedRequest);
+                    var statusCode = HttpStatusCode.OK;
+                    if (responseBody.Trim().Equals("<UnimplementedCommand>"))
+                    {
+                        statusCode = HttpStatusCode.NotImplemented;
+                    }
+                    else if (responseBody.Trim().Equals("<UnknownCommand>"))
+                    {
+                        statusCode = HttpStatusCode.NotFound;
+                    }
 
-                    Responder.WriteResponse(stream, responseBody);
+                    Responder.WriteResponse(stream, responseBody, statusCode);
 
                     // Shutdown and end connection
                     stream.Close();
@@ -116,11 +166,10 @@
                                                 { "platform", "WinPhone" }, 
                                                 { "emulatorMouseDelay", 0 }, 
                                                 { "deviceName", string.Empty }, 
-                                                { "launchTimeout", 10000 }, 
                                                 { "launchDelay", 1000 }, 
+                                                { "debugConnectToRunningApp", "false" }, 
  
-                                                // launchTimeout - How long will we wait for ping response from automator (app side) 
-                                                // launchDelay - Lets give some time for visuals to appear after successful ping response
+                                                // launchDelay - Lets give some time for visuals to appear
                                             };
             var actualCapabilities = new Dictionary<string, object>();
             var parsedContent = JObject.Parse(content);
@@ -147,208 +196,44 @@
             return actualCapabilities;
         }
 
-        private string HandleLocalRequest(AcceptedRequest acceptedRequest)
-        {
-            var responseBody = string.Empty;
-            const string EnterKey = "\ue007";
-            this.sessionId = "awesomeSessionId";
-            var request = acceptedRequest.Request;
-            var content = acceptedRequest.Content;
-            var urn = RequestParser.GetRequestUrn(request);
-            var command = RequestParser.GetUrnLastToken(urn);
-            try
-            {
-                switch (command)
-                {
-                    case "session":
-                        this.actualCapabilities = ParseDesiredCapabilitiesJson(content);
-                        var innerIp = this.InitializeApplication();
-                        const int InnerPort = 9998;
-                        Console.WriteLine("Inner ip: " + innerIp);
-                        this.phoneRequester = new Requester(innerIp, InnerPort);
-
-                        this.WaitForApplicationToLaunch(Convert.ToInt32(this.actualCapabilities["launchTimeout"]));
-
-                        // waits for successful ping
-                        Thread.Sleep(Convert.ToInt32(this.actualCapabilities["launchDelay"]));
-
-                        // gives sometime to load visuals
-                        var jsonResponse = Responder.CreateJsonResponse(
-                            this.sessionId, 
-                            ResponseStatus.Success, 
-                            this.actualCapabilities);
-                        responseBody = jsonResponse;
-                        break;
-
-                    case "window_handle":
-
-                        // TODO: Is it temporary implementation? There is only one window for windows phone app, so it must be OK
-                        responseBody = "current";
-                        break;
-
-                    case "size":
-
-                        // Window size is partially implemented
-                        // TODO: Handle windows handles? 
-                        var tokens = RequestParser.GetUrnTokens(urn);
-                        if (tokens.Length == 5 && tokens[2].Equals("window"))
-                        {
-                            var phoneScreenSize = this.inputController.PhoneScreenSize();
-                            responseBody = Responder.CreateJsonResponse(
-                                this.sessionId, 
-                                ResponseStatus.Success, 
-                                new Dictionary<string, int>
-                                    {
-                                        { "width", phoneScreenSize.Width }, 
-                                        { "height", phoneScreenSize.Height }
-                                    });
-                        }
-                        else
-                        {
-                            // We can do better than goto
-                            goto default;
-                        }
-
-                        break;
-
-                    case "screenshot":
-                        responseBody = ScreenShoter.TakeScreenshot();
-                        break;
-
-                        // if the text has the ENTER command in it, execute it after sending the rest of the text to the inner driver
-                    case "value":
-                        var needToClickEnter = false;
-                        var oldContent = JsonConvert.DeserializeObject<JsonValueContent>(content);
-                        var value = oldContent.Value;
-                        if (value.Contains(EnterKey))
-                        {
-                            needToClickEnter = true;
-                            value = value.Where(val => val != EnterKey).ToArray();
-                        }
-
-                        var newContent = new JsonValueContent(oldContent.SessionId, oldContent.Id, value);
-                        responseBody = this.phoneRequester.SendRequest(
-                            RequestParser.GetRequestUrn(request), 
-                            JsonConvert.SerializeObject(newContent));
-                        if (needToClickEnter)
-                        {
-                            this.inputController.ClickEnterKey();
-                        }
-
-                        break;
-
-                    case "moveto":
-                        {
-                            var moveToContent = JsonConvert.DeserializeObject<JsonMovetoContent>(content);
-                            var elementId = moveToContent.Element;
-                            var coordinates = new Point();
-                            if (elementId != null)
-                            {
-                                var locationRequest = "/session/" + this.sessionId + "/element/" + elementId
-                                                      + "/location";
-                                responseBody = this.phoneRequester.SendRequest(locationRequest, string.Empty);
-
-                                var deserializeObject = JsonConvert.DeserializeObject<JsonResponse>(responseBody);
-                                if (deserializeObject.Status == ResponseStatus.Success)
-                                {
-                                    var values =
-                                        JsonConvert.DeserializeObject<Dictionary<string, string>>(
-                                            deserializeObject.Value.ToString());
-                                    coordinates.X = Convert.ToInt32(values["x"]);
-                                    coordinates.Y = Convert.ToInt32(values["y"]);
-                                }
-                            }
-                            else
-                            {
-                                coordinates = new Point(
-                                    int.Parse(moveToContent.XOffset), 
-                                    int.Parse(moveToContent.YOffset));
-                            }
-
-                            this.inputController.MoveCursorToPhoneScreenAtPoint(coordinates);
-                        }
-
-                        break;
-
-                    case "click":
-                        var requestLength = RequestParser.GetUrnTokensCount(urn);
-                        if (requestLength == 3)
-                        {
-                            // simple click command without element
-                            this.inputController.LeftClick();
-                        }
-                        else
-                        {
-                            responseBody = this.phoneRequester.SendRequest(
-                                RequestParser.GetRequestUrn(request), 
-                                content);
-                            var deserializeObject = JsonConvert.DeserializeObject<JsonResponse>(responseBody);
-                            if (deserializeObject.Status == ResponseStatus.Success)
-                            {
-                                var clickValue = deserializeObject.Value.ToString();
-                                if (!string.IsNullOrEmpty(clickValue))
-                                {
-                                    var clickCoordinatesArray = clickValue.Split(':');
-                                    var offsetX = Convert.ToInt32(clickCoordinatesArray[0]);
-                                    var offsetY = Convert.ToInt32(clickCoordinatesArray[1]);
-                                    var point = new Point(offsetX, offsetY);
-                                    this.inputController.LeftClickPhoneScreenAtPoint(point);
-                                    Console.WriteLine("Coordinates: " + offsetX + " " + offsetY);
-                                    responseBody = string.Empty;
-                                }
-                            }
-                        }
-
-                        break;
-
-                    case "buttondown":
-                        this.inputController.LeftButtonDown();
-                        break;
-
-                    case "buttonup":
-                        this.inputController.LeftButtonUp();
-                        break;
-
-                    case "keys":
-                        var jsonValue = RequestParser.GetKeysString(content);
-                        if (jsonValue.Equals(EnterKey))
-                        {
-                            this.inputController.ClickEnterKey();
-                        }
-
-                        break;
-
-                    default:
-                        Console.WriteLine("Not proxying. Unimplemented");
-                        responseBody = "Success";
-                        break;
-                }
-            }
-            catch (AutomationException ex)
-            {
-                responseBody = Responder.CreateJsonResponse(this.sessionId, ex.Status, ex.Message);
-            }
-
-            return responseBody;
-        }
-
         private string HandleRequest(AcceptedRequest acceptedRequest)
         {
+            Command commandToExecute;
             var request = acceptedRequest.Request;
             var content = acceptedRequest.Content;
-            var urn = RequestParser.GetRequestUrn(request);
 
-            return RequestParserEx.ShouldProxyUrn(urn)
-                       ? this.phoneRequester.SendRequest(urn, content)
-                       : this.HandleLocalRequest(acceptedRequest);
+            var firstHeaderTokens = request.Split(' ');
+            var method = firstHeaderTokens[0];
+            var resourcePath = firstHeaderTokens[1];
+
+            try
+            {
+                var matched = this.dispatcher.Match(method, new Uri(this.Prefix, resourcePath));
+
+                var commandName = matched.Data.ToString();
+                commandToExecute = new Command(commandName, content);
+                foreach (string variableName in matched.BoundVariables.Keys)
+                {
+                    commandToExecute.Parameters[variableName] = matched.BoundVariables[variableName];
+                }
+            }
+            catch (UriTemplateMatchException)
+            {
+                return "<UnknownCommand>";
+            }
+
+            return this.ProcessCommand(commandToExecute);
         }
 
-        private string InitializeApplication()
+        private string InitializeApplication(bool debugDoNotDeploy = false)
         {
             var appPath = this.actualCapabilities["app"].ToString();
             this.deployer = new Deployer81(this.actualCapabilities["deviceName"].ToString());
+            if (!debugDoNotDeploy)
+            {
+                this.deployer.Deploy(appPath);
+            }
 
-            this.deployer.Deploy(appPath);
             var ip = this.deployer.ReceiveIpAddress();
             Console.WriteLine("Actual Device: " + this.deployer.DeviceName);
             var desiredsmoothing = Convert.ToInt32(this.actualCapabilities["emulatorMouseDelay"]);
@@ -360,136 +245,161 @@
 
             if (string.IsNullOrEmpty(ip))
             {
-                ip = this.localAddress.ToString();
+                ip = IPAddress.Parse(FindIpAddress()).ToString();
             }
 
             return ip;
         }
 
-        private void WaitForApplicationToLaunch(int timeout)
+        private string ProcessCommand(Command command)
         {
-            // Supposed to wait for application to launch, but ping response might come earlier than visual tree is build or something
-            const int StepDelay = 500;
-            var pingSuccess = false;
-            while (timeout > 0)
+            var responseBody = string.Empty;
+            const string EnterKey = "\ue007";
+            this.sessionId = "awesomeSessionId";
+            try
             {
-                Thread.Sleep(StepDelay);
-                var urn = string.Format("/session/{0}/ping", this.sessionId);
-                var pingResult = this.phoneRequester.SendRequest(urn, string.Empty);
-                if (!string.IsNullOrEmpty(pingResult) && !pingResult.Equals("error"))
+                if (command.Name.Equals(DriverCommand.NewSession))
                 {
-                    pingSuccess = true;
-                    break;
+                    this.actualCapabilities = ParseDesiredCapabilitiesJson(command.ParametersAsJsonString);
+                    var debugConnectToRunningApp = Convert.ToBoolean(
+                        this.actualCapabilities["debugConnectToRunningApp"]);
+                    var innerIp = this.InitializeApplication(debugConnectToRunningApp);
+                    const int InnerPort = 9998;
+                    Console.WriteLine("Inner ip: " + innerIp);
+                    this.phoneRequester = new Requester(innerIp, InnerPort);
+
+                    Thread.Sleep(Convert.ToInt32(this.actualCapabilities["launchDelay"]));
+
+                    // gives sometime to load visuals
+                    var jsonResponse = Responder.CreateJsonResponse(
+                        this.sessionId, 
+                        ResponseStatus.Success, 
+                        this.actualCapabilities);
+                    responseBody = jsonResponse;
                 }
+                else if (command.Name.Equals(DriverCommand.GetCurrentWindowHandle))
+                {
+                    // TODO: Is it temporary implementation? There is only one window for windows phone app, so it must be OK
+                    responseBody = "current";
+                }
+                else if (command.Name.Equals(DriverCommand.GetWindowSize))
+                {
+                    // Window size is partially implemented
+                    var phoneScreenSize = this.inputController.PhoneScreenSize();
+                    responseBody = Responder.CreateJsonResponse(
+                        this.sessionId, 
+                        ResponseStatus.Success, 
+                        new Dictionary<string, int>
+                            {
+                                { "width", phoneScreenSize.Width }, 
+                                { "height", phoneScreenSize.Height }
+                            });
+                }
+                else if (command.Name.Equals(DriverCommand.Screenshot))
+                {
+                    responseBody = ScreenShoter.TakeScreenshot();
+                }
+                else if (command.Name.Equals(DriverCommand.SendKeysToElement))
+                {
+                    // if the text has the ENTER command in it, execute it after sending the rest of the text to the inner driver
+                    var needToClickEnter = false;
+                    var originalContent = command.Parameters;
+                    var value = ((object[])originalContent["value"]).Select(o => o.ToString()).ToArray();
 
-                timeout -= StepDelay;
+                    if (value.Contains(EnterKey))
+                    {
+                        needToClickEnter = true;
+                        value = value.Where(val => val != EnterKey).ToArray();
+                    }
+
+                    command.Parameters["value"] = value;
+                    responseBody = this.phoneRequester.ForwardCommand(command);
+
+                    if (needToClickEnter)
+                    {
+                        this.inputController.ClickEnterKey();
+                    }
+                }
+                else if (command.Name.Equals(DriverCommand.MouseMoveTo))
+                {
+                    var elementId = command.Parameters["element"];
+
+                    var coordinates = new Point();
+                    if (elementId != null)
+                    {
+                        var parameters = new Dictionary<string, object> { { "ID", elementId } };
+                        var locationCommand = new Command(null, DriverCommand.GetElementLocation, parameters);
+
+                        responseBody = this.phoneRequester.ForwardCommand(locationCommand);
+
+                        var deserializeObject = JsonConvert.DeserializeObject<JsonResponse>(responseBody);
+                        if (deserializeObject.Status == ResponseStatus.Success)
+                        {
+                            var values =
+                                JsonConvert.DeserializeObject<Dictionary<string, string>>(
+                                    deserializeObject.Value.ToString());
+                            coordinates.X = Convert.ToInt32(values["x"]);
+                            coordinates.Y = Convert.ToInt32(values["y"]);
+                        }
+                    }
+                    else
+                    {
+                        var xOffset = command.Parameters["xOffset"].ToString();
+                        var yOffset = command.Parameters["YOffset"].ToString();
+                        coordinates = new Point(int.Parse(xOffset), int.Parse(yOffset));
+                    }
+
+                    this.inputController.MoveCursorToPhoneScreenAtPoint(coordinates);
+                }
+                else if (command.Name.Equals(DriverCommand.MouseClick))
+                {
+                    this.inputController.LeftClick();
+                }
+                else if (command.Name.Equals(DriverCommand.ClickElement))
+                {
+                    responseBody = this.phoneRequester.ForwardCommand(command);
+
+                    var deserializeObject = JsonConvert.DeserializeObject<JsonResponse>(responseBody);
+                    if (deserializeObject.Status == ResponseStatus.Success)
+                    {
+                        var clickValue = deserializeObject.Value.ToString();
+                        if (!string.IsNullOrEmpty(clickValue))
+                        {
+                            var clickCoordinatesArray = clickValue.Split(':');
+                            var offsetX = Convert.ToInt32(clickCoordinatesArray[0]);
+                            var offsetY = Convert.ToInt32(clickCoordinatesArray[1]);
+                            var point = new Point(offsetX, offsetY);
+                            this.inputController.LeftClickPhoneScreenAtPoint(point);
+                            Console.WriteLine("Coordinates: " + offsetX + " " + offsetY);
+                            responseBody = string.Empty;
+                        }
+                    }
+                }
+                else if (command.Name.Equals(DriverCommand.MouseDown))
+                {
+                    this.inputController.LeftButtonDown();
+                }
+                else if (command.Name.Equals(DriverCommand.MouseUp))
+                {
+                    this.inputController.LeftButtonUp();
+                }
+                else if (command.Name.Equals(DriverCommand.Close))
+                {
+                    this.deployer.Disconnect();
+                }
+                else
+                {
+                    responseBody = this.phoneRequester.ForwardCommand(command);
+                }
             }
-
-            if (pingSuccess)
+            catch (AutomationException ex)
             {
-                return;
+                responseBody = Responder.CreateJsonResponse(this.sessionId, ex.Status, ex.Message);
             }
 
-            Console.WriteLine("Timeout: App is not running. Use launchTimeout desired capability to increase timeout.");
-            throw new AutomationException("Application is not running");
+            return responseBody;
         }
 
         #endregion
-
-        private class AcceptedRequest
-        {
-            #region Public Properties
-
-            public string Content { get; private set; }
-
-            public string Request { get; private set; }
-
-            #endregion
-
-            #region Properties
-
-            private Dictionary<string, string> Headers { get; set; }
-
-            #endregion
-
-            #region Public Methods and Operators
-
-            public void AcceptRequest(NetworkStream stream)
-            {
-                // read HTTP request
-                this.Request = this.ReadString(stream);
-                Console.WriteLine("Request: " + this.Request);
-
-                // read HTTP headers
-                this.Headers = this.ReadHeaders(stream);
-
-                // try and read request content
-                this.Content = this.ReadContent(stream, this.Headers);
-            }
-
-            #endregion
-
-            #region Methods
-
-            private string ReadContent(NetworkStream stream, Dictionary<string, string> headers)
-            {
-                string contentLengthString;
-                var hasContentLength = headers.TryGetValue("Content-Length", out contentLengthString);
-                var content = string.Empty;
-                if (hasContentLength)
-                {
-                    content = this.ReadContent(stream, Convert.ToInt32(contentLengthString));
-                    Console.WriteLine("Content: " + content);
-                }
-
-                return content;
-            }
-
-            // reads the content of a request depending on its length
-            private string ReadContent(NetworkStream s, int contentLength)
-            {
-                var readBuffer = new byte[contentLength];
-                var readBytes = s.Read(readBuffer, 0, readBuffer.Length);
-                return System.Text.Encoding.ASCII.GetString(readBuffer, 0, readBytes);
-            }
-
-            private Dictionary<string, string> ReadHeaders(NetworkStream stream)
-            {
-                var headers = new Dictionary<string, string>();
-                string header;
-                while (!string.IsNullOrEmpty(header = this.ReadString(stream)))
-                {
-                    var splitHeader = header.Split(':');
-                    headers.Add(splitHeader[0], splitHeader[1].Trim(' '));
-                }
-
-                return headers;
-            }
-
-            private string ReadString(NetworkStream stream)
-            {
-                // StreamReader reader = new StreamReader(stream);
-                string data = string.Empty;
-                while (true)
-                {
-                    var nextChar = stream.ReadByte();
-                    if (nextChar == '\n')
-                    {
-                        break;
-                    }
-
-                    if (nextChar == '\r')
-                    {
-                        continue;
-                    }
-
-                    data += Convert.ToChar(nextChar);
-                }
-
-                return data;
-            }
-
-            #endregion
-        }
     }
 }
