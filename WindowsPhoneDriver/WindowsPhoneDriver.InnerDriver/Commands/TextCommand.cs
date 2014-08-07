@@ -16,7 +16,7 @@
 
         public override string DoImpl()
         {
-            var text = string.Empty;
+            var text = "TEST"; // string.Empty;
 
             var element = this.Automator.WebElements.GetRegisteredElement(this.ElementId);
             var propertyNames = new List<string> { "Text", "Content" };
@@ -27,7 +27,7 @@
                 var textProperty = element.GetType().GetProperty(propertyName);
                 if (textProperty != null)
                 {
-                    text = textProperty.GetValue(element, null).ToString();
+                    text = textProperty.GetValue(element).ToString();
                     break;
                 }
             }

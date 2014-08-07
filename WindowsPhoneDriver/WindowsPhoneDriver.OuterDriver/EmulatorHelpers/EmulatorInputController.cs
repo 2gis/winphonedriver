@@ -25,25 +25,25 @@
 
         public EmulatorInputController(string emulatorName)
         {
+            emulatorName = emulatorName.Split('(')[0];
             this.mouseMovementSleepDelay = 0;
             var procs = Process.GetProcessesByName("XDE");
-            foreach (var proc in procs)
+            foreach (var process in procs)
             {
-                var wnds = NativeWrapper.GetOpenWindowsFromPid(proc.Id);
+                var windows = NativeWrapper.GetOpenWindowsFromPid(process.Id);
 
-                bool isXdeOfInterest = wnds.Any(x => x.Key.StartsWith(emulatorName));
+                var isXdeOfInterest = windows.Any(x => x.Key.StartsWith(emulatorName));
 
                 // Using StartWith instead of Equals because emulator name for 8.1 ends with locale, e.g. (RU)
                 if (isXdeOfInterest)
                 {
-                    wnds.TryGetValue("XDE", out this.xdeWindowHandle);
-
                     // Host XDE window, which allows determining Emulator screen size in terms of host screen
+                    windows.TryGetValue("XDE", out this.xdeWindowHandle);
+
+                    // Output window, which allows determining Phone screen size
                     this.outputWindowHandle =
                         NativeWrapper.GetChildWindowsFromHwnd(this.xdeWindowHandle)
                             .FirstOrDefault(x => x.Key.Equals("Output Painter Window"))
-                            
-                            // Output window, which allows determining Phone screen size
                             .Value;
                     break;
                 }

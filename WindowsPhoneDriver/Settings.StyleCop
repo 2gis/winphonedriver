@@ -4,6 +4,8 @@
       <AnalyzerSettings>
         <CollectionProperty Name="Hungarian">
           <Value>ip</Value>
+          <Value>x</Value>
+          <Value>y</Value>
         </CollectionProperty>
       </AnalyzerSettings>
     </Analyzer>

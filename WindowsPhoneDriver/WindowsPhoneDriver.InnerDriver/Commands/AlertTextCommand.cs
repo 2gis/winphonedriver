@@ -26,7 +26,6 @@
             foreach (var popupChild in children)
             {
                 message += FirstTextInChild(popupChild);
-
                 if (!string.IsNullOrEmpty(message))
                 {
                     break;
@@ -42,9 +41,8 @@
 
         private static string FirstTextInChild(DependencyObject popupChild)
         {
-            var elements = Finder.GetDescendantsBy(
-                popupChild,
-                new By("name", "System.Windows.Controls.TextBlock"));
+            var elements = Finder.GetDescendantsBy(popupChild, new By("tag name", "System.Windows.Controls.TextBlock"));
+
             return
                 elements.Select(o => o as TextBlock)
                     .Where(textBlock => textBlock != null)

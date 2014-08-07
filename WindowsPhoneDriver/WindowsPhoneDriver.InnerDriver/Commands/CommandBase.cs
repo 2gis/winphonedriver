@@ -1,6 +1,7 @@
 ﻿namespace WindowsPhoneDriver.InnerDriver.Commands
 {
     using System;
+    using System.Collections.Generic;
 
     using WindowsPhoneDriver.Common;
 
@@ -9,6 +10,8 @@
         #region Public Properties
 
         public Automator Automator { get; set; }
+
+        public Dictionary<string, object> Parameters { get; set; }
 
         #endregion
 
