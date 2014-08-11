@@ -160,8 +160,9 @@
         private static Dictionary<string, object> ParseDesiredCapabilitiesJson(string content)
         {
             /* Parses JSON and returns dictionary of supported capabilities and their values (or default values if not set)
+             * launchTimeout - App launch timeout (app is pinged every 0.5 sec within launchTimeout;
              * launchDelay - gives time for visuals to initialize after app launch (successful ping)
-             * launchTimeout - App launch timeout (app is pinged every 0.5 sec within launchTimeout; error respnose on timeout)
+             * reaching timeout will not raise any error, it will still wait for launchDelay and try to execute next ocmmand
             */
             var supportedCapabilities = new Dictionary<string, object>
                                             {
