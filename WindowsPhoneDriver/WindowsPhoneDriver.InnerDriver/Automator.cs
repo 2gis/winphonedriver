@@ -53,7 +53,11 @@
 
             CommandBase commandToExecute;
 
-            if (command.Equals(DriverCommand.GetAlertText))
+            if (command.Equals("ping"))
+            {
+                return "<pong>";
+            }
+            else if (command.Equals(DriverCommand.GetAlertText))
             {
                 commandToExecute = new AlertTextCommand();
             }

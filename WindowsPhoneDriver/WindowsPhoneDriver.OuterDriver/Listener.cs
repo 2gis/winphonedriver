@@ -159,7 +159,10 @@
 
         private static Dictionary<string, object> ParseDesiredCapabilitiesJson(string content)
         {
-            // Parses JSON and returns dictionary of supported capabilities and their values (or default values if not set)
+            /* Parses JSON and returns dictionary of supported capabilities and their values (or default values if not set)
+             * launchDelay - gives time for visuals to initialize after app launch (successful ping)
+             * launchTimeout - App launch timeout (app is pinged every 0.5 sec within launchTimeout; error respnose on timeout)
+            */
             var supportedCapabilities = new Dictionary<string, object>
                                             {
                                                 { "app", string.Empty }, 
@@ -167,10 +170,10 @@
                                                 { "emulatorMouseDelay", 0 }, 
                                                 { "deviceName", string.Empty }, 
                                                 { "launchDelay", 1000 }, 
+                                                { "launchTimeout", 10000 }, 
                                                 { "debugConnectToRunningApp", "false" }, 
- 
-                                                // launchDelay - Lets give some time for visuals to appear
                                             };
+
             var actualCapabilities = new Dictionary<string, object>();
             var parsedContent = JObject.Parse(content);
             var desiredCapabilitiesToken = parsedContent["desiredCapabilities"];
@@ -268,6 +271,22 @@
                     Console.WriteLine("Inner ip: " + innerIp);
                     this.phoneRequester = new Requester(innerIp, InnerPort);
 
+                    var timeout = Convert.ToInt32(this.actualCapabilities["launchTimeout"]);
+                    const int PingStep = 500;
+                    while (timeout > 0)
+                    {
+                        Console.Write(".");
+                        timeout -= PingStep;
+                        var pingCommand = new Command(null, "ping", null);
+                        responseBody = this.phoneRequester.ForwardCommand(pingCommand, false);
+                        if (responseBody.StartsWith("<pong>"))
+                        {
+                            break;
+                        }
+                        
+                        Thread.Sleep(PingStep);
+                    }
+                    Console.WriteLine();
                     Thread.Sleep(Convert.ToInt32(this.actualCapabilities["launchDelay"]));
 
                     // gives sometime to load visuals
