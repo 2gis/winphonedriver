@@ -55,9 +55,11 @@
 
             if (command.Equals("ping"))
             {
+                // Service command
                 return "<pong>";
             }
-            else if (command.Equals(DriverCommand.GetAlertText))
+
+            if (command.Equals(DriverCommand.GetAlertText))
             {
                 commandToExecute = new AlertTextCommand();
             }

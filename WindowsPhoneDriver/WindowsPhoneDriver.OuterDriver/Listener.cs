@@ -17,6 +17,8 @@
     using WindowsPhoneDriver.Common;
     using WindowsPhoneDriver.OuterDriver.EmulatorHelpers;
 
+    using DriverCommand = WindowsPhoneDriver.Common.DriverCommand;
+
     public class Listener
     {
         #region Static Fields
@@ -284,9 +286,10 @@
                         {
                             break;
                         }
-                        
+
                         Thread.Sleep(PingStep);
                     }
+
                     Console.WriteLine();
                     Thread.Sleep(Convert.ToInt32(this.actualCapabilities["launchDelay"]));
 
