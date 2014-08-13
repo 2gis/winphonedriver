@@ -34,11 +34,31 @@
             return string.Empty;
         }
 
-        internal static bool IsUserVisible(this FrameworkElement element)
+        internal static bool IsUserVisible(this FrameworkElement element, UIElement visualRoot)
         {
+            var zero = new Point(0, 0);
+            var elementSize = new Size(element.ActualWidth, element.ActualHeight);
+
+            // Check if element is of zero size
+            if (!(elementSize.Width > 0 && elementSize.Height > 0))
+            {
+                return false;
+            }
+
+            var rect = new Rect(zero, elementSize);
+            var bound = element.TransformToVisual(visualRoot).TransformBounds(rect);
+            var rootRect = new Rect(zero, visualRoot.RenderSize);
+            rootRect.Intersect(bound);
+
+            // Check if element is offscreen
+            if (rootRect.IsEmpty)
+            {
+                return false;
+            }
+
             while (true)
             {
-                if (element.Visibility != Visibility.Visible || !element.IsHitTestVisible)
+                if (element.Visibility != Visibility.Visible || !element.IsHitTestVisible || !(element.Opacity > 0))
                 {
                     return false;
                 }

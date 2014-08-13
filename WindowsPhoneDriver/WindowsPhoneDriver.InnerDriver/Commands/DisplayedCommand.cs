@@ -15,7 +15,7 @@
         public override string DoImpl()
         {
             var element = this.Automator.WebElements.GetRegisteredElement(this.ElementId);
-            var displayed = element.IsUserVisible();
+            var displayed = element.IsUserVisible(this.Automator.VisualRoot);
 
             return Responder.CreateJsonResponse(ResponseStatus.Success, displayed);
         }

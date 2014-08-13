@@ -58,7 +58,7 @@
                                      { "name", item.Name }, 
                                      {
                                          "visible", 
-                                         item.IsUserVisible().ToString().ToLowerInvariant()
+                                         item.IsUserVisible(this.Automator.VisualRoot).ToString().ToLowerInvariant()
                                      }, 
                                      { "value", item.GetText() }, 
                                      { "x", coordinates.X.ToString(CultureInfo.InvariantCulture) },
