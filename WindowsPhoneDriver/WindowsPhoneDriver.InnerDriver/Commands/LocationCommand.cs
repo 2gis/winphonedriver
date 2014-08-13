@@ -17,7 +17,7 @@
         public override string DoImpl()
         {
             var element = this.Automator.WebElements.GetRegisteredElement(this.ElementId);
-            var coordinates = VisualTreeHelperMethods.GetCoordinates(element, this.Automator.VisualRoot);
+            var coordinates = element.GetCoordinates(this.Automator.VisualRoot);
             var coordinatesDict = new Dictionary<string, int>
                                       {
                                           { "x", (int)coordinates.X }, 

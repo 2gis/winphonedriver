@@ -16,22 +16,9 @@
 
         public override string DoImpl()
         {
-            var text = "TEST"; // string.Empty;
-
             var element = this.Automator.WebElements.GetRegisteredElement(this.ElementId);
-            var propertyNames = new List<string> { "Text", "Content" };
-
-            foreach (var propertyName in propertyNames)
-            {
-                // list of Text property aliases. Use "Text" for TextBox, TextBlock, etc. Use "Content" as fallback if there is no "Text" property
-                var textProperty = element.GetType().GetProperty(propertyName);
-                if (textProperty != null)
-                {
-                    text = textProperty.GetValue(element).ToString();
-                    break;
-                }
-            }
-
+            var text = element.GetText();
+            
             return Responder.CreateJsonResponse(ResponseStatus.Success, text);
         }
 

@@ -101,6 +101,10 @@
             {
                 commandToExecute = new LocationCommand { ElementId = elementId };
             }
+            else if (command.Equals(DriverCommand.GetPageSource))
+            {
+                commandToExecute = new PageSourceCommand { ElementId = elementId };
+            }
             else
             {
                 return "<UnimplementedCommand>";
