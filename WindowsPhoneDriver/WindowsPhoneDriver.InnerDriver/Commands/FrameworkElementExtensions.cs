@@ -1,36 +1,12 @@
 ﻿namespace WindowsPhoneDriver.InnerDriver.Commands
 {
-    using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Windows;
     using System.Windows.Media;
 
-    internal static class VisualTreeHelperMethods
+    internal static class FrameworkElementExtensions
     {
-        #region Public Methods and Operators
-
-        internal static bool IsUserVisible(this FrameworkElement element)
-        {
-            while (true)
-            {
-                if (element.Visibility != Visibility.Visible || !element.IsHitTestVisible)
-                {
-                    return false;
-                }
-
-                var container = VisualTreeHelper.GetParent(element) as FrameworkElement;
-                if (container == null)
-                {
-                    return true;
-                }
-
-                element = container;
-            }
-        }
-
-        #endregion
-
         #region Methods
 
         internal static Point GetCoordinates(this FrameworkElement element, UIElement visualRoot)
@@ -56,6 +32,25 @@
             }
 
             return string.Empty;
+        }
+
+        internal static bool IsUserVisible(this FrameworkElement element)
+        {
+            while (true)
+            {
+                if (element.Visibility != Visibility.Visible || !element.IsHitTestVisible)
+                {
+                    return false;
+                }
+
+                var container = VisualTreeHelper.GetParent(element) as FrameworkElement;
+                if (container == null)
+                {
+                    return true;
+                }
+
+                element = container;
+            }
         }
 
         #endregion
