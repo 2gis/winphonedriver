@@ -6,6 +6,8 @@
 
     using OpenQA.Selenium.Remote;
 
+    using DriverCommand = WindowsPhoneDriver.Common.DriverCommand;
+
     internal class DispatchTables
     {
         #region Fields

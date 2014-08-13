@@ -1,5 +1,5 @@
 ﻿// Copied from OpenQA
-namespace WindowsPhoneDriver.InnerDriver
+namespace WindowsPhoneDriver.Common
 {
     /// <summary>
     /// Values describing the list of commands understood by a remote server using the JSON wire protocol.

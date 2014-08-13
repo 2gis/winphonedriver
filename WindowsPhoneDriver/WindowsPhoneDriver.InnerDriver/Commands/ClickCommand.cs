@@ -18,7 +18,7 @@
             var element = this.Automator.WebElements.GetRegisteredElement(this.ElementId);
 
             // TODO: Replace with implementation using AutomationPeer
-            var coordinates = VisualTreeHelperMethods.GetCoordinates(element, this.Automator.VisualRoot);
+            var coordinates = element.GetCoordinates(this.Automator.VisualRoot);
             var strCoordinates = coordinates.X + ":" + coordinates.Y;
 
             return Responder.CreateJsonResponse(ResponseStatus.Success, strCoordinates);

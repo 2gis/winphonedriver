@@ -55,9 +55,11 @@
 
             if (command.Equals("ping"))
             {
+                // Service command
                 return "<pong>";
             }
-            else if (command.Equals(DriverCommand.GetAlertText))
+
+            if (command.Equals(DriverCommand.GetAlertText))
             {
                 commandToExecute = new AlertTextCommand();
             }
@@ -98,6 +100,10 @@
             else if (command.Equals(DriverCommand.GetElementLocation))
             {
                 commandToExecute = new LocationCommand { ElementId = elementId };
+            }
+            else if (command.Equals(DriverCommand.GetPageSource))
+            {
+                commandToExecute = new PageSourceCommand { ElementId = elementId };
             }
             else
             {
