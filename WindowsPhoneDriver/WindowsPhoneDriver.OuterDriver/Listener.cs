@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Drawing;
     using System.Globalization;
     using System.Linq;
@@ -93,6 +94,40 @@
             return localIp;
         }
 
+        public Point? RequestElementLocation(string element)
+        {
+            var command = new Command(
+                null, 
+                DriverCommand.GetElementLocation, 
+                new Dictionary<string, object> { { "ID", element } });
+
+            var responseBody = this.phoneRequester.ForwardCommand(command);
+
+            var deserializeObject = JsonConvert.DeserializeObject<JsonResponse>(responseBody);
+
+            if (deserializeObject.Status != ResponseStatus.Success)
+            {
+                return null;
+            }
+
+            var locationObject = deserializeObject.Value as JObject;
+            if (locationObject == null)
+            {
+                return null;
+            }
+
+            var location = locationObject.ToObject<Dictionary<string, int>>();
+
+            if (location == null)
+            {
+                return null;
+            }
+
+            var x = location["x"];
+            var y = location["y"];
+            return new Point(x, y);
+        }
+
         public void StartListening()
         {
             try
@@ -170,9 +205,8 @@
                                             {
                                                 { "app", string.Empty }, 
                                                 { "platform", "WinPhone" }, 
-                                                { "emulatorMouseDelay", 0 }, 
                                                 { "deviceName", string.Empty }, 
-                                                { "launchDelay", 1000 }, 
+                                                { "launchDelay", 0 }, 
                                                 { "launchTimeout", 10000 }, 
                                                 { "debugConnectToRunningApp", "false" }, 
                                             };
@@ -200,6 +234,14 @@
             }
 
             return actualCapabilities;
+        }
+
+        private static T GetValue<T>(IReadOnlyDictionary<string, object> parameters, string key) where T : class
+        {
+            object valueObject;
+            parameters.TryGetValue(key, out valueObject);
+
+            return valueObject as T;
         }
 
         private string HandleRequest(AcceptedRequest acceptedRequest)
@@ -242,12 +284,7 @@
 
             var ip = this.deployer.ReceiveIpAddress();
             Console.WriteLine("Actual Device: " + this.deployer.DeviceName);
-            var desiredsmoothing = Convert.ToInt32(this.actualCapabilities["emulatorMouseDelay"]);
-            this.inputController = new EmulatorInputController(this.deployer.DeviceName)
-                                       {
-                                           MouseMovementSmoothing =
-                                               desiredsmoothing
-                                       };
+            this.inputController = new EmulatorInputController(this.deployer.DeviceName);
 
             if (string.IsNullOrEmpty(ip))
             {
@@ -274,20 +311,23 @@
                     Console.WriteLine("Inner ip: " + innerIp);
                     this.phoneRequester = new Requester(innerIp, InnerPort);
 
-                    var timeout = Convert.ToInt32(this.actualCapabilities["launchTimeout"]);
+                    long timeout = Convert.ToInt32(this.actualCapabilities["launchTimeout"]);
                     const int PingStep = 500;
+                    var stopWatch = new Stopwatch();
                     while (timeout > 0)
                     {
+                        stopWatch.Restart();
                         Console.Write(".");
-                        timeout -= PingStep;
                         var pingCommand = new Command(null, "ping", null);
-                        responseBody = this.phoneRequester.ForwardCommand(pingCommand, false);
+                        responseBody = this.phoneRequester.ForwardCommand(pingCommand, false, 2000);
                         if (responseBody.StartsWith("<pong>"))
                         {
                             break;
                         }
 
                         Thread.Sleep(PingStep);
+                        stopWatch.Stop();
+                        timeout -= stopWatch.ElapsedMilliseconds;
                     }
 
                     Console.WriteLine();
@@ -340,12 +380,13 @@
 
                     if (needToClickEnter)
                     {
-                        this.inputController.ClickEnterKey();
+                        this.inputController.PressEnterKey();
                     }
                 }
                 else if (command.Name.Equals(DriverCommand.MouseMoveTo))
                 {
-                    var elementId = command.Parameters["element"];
+                    object elementId;
+                    command.Parameters.TryGetValue("element", out elementId);
 
                     var coordinates = new Point();
                     if (elementId != null)
@@ -372,7 +413,7 @@
                         coordinates = new Point(int.Parse(xOffset), int.Parse(yOffset));
                     }
 
-                    this.inputController.MoveCursorToPhoneScreenAtPoint(coordinates);
+                    this.inputController.MoveCursorTo(coordinates);
                 }
                 else if (command.Name.Equals(DriverCommand.MouseClick))
                 {
@@ -380,22 +421,11 @@
                 }
                 else if (command.Name.Equals(DriverCommand.ClickElement))
                 {
-                    responseBody = this.phoneRequester.ForwardCommand(command);
+                    var location = this.RequestElementLocation(command.Parameters["ID"] as string);
 
-                    var deserializeObject = JsonConvert.DeserializeObject<JsonResponse>(responseBody);
-                    if (deserializeObject.Status == ResponseStatus.Success)
+                    if (location.HasValue)
                     {
-                        var clickValue = deserializeObject.Value.ToString();
-                        if (!string.IsNullOrEmpty(clickValue))
-                        {
-                            var clickCoordinatesArray = clickValue.Split(':');
-                            var offsetX = Convert.ToInt32(clickCoordinatesArray[0]);
-                            var offsetY = Convert.ToInt32(clickCoordinatesArray[1]);
-                            var point = new Point(offsetX, offsetY);
-                            this.inputController.LeftClickPhoneScreenAtPoint(point);
-                            Console.WriteLine("Coordinates: " + offsetX + " " + offsetY);
-                            responseBody = string.Empty;
-                        }
+                        this.inputController.LeftClickPhoneScreenAtPoint(location.Value);
                     }
                 }
                 else if (command.Name.Equals(DriverCommand.MouseDown))
@@ -405,6 +435,59 @@
                 else if (command.Name.Equals(DriverCommand.MouseUp))
                 {
                     this.inputController.LeftButtonUp();
+                }
+                else if (command.Name.Equals(DriverCommand.TouchFlick))
+                {
+                    var screen = this.inputController.PhoneScreenSize();
+                    var startPoint = new Point(screen.Width / 2, screen.Height / 2);
+
+                    var elementId = GetValue<string>(command.Parameters, "element");
+                    if (elementId != null)
+                    {
+                        startPoint = this.RequestElementLocation(elementId).GetValueOrDefault();
+                    }
+
+                    object speed;
+                    if (command.Parameters.TryGetValue("speed", out speed))
+                    {
+                        var xOffset = Convert.ToInt32(command.Parameters["xoffset"]);
+                        var yOffset = Convert.ToInt32(command.Parameters["yoffset"]);
+
+                        this.inputController.PerformGesture(
+                            new FlickGesture(startPoint, xOffset, yOffset, Convert.ToDouble(speed)));
+                    }
+                    else
+                    {
+                        var xSpeed = Convert.ToDouble(command.Parameters["xspeed"]);
+                        var ySpeed = Convert.ToDouble(command.Parameters["yspeed"]);
+                        this.inputController.PerformGesture(new FlickGesture(startPoint, xSpeed, ySpeed));
+                    }
+                }
+                else if (command.Name.Equals(DriverCommand.TouchScroll))
+                {
+                    var screen = this.inputController.PhoneScreenSize();
+                    var startPoint = new Point(screen.Width / 2, screen.Height / 2);
+
+                    var elementId = GetValue<string>(command.Parameters, "element");
+                    if (elementId != null)
+                    {
+                        startPoint = this.RequestElementLocation(elementId).GetValueOrDefault();
+                    }
+
+                    // TODO: Add handling of missing parameters. Server should respond with a 400 Bad Request if parameters are missing
+                    var xOffset = Convert.ToInt32(command.Parameters["xoffset"]);
+                    var yOffset = Convert.ToInt32(command.Parameters["yoffset"]);
+
+                    this.inputController.PerformGesture(new ScrollGesture(startPoint, xOffset, yOffset));
+                }
+                else if (command.Name.Equals(DriverCommand.TouchSingleTap))
+                {
+                    var elementId = GetValue<string>(command.Parameters, "element");
+                    if (elementId != null)
+                    {
+                        var tapPoint = this.RequestElementLocation(elementId).GetValueOrDefault();
+                        this.inputController.PerformGesture(new TapGesture(tapPoint));
+                    }
                 }
                 else if (command.Name.Equals(DriverCommand.Close))
                 {

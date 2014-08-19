@@ -24,14 +24,12 @@
         {
             string source;
             var settings = new XmlWriterSettings { Indent = true, Encoding = new UTF8Encoding(false) };
+
             using (var writer = new MemoryStream())
             {
-                using (var xmlWriter = XmlWriter.Create(writer, settings))
-                {
-                                        this.WriteElementToXml(xmlWriter, this.Automator.VisualRoot as FrameworkElement);
-                                        xmlWriter.Flush();
-                                        xmlWriter.Close();
-                }
+                var xmlWriter = XmlWriter.Create(writer, settings);
+                this.WriteElementToXml(xmlWriter, this.Automator.VisualRoot as FrameworkElement);
+                xmlWriter.Flush();
 
                 var buffer = writer.ToArray();
                 source = Encoding.UTF8.GetString(buffer, 0, buffer.Length);
@@ -58,11 +56,19 @@
                                      { "name", item.Name }, 
                                      {
                                          "visible", 
-                                         item.IsUserVisible(this.Automator.VisualRoot).ToString().ToLowerInvariant()
+                                         item.IsUserVisible(this.Automator.VisualRoot)
+                                         .ToString()
+                                         .ToLowerInvariant()
                                      }, 
                                      { "value", item.GetText() }, 
-                                     { "x", coordinates.X.ToString(CultureInfo.InvariantCulture) },
-                                     { "y", coordinates.Y.ToString(CultureInfo.InvariantCulture) }
+                                     {
+                                         "x", 
+                                         coordinates.X.ToString(CultureInfo.InvariantCulture)
+                                     }, 
+                                     {
+                                         "y", 
+                                         coordinates.Y.ToString(CultureInfo.InvariantCulture)
+                                     }
                                  };
             foreach (var attribute in attributes)
             {

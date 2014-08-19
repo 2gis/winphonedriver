@@ -30,14 +30,14 @@
 
         #region Public Methods and Operators
 
-        public string ForwardCommand(Command commandToForward, bool verbose = true)
+        public string ForwardCommand(Command commandToForward, bool verbose = true, int timeout = 0)
         {
             var serializedCommand = JsonConvert.SerializeObject(commandToForward);
 
-            return this.SendRequest(serializedCommand, verbose);
+            return this.SendRequest(serializedCommand, verbose, timeout);
         }
 
-        public string SendRequest(string requestContent, bool verbose)
+        public string SendRequest(string requestContent, bool verbose, int timeout)
         {
             var result = "UnknownError";
             StreamReader reader = null;
@@ -47,6 +47,11 @@
                 // create the request
                 var uri = string.Format("http://{0}:{1}", this.ip, this.port);
                 var request = CreateWebRequest(uri, requestContent);
+                if (timeout != 0)
+                {
+                    request.Timeout = timeout;
+                }
+
                 if (verbose)
                 {
                     // TODO Write normal logging

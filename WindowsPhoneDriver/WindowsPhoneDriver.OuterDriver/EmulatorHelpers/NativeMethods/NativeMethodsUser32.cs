@@ -9,10 +9,6 @@
         // An application-defined callback function used with the EnumWindows & EnumChildWindows http://msdn.microsoft.com/en-us/library/windows/desktop/ms633498(v=vs.85).aspx
         public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
 
-        // The mouse_event function synthesizes mouse motion and button clicks http://msdn.microsoft.com/en-us/library/windows/desktop/ms646260(v=vs.85).aspx
-        [DllImport("user32.dll")]
-        public static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint dwData, UIntPtr dwExtraInfo);
-
         // Activate window to receive keyboard input http://msdn.microsoft.com/en-us/library/windows/desktop/ms633539(v=vs.85).aspx
         [DllImport("user32.dll")]
         public static extern bool SetForegroundWindow(IntPtr hWnd);
