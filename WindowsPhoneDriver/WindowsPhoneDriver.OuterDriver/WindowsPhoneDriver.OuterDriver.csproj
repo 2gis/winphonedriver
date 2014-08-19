@@ -88,14 +88,12 @@
     <Compile Include="CommandLineOptions.cs" />
     <Compile Include="DispatchTables.cs" />
     <Compile Include="EmulatorHelpers\Deployer81.cs" />
-    <Compile Include="EmulatorHelpers\EmulatorInputController.cs" />
+    <Compile Include="EmulatorHelpers\EmulatorController.cs" />
     <Compile Include="EmulatorHelpers\FlickGesture.cs" />
     <Compile Include="EmulatorHelpers\IGesture.cs" />
     <Compile Include="EmulatorHelpers\NativeWrapper.cs" />
     <Compile Include="EmulatorHelpers\IDeployer.cs" />
     <Compile Include="EmulatorHelpers\NativeMethods\NativeMethodsUser32.cs" />
-    <Compile Include="EmulatorHelpers\NativeMethods\NativeMethodsGdi32.cs" />
-    <Compile Include="EmulatorHelpers\ScreenShoter.cs" />
     <Compile Include="EmulatorHelpers\ScrollGesture.cs" />
     <Compile Include="EmulatorHelpers\TapGesture.cs" />
     <Compile Include="Listener.cs" />

@@ -3,6 +3,8 @@
     using System;
     using System.Diagnostics;
     using System.Drawing;
+    using System.Drawing.Imaging;
+    using System.IO;
     using System.Linq;
     using System.Threading;
     using System.Windows.Forms;
@@ -10,7 +12,9 @@
     using Microsoft.Xde.Common;
     using Microsoft.Xde.Wmi;
 
-    internal class EmulatorInputController
+    using WindowsPhoneDriver.Common;
+
+    internal class EmulatorController
     {
         #region Fields
 
@@ -24,7 +28,7 @@
 
         #region Constructors and Destructors
 
-        public EmulatorInputController(string emulatorName)
+        public EmulatorController(string emulatorName)
         {
             this.emulatorVm = GetEmulatorVm(emulatorName);
             this.cursor = new Point(0, 0);
@@ -145,6 +149,16 @@
             this.emulatorVm.TypeKey(Keys.Enter);
         }
 
+        public string TakeScreenshot()
+        {
+            var size = this.emulatorVm.GetCurrentResolution();
+            var screen = this.emulatorVm.GetScreenShot(0, 0, size.Width, size.Height);
+
+            var base64 = ImageToBase64String(screen, ImageFormat.Png);
+            screen.Dispose();
+            return base64;
+        }
+
         #endregion
 
         #region Methods
@@ -159,6 +173,25 @@
             }
 
             return vm;
+        }
+
+        private static string ImageToBase64String(Image image, ImageFormat imageFormat)
+        {
+            byte[] byteBuffer;
+            using (var memoryStream = new MemoryStream())
+            {
+                image.Save(memoryStream, imageFormat);
+
+                memoryStream.Position = 0;
+                byteBuffer = memoryStream.ToArray();
+            }
+
+            if (byteBuffer == null)
+            {
+                throw new AutomationException("Could not take screenshot.", ResponseStatus.UnknownError);
+            }
+
+            return Convert.ToBase64String(byteBuffer);
         }
 
         #endregion

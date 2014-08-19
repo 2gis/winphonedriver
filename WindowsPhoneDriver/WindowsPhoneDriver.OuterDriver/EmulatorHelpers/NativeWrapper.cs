@@ -87,14 +87,6 @@
             return dictWindows;
         }
 
-        public static bool BringWindowToForegroundAndActivate(IntPtr windowHandle)
-        {
-            var bringToFrontResult = NativeMethods.NativeMethods.BringWindowToTop(windowHandle);
-            var setForegroundResult = NativeMethods.NativeMethods.SetForegroundWindow(windowHandle);
-
-            return bringToFrontResult && setForegroundResult;
-        }
-
         #endregion
     }
 }
