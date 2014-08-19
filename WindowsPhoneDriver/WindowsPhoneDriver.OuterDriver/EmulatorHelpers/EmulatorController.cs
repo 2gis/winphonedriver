@@ -154,7 +154,7 @@
             var size = this.emulatorVm.GetCurrentResolution();
             var screen = this.emulatorVm.GetScreenShot(0, 0, size.Width, size.Height);
 
-            var base64 = ToBase64String(screen, ImageFormat.Png);
+            var base64 = ImageToBase64String(screen, ImageFormat.Png);
             screen.Dispose();
             return base64;
         }
@@ -175,7 +175,7 @@
             return vm;
         }
 
-        private static string ToBase64String(Image image, ImageFormat imageFormat)
+        private static string ImageToBase64String(Image image, ImageFormat imageFormat)
         {
             byte[] byteBuffer;
             using (var memoryStream = new MemoryStream())
