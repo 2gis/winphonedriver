@@ -7,17 +7,18 @@
     using System.Threading;
     using System.Windows.Forms;
 
-    using WindowsPhoneDriver.Common;
+    using Microsoft.Xde.Common;
+    using Microsoft.Xde.Wmi;
 
     internal class EmulatorInputController
     {
         #region Fields
 
+        private readonly IXdeVirtualMachine emulatorVm;
+
         private readonly IntPtr outputWindowHandle; // Used to determine WP screen size (480x800 or 480x853)
 
-        private readonly IntPtr xdeWindowHandle; // Used to obtain host window coordinates and size
-
-        private int mouseMovementSleepDelay;
+        private Point cursor;
 
         #endregion
 
@@ -25,24 +26,34 @@
 
         public EmulatorInputController(string emulatorName)
         {
-            emulatorName = emulatorName.Split('(')[0];
-            this.mouseMovementSleepDelay = 0;
+            this.emulatorVm = GetEmulatorVm(emulatorName);
+            this.cursor = new Point(0, 0);
+
+            var partialName = emulatorName.Split('(')[0];
+
+            if (this.emulatorVm == null)
+            {
+                throw new NullReferenceException(
+                    string.Format("Could not get running XDE virtual machine by partial name {0}", partialName));
+            }
+
             var procs = Process.GetProcessesByName("XDE");
             foreach (var process in procs)
             {
                 var windows = NativeWrapper.GetOpenWindowsFromPid(process.Id);
 
-                var isXdeOfInterest = windows.Any(x => x.Key.StartsWith(emulatorName));
+                var isXdeOfInterest = windows.Any(x => x.Key.StartsWith(partialName));
 
                 // Using StartWith instead of Equals because emulator name for 8.1 ends with locale, e.g. (RU)
                 if (isXdeOfInterest)
                 {
                     // Host XDE window, which allows determining Emulator screen size in terms of host screen
-                    windows.TryGetValue("XDE", out this.xdeWindowHandle);
+                    IntPtr xdeWindowHandle;
+                    windows.TryGetValue("XDE", out xdeWindowHandle);
 
                     // Output window, which allows determining Phone screen size
                     this.outputWindowHandle =
-                        NativeWrapper.GetChildWindowsFromHwnd(this.xdeWindowHandle)
+                        NativeWrapper.GetChildWindowsFromHwnd(xdeWindowHandle)
                             .FirstOrDefault(x => x.Key.Equals("Output Painter Window"))
                             .Value;
                     break;
@@ -63,36 +74,7 @@
 
         #endregion
 
-        #region Public Properties
-
-        public int MouseMovementSmoothing
-        {
-            // Mouse movement delay that can be used in tests debugging
-            get
-            {
-                return this.mouseMovementSleepDelay;
-            }
-
-            set
-            {
-                this.mouseMovementSleepDelay = value > 0 ? value : 0;
-            }
-        }
-
-        #endregion
-
         #region Public Methods and Operators
-
-        public void ClickEnterKey()
-        {
-            // Replaced with relative coordinates, still hard-coded, need more thought
-            var phoneScreenSize = this.PhoneScreenSize();
-
-            var offsetX = phoneScreenSize.Width - 30;
-            var offsetY = phoneScreenSize.Height - 40;
-
-            this.LeftClickPhoneScreenAtPoint(new Point(offsetX, offsetY));
-        }
 
         public PhoneOrientation EstimatePhoneOrientation()
         {
@@ -102,12 +84,14 @@
 
         public void LeftButtonDown()
         {
-            NativeWrapper.SendMouseButtonEvent(NativeWrapper.ButtonFlags.LeftDown);
+            var hold = new MouseEventArgs(MouseButtons.Left, 0, this.cursor.X, this.cursor.Y, 0);
+            this.emulatorVm.SendMouseEvent(hold);
         }
 
         public void LeftButtonUp()
         {
-            NativeWrapper.SendMouseButtonEvent(NativeWrapper.ButtonFlags.LeftUp);
+            var release = new MouseEventArgs(MouseButtons.None, 0, this.cursor.X, this.cursor.Y, 0);
+            this.emulatorVm.SendMouseEvent(release);
         }
 
         public void LeftClick()
@@ -118,34 +102,31 @@
 
         public void LeftClickPhoneScreenAtPoint(Point point)
         {
-            var oldPos = Cursor.Position;
-
-            this.MoveCursorToPhoneScreenAtPoint(point);
-            this.LeftButtonDown();
-            this.LeftButtonUp();
-
-            // return mouse back to original position
-            Cursor.Position = oldPos;
+            var hold = new MouseEventArgs(MouseButtons.Left, 0, point.X, point.Y, 0);
+            var release = new MouseEventArgs(MouseButtons.None, 0, point.X, point.Y, 0);
+            this.emulatorVm.SendMouseEvent(hold);
+            this.emulatorVm.SendMouseEvent(release);
         }
 
-        public void MoveCursorToPhoneScreenAtPoint(Point phonePoint)
+        public void MoveCursorTo(Point phonePoint)
         {
-            this.SwitchToEmulator();
+            this.cursor = phonePoint;
+        }
 
-            var hostPoint = this.TranslatePhonePointToHostPoint(phonePoint);
-            if (!this.PhonePointVisibleOnScreen(phonePoint))
+        public void PerformGesture(IGesture gesture)
+        {
+            // TODO Works only for default portrait orientation, need to take orientation into account
+            var array = gesture.GetScreenPoints().ToArray();
+
+            foreach (var point in array.Take(array.Length - 1))
             {
-                throw new AutomationException(
-                    string.Format(
-                        "Location {0}:{1} is out of phone screen bounds {2}:{3}. Scroll into view before clicking.", 
-                        phonePoint.X, 
-                        phonePoint.Y, 
-                        this.PhoneScreenSize().Width, 
-                        this.PhoneScreenSize().Height), 
-                    ResponseStatus.MoveTargetOutOfBounds);
+                this.MoveCursorTo(point);
+                this.LeftButtonDown();
+                Thread.Sleep(gesture.PeriodBetweenPoints);
             }
 
-            this.LinearSmoothMoveCursorToHostAtPoint(new Point(hostPoint.X, hostPoint.Y));
+            this.MoveCursorTo(array.Last());
+            this.LeftButtonUp();
         }
 
         public bool PhonePointVisibleOnScreen(Point phonePoint)
@@ -159,59 +140,25 @@
             return NativeWrapper.GetWindowRectangle(this.outputWindowHandle).Size;
         }
 
+        public void PressEnterKey()
+        {
+            this.emulatorVm.TypeKey(Keys.Enter);
+        }
+
         #endregion
 
         #region Methods
 
-        private Rectangle HostRectangle()
+        private static IXdeVirtualMachine GetEmulatorVm(string emulatorName)
         {
-            return NativeWrapper.GetWindowRectangle(this.xdeWindowHandle);
-        }
-
-        private void LinearSmoothMoveCursorToHostAtPoint(Point newPosition)
-        {
-            var start = Cursor.Position;
-            PointF iterPoint = start;
-            const int Steps = 10;
-
-            // Find the slope of the line segment defined by start and newPosition
-            var slope = new PointF(newPosition.X - start.X, newPosition.Y - start.Y);
-
-            // Divide by the number of steps
-            slope.X = slope.X / Steps;
-            slope.Y = slope.Y / Steps;
-
-            // Move the mouse to each iterative point.
-            for (int i = 0; i < Steps; i++)
+            var factory = new XdeWmiFactory();
+            var vm = factory.GetVirtualMachine(emulatorName + "." + Environment.UserName);
+            if (vm.EnabledState != VirtualMachineEnabledState.Enabled)
             {
-                iterPoint = new PointF(iterPoint.X + slope.X, iterPoint.Y + slope.Y);
-                Cursor.Position = Point.Round(iterPoint);
-                Thread.Sleep(this.MouseMovementSmoothing);
+                throw new XdeVirtualMachineException("Emulator is not running. ");
             }
 
-            // Move the mouse to the final destination.
-            Cursor.Position = newPosition;
-        }
-
-        private void SwitchToEmulator()
-        {
-            NativeWrapper.BringWindowToForegroundAndActivate(this.xdeWindowHandle);
-        }
-
-        private Point TranslatePhonePointToHostPoint(Point phonePoint)
-        {
-            var hostScreen = this.HostRectangle();
-            var phoneScreenSize = this.PhoneScreenSize();
-
-            var translatedPoint = new Point();
-
-            var scaleFactorX = (double)hostScreen.Width / phoneScreenSize.Width;
-            var scaleFactorY = (double)hostScreen.Height / phoneScreenSize.Height;
-
-            translatedPoint.X = (int)(phonePoint.X * scaleFactorX) + hostScreen.X;
-            translatedPoint.Y = (int)(phonePoint.Y * scaleFactorY) + hostScreen.Y;
-
-            return translatedPoint;
+            return vm;
         }
 
         #endregion

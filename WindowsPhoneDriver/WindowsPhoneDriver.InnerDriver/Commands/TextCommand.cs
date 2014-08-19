@@ -1,7 +1,5 @@
 ﻿namespace WindowsPhoneDriver.InnerDriver.Commands
 {
-    using System.Collections.Generic;
-
     using WindowsPhoneDriver.Common;
 
     internal class TextCommand : CommandBase

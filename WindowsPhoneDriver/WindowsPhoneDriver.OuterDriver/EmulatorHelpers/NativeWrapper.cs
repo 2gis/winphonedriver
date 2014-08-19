@@ -9,13 +9,6 @@
     {
         #region Native WinApi Wrappers
 
-        public enum ButtonFlags : uint
-        {
-            LeftDown = 0x00000002, 
-
-            LeftUp = 0x00000004, 
-        }
-
         public static Rectangle GetWindowRectangle(IntPtr windowHandle)
         {
             NativeMethods.NativeMethods.Rect winRect;
@@ -100,11 +93,6 @@
             var setForegroundResult = NativeMethods.NativeMethods.SetForegroundWindow(windowHandle);
 
             return bringToFrontResult && setForegroundResult;
-        }
-
-        public static void SendMouseButtonEvent(ButtonFlags flags)
-        {
-            NativeMethods.NativeMethods.mouse_event((uint)flags, 0, 0, 0, UIntPtr.Zero);
         }
 
         #endregion

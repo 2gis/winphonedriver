@@ -60,6 +60,10 @@
       <HintPath>C:\Program Files (x86)\Microsoft SDKs\Windows Phone\v8.1\Tools\AppDeploy\Microsoft.Phone.Tools.Deploy.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Microsoft.Xde.Common, Version=8.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=x86" />
+    <Reference Include="Microsoft.Xde.Wmi">
+      <HintPath>C:\Program Files (x86)\Microsoft XDE\8.1\Microsoft.Xde.Wmi.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Newtonsoft.Json.6.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
@@ -85,11 +89,15 @@
     <Compile Include="DispatchTables.cs" />
     <Compile Include="EmulatorHelpers\Deployer81.cs" />
     <Compile Include="EmulatorHelpers\EmulatorInputController.cs" />
+    <Compile Include="EmulatorHelpers\FlickGesture.cs" />
+    <Compile Include="EmulatorHelpers\IGesture.cs" />
     <Compile Include="EmulatorHelpers\NativeWrapper.cs" />
     <Compile Include="EmulatorHelpers\IDeployer.cs" />
     <Compile Include="EmulatorHelpers\NativeMethods\NativeMethodsUser32.cs" />
     <Compile Include="EmulatorHelpers\NativeMethods\NativeMethodsGdi32.cs" />
     <Compile Include="EmulatorHelpers\ScreenShoter.cs" />
+    <Compile Include="EmulatorHelpers\ScrollGesture.cs" />
+    <Compile Include="EmulatorHelpers\TapGesture.cs" />
     <Compile Include="Listener.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
