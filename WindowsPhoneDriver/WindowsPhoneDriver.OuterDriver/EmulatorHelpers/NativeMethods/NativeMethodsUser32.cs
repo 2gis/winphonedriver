@@ -51,15 +51,6 @@
         [DllImport("user32.dll", SetLastError = true)]
         public static extern bool BringWindowToTop(IntPtr hWnd);
 
-        [DllImport("user32.dll")]
-        public static extern IntPtr GetDesktopWindow();
-
-        [DllImport("user32.dll")]
-        public static extern IntPtr GetWindowDC(IntPtr ptr);
-
-        [DllImport("user32.dll")]
-        public static extern bool ReleaseDC(IntPtr hWnd, IntPtr hDc);
-
         [StructLayout(LayoutKind.Sequential)]
         public struct Rect
         {

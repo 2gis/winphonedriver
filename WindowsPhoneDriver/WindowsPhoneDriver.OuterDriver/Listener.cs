@@ -36,7 +36,7 @@
 
         private DispatchTables dispatcher;
 
-        private EmulatorInputController inputController;
+        private EmulatorController emulatorController;
 
         private TcpListener listener;
 
@@ -284,7 +284,7 @@
 
             var ip = this.deployer.ReceiveIpAddress();
             Console.WriteLine("Actual Device: " + this.deployer.DeviceName);
-            this.inputController = new EmulatorInputController(this.deployer.DeviceName);
+            this.emulatorController = new EmulatorController(this.deployer.DeviceName);
 
             if (string.IsNullOrEmpty(ip))
             {
@@ -348,7 +348,7 @@
                 else if (command.Name.Equals(DriverCommand.GetWindowSize))
                 {
                     // Window size is partially implemented
-                    var phoneScreenSize = this.inputController.PhoneScreenSize();
+                    var phoneScreenSize = this.emulatorController.PhoneScreenSize();
                     responseBody = Responder.CreateJsonResponse(
                         this.sessionId, 
                         ResponseStatus.Success, 
@@ -360,7 +360,7 @@
                 }
                 else if (command.Name.Equals(DriverCommand.Screenshot))
                 {
-                    responseBody = ScreenShoter.TakeScreenshot();
+                    responseBody = this.emulatorController.TakeScreenshot();
                 }
                 else if (command.Name.Equals(DriverCommand.SendKeysToElement))
                 {
@@ -380,7 +380,7 @@
 
                     if (needToClickEnter)
                     {
-                        this.inputController.PressEnterKey();
+                        this.emulatorController.PressEnterKey();
                     }
                 }
                 else if (command.Name.Equals(DriverCommand.MouseMoveTo))
@@ -413,11 +413,11 @@
                         coordinates = new Point(int.Parse(xOffset), int.Parse(yOffset));
                     }
 
-                    this.inputController.MoveCursorTo(coordinates);
+                    this.emulatorController.MoveCursorTo(coordinates);
                 }
                 else if (command.Name.Equals(DriverCommand.MouseClick))
                 {
-                    this.inputController.LeftClick();
+                    this.emulatorController.LeftClick();
                 }
                 else if (command.Name.Equals(DriverCommand.ClickElement))
                 {
@@ -425,20 +425,20 @@
 
                     if (location.HasValue)
                     {
-                        this.inputController.LeftClickPhoneScreenAtPoint(location.Value);
+                        this.emulatorController.LeftClickPhoneScreenAtPoint(location.Value);
                     }
                 }
                 else if (command.Name.Equals(DriverCommand.MouseDown))
                 {
-                    this.inputController.LeftButtonDown();
+                    this.emulatorController.LeftButtonDown();
                 }
                 else if (command.Name.Equals(DriverCommand.MouseUp))
                 {
-                    this.inputController.LeftButtonUp();
+                    this.emulatorController.LeftButtonUp();
                 }
                 else if (command.Name.Equals(DriverCommand.TouchFlick))
                 {
-                    var screen = this.inputController.PhoneScreenSize();
+                    var screen = this.emulatorController.PhoneScreenSize();
                     var startPoint = new Point(screen.Width / 2, screen.Height / 2);
 
                     var elementId = GetValue<string>(command.Parameters, "element");
@@ -453,19 +453,19 @@
                         var xOffset = Convert.ToInt32(command.Parameters["xoffset"]);
                         var yOffset = Convert.ToInt32(command.Parameters["yoffset"]);
 
-                        this.inputController.PerformGesture(
+                        this.emulatorController.PerformGesture(
                             new FlickGesture(startPoint, xOffset, yOffset, Convert.ToDouble(speed)));
                     }
                     else
                     {
                         var xSpeed = Convert.ToDouble(command.Parameters["xspeed"]);
                         var ySpeed = Convert.ToDouble(command.Parameters["yspeed"]);
-                        this.inputController.PerformGesture(new FlickGesture(startPoint, xSpeed, ySpeed));
+                        this.emulatorController.PerformGesture(new FlickGesture(startPoint, xSpeed, ySpeed));
                     }
                 }
                 else if (command.Name.Equals(DriverCommand.TouchScroll))
                 {
-                    var screen = this.inputController.PhoneScreenSize();
+                    var screen = this.emulatorController.PhoneScreenSize();
                     var startPoint = new Point(screen.Width / 2, screen.Height / 2);
 
                     var elementId = GetValue<string>(command.Parameters, "element");
@@ -478,7 +478,7 @@
                     var xOffset = Convert.ToInt32(command.Parameters["xoffset"]);
                     var yOffset = Convert.ToInt32(command.Parameters["yoffset"]);
 
-                    this.inputController.PerformGesture(new ScrollGesture(startPoint, xOffset, yOffset));
+                    this.emulatorController.PerformGesture(new ScrollGesture(startPoint, xOffset, yOffset));
                 }
                 else if (command.Name.Equals(DriverCommand.TouchSingleTap))
                 {
@@ -486,7 +486,7 @@
                     if (elementId != null)
                     {
                         var tapPoint = this.RequestElementLocation(elementId).GetValueOrDefault();
-                        this.inputController.PerformGesture(new TapGesture(tapPoint));
+                        this.emulatorController.PerformGesture(new TapGesture(tapPoint));
                     }
                 }
                 else if (command.Name.Equals(DriverCommand.Close))
