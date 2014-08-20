@@ -408,8 +408,8 @@
                     }
                     else
                     {
-                        var xOffset = command.Parameters["xOffset"].ToString();
-                        var yOffset = command.Parameters["YOffset"].ToString();
+                        var xOffset = command.Parameters["xoffset"].ToString();
+                        var yOffset = command.Parameters["yoffset"].ToString();
                         coordinates = new Point(int.Parse(xOffset), int.Parse(yOffset));
                     }
 
