@@ -17,7 +17,7 @@
         public FlickGesture(Point startPoint, int xOffset, int yOffset, double speed)
         {
             this.StartPosition = startPoint;
-            this.PeriodBetweenPoints = TimeSpan.FromMilliseconds(0.5 * this.Distance() / speed);
+            this.PeriodBetweenPoints = TimeSpan.FromMilliseconds(this.Distance() / (NumberOfIntermediatePoints + 1) / speed);
 
             this.EndPosition = new Point(startPoint.X + xOffset, startPoint.Y + yOffset);
         }
