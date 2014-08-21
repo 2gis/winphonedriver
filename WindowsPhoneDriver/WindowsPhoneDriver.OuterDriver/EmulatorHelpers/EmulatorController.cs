@@ -98,18 +98,15 @@
             this.emulatorVm.SendMouseEvent(release);
         }
 
-        public void LeftClick()
+        public void LeftButtonClick(Point? point = null)
         {
+            if (point.HasValue)
+            {
+                this.MoveCursorTo(point.Value);
+            }
+
             this.LeftButtonDown();
             this.LeftButtonUp();
-        }
-
-        public void LeftClickPhoneScreenAtPoint(Point point)
-        {
-            var hold = new MouseEventArgs(MouseButtons.Left, 0, point.X, point.Y, 0);
-            var release = new MouseEventArgs(MouseButtons.None, 0, point.X, point.Y, 0);
-            this.emulatorVm.SendMouseEvent(hold);
-            this.emulatorVm.SendMouseEvent(release);
         }
 
         public void MoveCursorTo(Point phonePoint)

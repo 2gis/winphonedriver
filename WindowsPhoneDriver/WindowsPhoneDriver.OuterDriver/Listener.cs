@@ -417,7 +417,7 @@
                 }
                 else if (command.Name.Equals(DriverCommand.MouseClick))
                 {
-                    this.emulatorController.LeftClick();
+                    this.emulatorController.LeftButtonClick();
                 }
                 else if (command.Name.Equals(DriverCommand.ClickElement))
                 {
@@ -425,7 +425,7 @@
 
                     if (location.HasValue)
                     {
-                        this.emulatorController.LeftClickPhoneScreenAtPoint(location.Value);
+                        this.emulatorController.LeftButtonClick(location.Value);
                     }
                 }
                 else if (command.Name.Equals(DriverCommand.MouseDown))
