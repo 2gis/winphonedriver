@@ -82,18 +82,6 @@
 
         #region Public Methods and Operators
 
-        public static string FindIpAddress()
-        {
-            var localIp = "localhost";
-            var host = Dns.GetHostEntry(Dns.GetHostName());
-            foreach (var ip in host.AddressList.Where(ip => ip.AddressFamily == AddressFamily.InterNetwork))
-            {
-                localIp = ip.ToString();
-            }
-
-            return localIp;
-        }
-
         public Point? RequestElementLocation(string element)
         {
             var command = new Command(
@@ -194,6 +182,14 @@
 
         #region Methods
 
+        private static T GetValue<T>(IReadOnlyDictionary<string, object> parameters, string key) where T : class
+        {
+            object valueObject;
+            parameters.TryGetValue(key, out valueObject);
+
+            return valueObject as T;
+        }
+
         private static Dictionary<string, object> ParseDesiredCapabilitiesJson(string content)
         {
             /* Parses JSON and returns dictionary of supported capabilities and their values (or default values if not set)
@@ -236,14 +232,6 @@
             return actualCapabilities;
         }
 
-        private static T GetValue<T>(IReadOnlyDictionary<string, object> parameters, string key) where T : class
-        {
-            object valueObject;
-            parameters.TryGetValue(key, out valueObject);
-
-            return valueObject as T;
-        }
-
         private string HandleRequest(AcceptedRequest acceptedRequest)
         {
             Command commandToExecute;
@@ -282,22 +270,16 @@
                 this.deployer.Deploy(appPath);
             }
 
-            var ip = this.deployer.ReceiveIpAddress();
             Console.WriteLine("Actual Device: " + this.deployer.DeviceName);
             this.emulatorController = new EmulatorController(this.deployer.DeviceName);
 
-            if (string.IsNullOrEmpty(ip))
-            {
-                ip = IPAddress.Parse(FindIpAddress()).ToString();
-            }
-
-            return ip;
+            return this.emulatorController.GetIpAddress();
         }
 
         private string ProcessCommand(Command command)
         {
             var responseBody = string.Empty;
-            const string EnterKey = "\ue007";
+
             this.sessionId = "awesomeSessionId";
             try
             {
@@ -368,6 +350,8 @@
                     var needToClickEnter = false;
                     var originalContent = command.Parameters;
                     var value = ((object[])originalContent["value"]).Select(o => o.ToString()).ToArray();
+
+                    const string EnterKey = "\ue007";
 
                     if (value.Contains(EnterKey))
                     {
