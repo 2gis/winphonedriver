@@ -105,6 +105,10 @@
             {
                 commandToExecute = new PageSourceCommand { ElementId = elementId };
             }
+            else if (command.Equals(DriverCommand.GetOrientation))
+            {
+                commandToExecute = new OrientationCommand();
+            }
             else
             {
                 return "<UnimplementedCommand>";
