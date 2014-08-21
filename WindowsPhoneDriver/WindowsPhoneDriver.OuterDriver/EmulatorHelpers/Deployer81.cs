@@ -70,13 +70,6 @@ namespace WindowsPhoneDriver.OuterDriver.EmulatorHelpers
             // Utils.InstallApplication automatically disconnects after deployment
         }
 
-        public string ReceiveIpAddress()
-        {
-            // Windows Phone 8.1 emulators use same ip as host http://social.msdn.microsoft.com/Forums/sqlserver/en-US/8902939b-233f-4075-99c3-5856f7e6ca6e/windows-phone-81-emulator-no-longer-uses-dhcp?forum=wpdevelop
-            // Driver will use host ip if empty string is returned
-            return string.Empty;
-        }
-
         #endregion
     }
 }

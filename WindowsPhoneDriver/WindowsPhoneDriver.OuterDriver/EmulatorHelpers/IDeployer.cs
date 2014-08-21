@@ -14,8 +14,6 @@
 
         void Disconnect();
 
-        string ReceiveIpAddress();
-
         #endregion
     }
 }

@@ -75,7 +75,6 @@
             this.listener.Control.QualityOfService = SocketQualityOfService.Normal;
             this.listener.ConnectionReceived += this.ListenerConnectionReceived;
             await this.listener.BindServiceNameAsync(this.listeningPort.ToString(CultureInfo.InvariantCulture));
-            this.WriteIpAddress();
         }
 
         public void Stop()
@@ -90,37 +89,6 @@
         #endregion
 
         #region Methods
-
-        internal string FindIpAddress()
-        {
-            var hostnames = NetworkInformation.GetHostNames();
-            const int IanaInterfaceTypeWiFi = 71; // IanaInterfaceType == 71 => WiFi
-            const int IanaInterfaceTypeEthernet = 6; // IanaInterfaceType == 6 => Ethernet (Emulator)
-            var ipAddresses = (from hn in hostnames
-                               where
-                                   hn.IPInformation != null
-                                   && (hn.IPInformation.NetworkAdapter.IanaInterfaceType == IanaInterfaceTypeWiFi
-                                       || hn.IPInformation.NetworkAdapter.IanaInterfaceType == IanaInterfaceTypeEthernet)
-                               select hn.DisplayName).ToList();
-
-            if (ipAddresses.Count < 1)
-            {
-                return null;
-            }
-
-            return ipAddresses.Count == 1 ? ipAddresses[0] : ipAddresses[ipAddresses.Count - 1];
-        }
-
-        internal void WriteIpAddress()
-        {
-            using (var isoStore = IsolatedStorageFile.GetUserStoreForApplication())
-            {
-                using (var sw = new StreamWriter(isoStore.OpenFile("ip.txt", FileMode.OpenOrCreate, FileAccess.Write)))
-                {
-                    sw.Write(this.FindIpAddress());
-                }
-            }
-        }
 
         private async void HandleRequest(StreamSocket socket)
         {
