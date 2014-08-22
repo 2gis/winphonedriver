@@ -91,9 +91,7 @@
     <Compile Include="EmulatorHelpers\EmulatorController.cs" />
     <Compile Include="EmulatorHelpers\FlickGesture.cs" />
     <Compile Include="EmulatorHelpers\IGesture.cs" />
-    <Compile Include="EmulatorHelpers\NativeWrapper.cs" />
     <Compile Include="EmulatorHelpers\IDeployer.cs" />
-    <Compile Include="EmulatorHelpers\NativeMethods\NativeMethodsUser32.cs" />
     <Compile Include="EmulatorHelpers\ScrollGesture.cs" />
     <Compile Include="EmulatorHelpers\TapGesture.cs" />
     <Compile Include="Listener.cs" />
@@ -112,6 +110,7 @@
       <Name>WindowsPhoneDriver.Common</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

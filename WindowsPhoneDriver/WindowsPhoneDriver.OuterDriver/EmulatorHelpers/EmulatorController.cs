@@ -1,7 +1,6 @@
 ﻿namespace WindowsPhoneDriver.OuterDriver.EmulatorHelpers
 {
     using System;
-    using System.Diagnostics;
     using System.Drawing;
     using System.Drawing.Imaging;
     using System.IO;
@@ -20,9 +19,9 @@
 
         private readonly IXdeVirtualMachine emulatorVm;
 
-        private readonly IntPtr outputWindowHandle; // Used to determine WP screen size (480x800 or 480x853)
-
         private Point cursor;
+
+        private Size virtualScreenSize;
 
         #endregion
 
@@ -32,58 +31,93 @@
         {
             this.emulatorVm = GetEmulatorVm(emulatorName);
             this.cursor = new Point(0, 0);
-
-            var partialName = emulatorName.Split('(')[0];
+            this.PhoneOrientationToUse = PhoneOrientation.Landscape;
 
             if (this.emulatorVm == null)
             {
                 throw new NullReferenceException(
-                    string.Format("Could not get running XDE virtual machine by partial name {0}", partialName));
+                    string.Format("Could not get running XDE virtual machine {0}", emulatorName));
             }
 
-            var procs = Process.GetProcessesByName("XDE");
-            foreach (var process in procs)
-            {
-                var windows = NativeWrapper.GetOpenWindowsFromPid(process.Id);
-
-                var isXdeOfInterest = windows.Any(x => x.Key.StartsWith(partialName));
-
-                // Using StartWith instead of Equals because emulator name for 8.1 ends with locale, e.g. (RU)
-                if (isXdeOfInterest)
-                {
-                    // Host XDE window, which allows determining Emulator screen size in terms of host screen
-                    IntPtr xdeWindowHandle;
-                    windows.TryGetValue("XDE", out xdeWindowHandle);
-
-                    // Output window, which allows determining Phone screen size
-                    this.outputWindowHandle =
-                        NativeWrapper.GetChildWindowsFromHwnd(xdeWindowHandle)
-                            .FirstOrDefault(x => x.Key.Equals("Output Painter Window"))
-                            .Value;
-                    break;
-                }
-            }
+            this.PhoneScreenSize = this.emulatorVm.GetCurrentResolution();
         }
 
         #endregion
 
         #region Enums
 
+        [Flags]
         public enum PhoneOrientation
         {
-            Portrait, 
+            None = 0, 
 
-            Landscape
+            Portrait = 1, 
+
+            Landscape = 2, 
+
+            PortraitUp = 5, 
+
+            PortraitDown = 9, 
+
+            LandscapeLeft = 18, 
+
+            LandscapeRight = 34, 
+        }
+
+        #endregion
+
+        #region Public Properties
+
+        /// <summary>
+        /// Current phone orientation to be used when translating phone screen coordinates into virtual machine screen coordinates.
+        /// Should be set before using PhoneScreenSize or any mouse moving methods
+        /// </summary>
+        public PhoneOrientation PhoneOrientationToUse { get; set; }
+
+        public Size PhoneScreenSize
+        {
+            get
+            {
+                return (this.PhoneOrientationToUse & PhoneOrientation.Landscape) == PhoneOrientation.Landscape
+                           ? new Size(this.virtualScreenSize.Height, this.virtualScreenSize.Width)
+                           : this.virtualScreenSize;
+            }
+
+            private set
+            {
+                this.virtualScreenSize = value;
+            }
         }
 
         #endregion
 
         #region Public Methods and Operators
 
-        public PhoneOrientation EstimatePhoneOrientation()
+        public string GetIpAddress()
         {
-            var screen = this.PhoneScreenSize();
-            return screen.Width > screen.Height ? PhoneOrientation.Landscape : PhoneOrientation.Portrait;
+            var nic = this.emulatorVm.InternalNic;
+            if (nic == null)
+            {
+                throw new Exception("Windows Phone Emulator Internal Switch not found");
+            }
+
+            if (nic.SwitchInformation.HostIpAddress == null)
+            {
+                throw new Exception("Unable to determine Windows Phone Emulator IP address.");
+            }
+
+            return nic.SwitchInformation.HostIpAddress;
+        }
+
+        public void LeftButtonClick(Point? point = null)
+        {
+            if (point.HasValue)
+            {
+                this.MoveCursorTo(point.Value);
+            }
+
+            this.LeftButtonDown();
+            this.LeftButtonUp();
         }
 
         public void LeftButtonDown()
@@ -98,20 +132,10 @@
             this.emulatorVm.SendMouseEvent(release);
         }
 
-        public void LeftButtonClick(Point? point = null)
-        {
-            if (point.HasValue)
-            {
-                this.MoveCursorTo(point.Value);
-            }
-
-            this.LeftButtonDown();
-            this.LeftButtonUp();
-        }
-
         public void MoveCursorTo(Point phonePoint)
         {
-            this.cursor = phonePoint;
+            var xdePoint = this.TranslatePhoneToVirtualmachinePoint(phonePoint);
+            this.cursor = xdePoint;
         }
 
         public void PerformGesture(IGesture gesture)
@@ -132,13 +156,8 @@
 
         public bool PhonePointVisibleOnScreen(Point phonePoint)
         {
-            var phoneScreen = new Rectangle(new Point(0, 0), this.PhoneScreenSize());
+            var phoneScreen = new Rectangle(new Point(0, 0), this.PhoneScreenSize);
             return phoneScreen.Contains(phonePoint);
-        }
-
-        public Size PhoneScreenSize()
-        {
-            return NativeWrapper.GetWindowRectangle(this.outputWindowHandle).Size;
         }
 
         public void PressEnterKey()
@@ -191,20 +210,28 @@
             return Convert.ToBase64String(byteBuffer);
         }
 
-        public string GetIpAddress()
+        private Point TranslatePhoneToVirtualmachinePoint(Point location)
         {
-            var nic = this.emulatorVm.InternalNic;
-            if (nic == null)
+            var translatedPoint = location;
+            switch (this.PhoneOrientationToUse)
             {
-                throw new Exception("Windows Phone Emulator Internal Switch not found");
+                case PhoneOrientation.PortraitDown:
+                    translatedPoint.X = this.virtualScreenSize.Width - location.X;
+                    translatedPoint.Y = this.virtualScreenSize.Height - location.Y;
+                    break;
+
+                case PhoneOrientation.LandscapeLeft:
+                    translatedPoint.X = this.virtualScreenSize.Width - location.Y;
+                    translatedPoint.Y = location.X;
+                    break;
+
+                case PhoneOrientation.LandscapeRight:
+                    translatedPoint.X = location.Y;
+                    translatedPoint.Y = this.virtualScreenSize.Height - location.X;
+                    break;
             }
 
-            if (nic.SwitchInformation.HostIpAddress == null)
-            {
-                throw new Exception("Unable to determine Windows Phone Emulator Internal Switch IP address.");
-            }
-
-            return nic.SwitchInformation.HostIpAddress;
+            return translatedPoint;
         }
 
         #endregion

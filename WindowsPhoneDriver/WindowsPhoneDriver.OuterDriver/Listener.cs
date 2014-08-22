@@ -329,8 +329,8 @@
                 }
                 else if (command.Name.Equals(DriverCommand.GetWindowSize))
                 {
-                    // Window size is partially implemented
-                    var phoneScreenSize = this.emulatorController.PhoneScreenSize();
+                    this.UpdatedOrientationForEmulatorController();
+                    var phoneScreenSize = this.emulatorController.PhoneScreenSize;
                     responseBody = Responder.CreateJsonResponse(
                         this.sessionId, 
                         ResponseStatus.Success, 
@@ -339,6 +339,19 @@
                                 { "width", phoneScreenSize.Width }, 
                                 { "height", phoneScreenSize.Height }
                             });
+                }
+                else if (command.Name.Equals(DriverCommand.GetOrientation))
+                {
+                    var orientation = string.Empty;
+                    responseBody = this.phoneRequester.ForwardCommand(command);
+                    var deserializeObject = JsonConvert.DeserializeObject<JsonResponse>(responseBody);
+                    if (deserializeObject.Status == ResponseStatus.Success)
+                    {
+                        var value = deserializeObject.Value.ToString();
+                        orientation = value.ToLower().StartsWith("landscape") ? "LANDSCAPE" : "PORTRAIT";
+                    }
+
+                    responseBody = Responder.CreateJsonResponse(this.sessionId, ResponseStatus.Success, orientation);
                 }
                 else if (command.Name.Equals(DriverCommand.Screenshot))
                 {
@@ -397,6 +410,7 @@
                         coordinates = new Point(int.Parse(xOffset), int.Parse(yOffset));
                     }
 
+                    this.UpdatedOrientationForEmulatorController();
                     this.emulatorController.MoveCursorTo(coordinates);
                 }
                 else if (command.Name.Equals(DriverCommand.MouseClick))
@@ -409,6 +423,8 @@
 
                     if (location.HasValue)
                     {
+                        this.UpdatedOrientationForEmulatorController();
+
                         this.emulatorController.LeftButtonClick(location.Value);
                     }
                 }
@@ -422,7 +438,9 @@
                 }
                 else if (command.Name.Equals(DriverCommand.TouchFlick))
                 {
-                    var screen = this.emulatorController.PhoneScreenSize();
+                    this.UpdatedOrientationForEmulatorController();
+
+                    var screen = this.emulatorController.PhoneScreenSize;
                     var startPoint = new Point(screen.Width / 2, screen.Height / 2);
 
                     var elementId = GetValue<string>(command.Parameters, "element");
@@ -449,7 +467,9 @@
                 }
                 else if (command.Name.Equals(DriverCommand.TouchScroll))
                 {
-                    var screen = this.emulatorController.PhoneScreenSize();
+                    this.UpdatedOrientationForEmulatorController();
+
+                    var screen = this.emulatorController.PhoneScreenSize;
                     var startPoint = new Point(screen.Width / 2, screen.Height / 2);
 
                     var elementId = GetValue<string>(command.Parameters, "element");
@@ -466,6 +486,8 @@
                 }
                 else if (command.Name.Equals(DriverCommand.TouchSingleTap))
                 {
+                    this.UpdatedOrientationForEmulatorController();
+
                     var elementId = GetValue<string>(command.Parameters, "element");
                     if (elementId != null)
                     {
@@ -488,6 +510,33 @@
             }
 
             return responseBody;
+        }
+
+        /// <summary>
+        /// This method should be called before any EmulatorController methods that move cursor or use screen size.
+        /// Orientation value is used by EmulatorController to translate phone screen coordinates into virtual machine coordinates
+        /// </summary>
+        private void UpdatedOrientationForEmulatorController()
+        {
+            Console.WriteLine("Updating orientation");
+
+            // TODO: Temporary solution, need to refactor command processing
+            var command = new Command(null, DriverCommand.GetOrientation, null);
+            var responseBody = this.phoneRequester.ForwardCommand(command);
+            var deserializeObject = JsonConvert.DeserializeObject<JsonResponse>(responseBody);
+            if (deserializeObject.Status != ResponseStatus.Success)
+            {
+                return;
+            }
+            Console.WriteLine("Response: {0}", responseBody);
+
+            EmulatorController.PhoneOrientation orientation;
+            if (Enum.TryParse(deserializeObject.Value.ToString(), true, out orientation))
+            {
+                this.emulatorController.PhoneOrientationToUse = orientation;
+            }
+
+            Console.WriteLine("Orientation: {0}", orientation);
         }
 
         #endregion
