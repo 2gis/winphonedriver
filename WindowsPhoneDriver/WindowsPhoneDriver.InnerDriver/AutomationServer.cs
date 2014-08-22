@@ -2,13 +2,9 @@
 {
     using System;
     using System.Globalization;
-    using System.IO;
-    using System.IO.IsolatedStorage;
-    using System.Linq;
     using System.Threading.Tasks;
     using System.Windows;
 
-    using Windows.Networking.Connectivity;
     using Windows.Networking.Sockets;
     using Windows.Storage.Streams;
 

@@ -6,18 +6,9 @@
     using System.Net.Sockets;
     using System.Text;
 
-    using Newtonsoft.Json;
-
-    using WindowsPhoneDriver.Common;
-
     internal class Responder
     {
         #region Public Methods and Operators
-
-        public static string CreateJsonResponse(string sessionId, ResponseStatus status, object jsonValue)
-        {
-            return JsonConvert.SerializeObject(new JsonResponse(sessionId, status, jsonValue));
-        }
 
         public static void WriteResponse(
             NetworkStream stream, 
