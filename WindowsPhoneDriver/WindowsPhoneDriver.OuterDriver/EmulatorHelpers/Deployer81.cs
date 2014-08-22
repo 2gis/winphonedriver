@@ -4,6 +4,7 @@ namespace WindowsPhoneDriver.OuterDriver.EmulatorHelpers
 {
     using System;
     using System.Linq;
+    using System.Reflection;
 
     using Microsoft.Phone.Tools.Deploy;
 
@@ -16,6 +17,8 @@ namespace WindowsPhoneDriver.OuterDriver.EmulatorHelpers
         #region Fields
 
         private readonly DeviceInfo deviceInfo;
+
+        private IAppManifestInfo appManifestInfo;
 
         #endregion
 
@@ -57,17 +60,20 @@ namespace WindowsPhoneDriver.OuterDriver.EmulatorHelpers
 
         public void Deploy(string appPath)
         {
-            var appManifestInfo = Utils.ReadAppManifestInfoFromPackage(appPath);
+            this.appManifestInfo = Utils.ReadAppManifestInfoFromPackage(appPath);
 
             GlobalOptions.LaunchAfterInstall = true;
-            Utils.InstallApplication(this.deviceInfo, appManifestInfo, DeploymentOptions.None, appPath);
+            Utils.InstallApplication(this.deviceInfo, this.appManifestInfo, DeploymentOptions.None, appPath);
 
             Console.WriteLine("Successfully deployed using Microsoft.Phone.Tools.Deploy");
         }
 
         public void Disconnect()
         {
-            // Utils.InstallApplication automatically disconnects after deployment
+            // FIXME Temporary solution using private UninstallApplication method
+            // Still using Microsoft.Phone.Tools.Deploy assembly is much easier than Smart Device connectivity
+            var uninstallApplication = typeof(Utils).GetMethod("UninstallApplication", BindingFlags.NonPublic | BindingFlags.Static);
+            uninstallApplication.Invoke(typeof(Utils), new object[] { deviceInfo, appManifestInfo.ProductId });
         }
 
         #endregion
