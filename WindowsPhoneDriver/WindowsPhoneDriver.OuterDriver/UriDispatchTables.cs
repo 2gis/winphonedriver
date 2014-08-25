@@ -8,7 +8,7 @@
 
     using DriverCommand = WindowsPhoneDriver.Common.DriverCommand;
 
-    internal class DispatchTables
+    internal class UriDispatchTables
     {
         #region Fields
 
@@ -22,7 +22,7 @@
 
         #region Constructors and Destructors
 
-        public DispatchTables(Uri prefix)
+        public UriDispatchTables(Uri prefix)
         {
             this.ConstructDispatcherTables(prefix);
         }

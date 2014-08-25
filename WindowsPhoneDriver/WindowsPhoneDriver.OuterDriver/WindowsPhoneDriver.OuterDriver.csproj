@@ -72,21 +72,34 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.ServiceModel" />
-    <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
     <Reference Include="WebDriver">
       <HintPath>..\packages\Selenium.WebDriver.2.42.0\lib\net40\WebDriver.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AcceptedRequest.cs" />
+    <Compile Include="Automator\Automator.cs" />
+    <Compile Include="CommandExecutorDispatchTable.cs" />
+    <Compile Include="CommandExecutors\CommandExecutorForward.cs" />
+    <Compile Include="CommandExecutors\CommandExecutorBase.cs" />
+    <Compile Include="CommandExecutors\GetCurrentWindowHandleExecutor.cs" />
+    <Compile Include="CommandExecutors\GetWindowSizeExecutor.cs" />
+    <Compile Include="CommandExecutors\GetOrientationExecutor.cs" />
+    <Compile Include="CommandExecutors\MouseMoveToExecutor.cs" />
+    <Compile Include="CommandExecutors\MouseClickExecutor.cs" />
+    <Compile Include="CommandExecutors\ClickElementExecutor.cs" />
+    <Compile Include="CommandExecutors\MouseUpExecutor.cs" />
+    <Compile Include="CommandExecutors\MouseDownExecutor.cs" />
+    <Compile Include="CommandExecutors\TouchSingleTapExecutor.cs" />
+    <Compile Include="CommandExecutors\TouchScrollExecutor.cs" />
+    <Compile Include="CommandExecutors\TouchFlickExecutor.cs" />
+    <Compile Include="CommandExecutors\SendKeysToElementExecutor.cs" />
+    <Compile Include="CommandExecutors\ScreenshotExecutor.cs" />
+    <Compile Include="CommandExecutors\CloseExecutor.cs" />
+    <Compile Include="CommandExecutors\NewSessionExecutor.cs" />
     <Compile Include="CommandLineOptions.cs" />
-    <Compile Include="DispatchTables.cs" />
+    <Compile Include="UriDispatchTables.cs" />
     <Compile Include="EmulatorHelpers\Deployer81.cs" />
     <Compile Include="EmulatorHelpers\EmulatorController.cs" />
     <Compile Include="EmulatorHelpers\FlickGesture.cs" />

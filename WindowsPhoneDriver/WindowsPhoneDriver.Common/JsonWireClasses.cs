@@ -5,19 +5,6 @@ namespace WindowsPhoneDriver.Common
 
     using Newtonsoft.Json;
 
-    internal class JsonKeysContent
-    {
-        #region Public Properties
-
-        [JsonProperty("sessionId")]
-        public string SessionId { get; set; }
-
-        [JsonProperty("value")]
-        public string[] Value { get; set; }
-
-        #endregion
-    }
-
     public class JsonWebElementContent
     {
         #region Constructors and Destructors

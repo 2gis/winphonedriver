@@ -1,5 +1,4 @@
-﻿ // Library needed to connect to the Windows Phone X Emulator
-
+﻿// Library needed to connect to the Windows Phone X Emulator
 namespace WindowsPhoneDriver.OuterDriver.EmulatorHelpers
 {
     using System;
@@ -30,8 +29,8 @@ namespace WindowsPhoneDriver.OuterDriver.EmulatorHelpers
 
             this.deviceInfo =
                 devices.FirstOrDefault(x => x.ToString().StartsWith(desiredDevice) && !x.ToString().Equals("Device"));
-                
-                // Exclude device
+
+            // Exclude device
             if (this.deviceInfo == null)
             {
                 Console.WriteLine("Desired target " + desiredDevice + " not found. Using default instead.");
@@ -72,8 +71,10 @@ namespace WindowsPhoneDriver.OuterDriver.EmulatorHelpers
         {
             // FIXME Temporary solution using private UninstallApplication method
             // Still using Microsoft.Phone.Tools.Deploy assembly is much easier than Smart Device connectivity
-            var uninstallApplication = typeof(Utils).GetMethod("UninstallApplication", BindingFlags.NonPublic | BindingFlags.Static);
-            uninstallApplication.Invoke(typeof(Utils), new object[] { deviceInfo, appManifestInfo.ProductId });
+            var uninstallApplication = typeof(Utils).GetMethod(
+                "UninstallApplication", 
+                BindingFlags.NonPublic | BindingFlags.Static);
+            uninstallApplication.Invoke(typeof(Utils), new object[] { this.deviceInfo, this.appManifestInfo.ProductId });
         }
 
         #endregion
