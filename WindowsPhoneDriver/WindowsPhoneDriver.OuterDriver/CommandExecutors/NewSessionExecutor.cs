@@ -60,7 +60,7 @@
             /* Parses JSON and returns dictionary of supported capabilities and their values (or default values if not set)
              * launchTimeout - App launch timeout (app is pinged every 0.5 sec within launchTimeout;
              * launchDelay - gives time for visuals to initialize after app launch (successful ping)
-             * reaching timeout will not raise any error, it will still wait for launchDelay and try to execute next ocmmand
+             * reaching timeout will not raise any error, it will still wait for launchDelay and try to execute next command
             */
             var supportedCapabilities = new Dictionary<string, object>
                                             {

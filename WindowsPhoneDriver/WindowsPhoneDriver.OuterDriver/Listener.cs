@@ -166,14 +166,8 @@
 
         private string ProcessCommand(Command command)
         {
-            var executor = this.executorDispatcher.GetExecutor(command.Name);
-
-            if (executor == null)
-            {
-                // TODO: Should return 
-                throw new NullReferenceException("Executor can not be null");
-            }
-
+            // TODO: wrap with try catch and return  500 Internal Server Error?
+            var executor = this.executorDispatcher.GetExecutor(command.Name); 
             executor.ExecutedCommand = command;
             return executor.Do();
         }
