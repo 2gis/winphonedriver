@@ -5,7 +5,10 @@
     using System.Threading;
     using System.Windows;
 
+    using Newtonsoft.Json;
+
     using WindowsPhoneDriver.Common;
+    using WindowsPhoneDriver.Common.Exceptions;
 
     internal class CommandBase
     {
@@ -14,6 +17,8 @@
         public Automator Automator { get; set; }
 
         public Dictionary<string, object> Parameters { get; set; }
+
+        public string Session { get; set; }
 
         #endregion
 
@@ -60,11 +65,11 @@
             }
             catch (AutomationException exception)
             {
-                response = Responder.CreateJsonResponse(exception.Status, exception.Message);
+                response = this.JsonResponse(exception.Status, exception.Message);
             }
             catch (Exception exception)
             {
-                response = Responder.CreateJsonResponse(ResponseStatus.UnknownError, "Unknown error: " + exception.Message);
+                response = this.JsonResponse(ResponseStatus.UnknownError, "Unknown error: " + exception.Message);
             }
 
             return response;
@@ -73,6 +78,16 @@
         public virtual string DoImpl()
         {
             throw new NotImplementedException();
+        }
+
+        public string JsonResponse(ResponseStatus status, object value)
+        {
+            if (status != ResponseStatus.Success && value == null)
+            {
+                value = string.Format("WebDriverException {0}", Enum.GetName(typeof(ResponseStatus), status));
+            }
+
+            return JsonConvert.SerializeObject(new JsonResponse(this.Session, status, value));
         }
 
         #endregion

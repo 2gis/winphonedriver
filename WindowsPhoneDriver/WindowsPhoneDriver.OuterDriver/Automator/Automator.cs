@@ -43,6 +43,8 @@
 
         public Dictionary<string, object> ActualCapabilities { get; set; }
 
+        public Requester CommandForwarder { get; set; }
+
         public IDeployer Deployer { get; set; }
 
         public EmulatorController EmulatorController
@@ -57,8 +59,6 @@
                 this.emulatorController = value;
             }
         }
-
-        public Requester CommandForwarder { get; set; }
 
         public string Session { get; private set; }
 
@@ -82,6 +82,11 @@
                 {
                     if (instance == null)
                     {
+                        if (sessionId == null)
+                        {
+                            sessionId = "AwesomeSession";
+                        }
+
                         // TODO: Add actual support for sessions. Temporary return single Automator for any season
                         instance = new Automator(sessionId);
                     }

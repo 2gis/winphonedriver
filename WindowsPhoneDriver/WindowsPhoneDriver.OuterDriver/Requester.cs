@@ -1,12 +1,15 @@
 ﻿namespace WindowsPhoneDriver.OuterDriver
 {
     using System;
+    using System.Collections.Generic;
     using System.IO;
     using System.Net;
 
     using Newtonsoft.Json;
 
     using OpenQA.Selenium.Remote;
+
+    using WindowsPhoneDriver.Common.Exceptions;
 
     internal class Requester
     {
@@ -34,14 +37,21 @@
         {
             var serializedCommand = JsonConvert.SerializeObject(commandToForward);
 
-            return this.SendRequest(serializedCommand, verbose, timeout);
+            var response = this.SendRequest(serializedCommand, verbose, timeout);
+            if (response.Key == HttpStatusCode.OK)
+            {
+                return response.Value;
+            }
+
+            throw new InnerDriverRequestError(response.Value, response.Key);
         }
 
-        public string SendRequest(string requestContent, bool verbose, int timeout)
+        public KeyValuePair<HttpStatusCode, string> SendRequest(string requestContent, bool verbose, int timeout)
         {
-            var result = "UnknownError";
+            var result = string.Empty;
             StreamReader reader = null;
-            WebResponse response = null;
+            HttpWebResponse response = null;
+            var status = HttpStatusCode.OK;
             try
             {
                 // create the request
@@ -59,16 +69,28 @@
                 }
 
                 // send the request and get the response
-                response = request.GetResponse();
-                var stream = response.GetResponseStream();
-                if (stream == null)
+                try
                 {
-                    throw new NullReferenceException();
+                    response = request.GetResponse() as HttpWebResponse;
+                }
+                catch (WebException ex)
+                {
+                    response = ex.Response as HttpWebResponse;
                 }
 
-                // read and return the response
-                reader = new StreamReader(stream);
-                result = reader.ReadToEnd();
+                if (response != null)
+                {
+                    status = response.StatusCode;
+                    var stream = response.GetResponseStream();
+                    if (stream == null)
+                    {
+                        throw new NullReferenceException();
+                    }
+
+                    // read and return the response
+                    reader = new StreamReader(stream);
+                    result = reader.ReadToEnd();
+                }
             }
             catch (Exception ex)
             {
@@ -90,7 +112,7 @@
                 }
             }
 
-            return result;
+            return new KeyValuePair<HttpStatusCode, string>(status, result);
         }
 
         #endregion

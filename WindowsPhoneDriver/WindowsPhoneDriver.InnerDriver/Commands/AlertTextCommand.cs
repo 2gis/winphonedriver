@@ -6,6 +6,7 @@
     using System.Windows.Media;
 
     using WindowsPhoneDriver.Common;
+    using WindowsPhoneDriver.Common.Exceptions;
     using WindowsPhoneDriver.InnerDriver.Commands.FindByHelpers;
 
     internal class AlertTextCommand : CommandBase
@@ -32,7 +33,7 @@
                 }
             }
 
-            return Responder.CreateJsonResponse(ResponseStatus.Success, message);
+            return this.JsonResponse(ResponseStatus.Success, message);
         }
 
         #endregion

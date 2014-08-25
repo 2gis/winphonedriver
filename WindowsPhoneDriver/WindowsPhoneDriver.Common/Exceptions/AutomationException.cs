@@ -1,4 +1,4 @@
-﻿namespace WindowsPhoneDriver.Common
+﻿namespace WindowsPhoneDriver.Common.Exceptions
 {
     using System;
 

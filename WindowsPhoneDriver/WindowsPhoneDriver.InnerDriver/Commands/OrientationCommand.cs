@@ -17,7 +17,7 @@
                 orientation = frame.Orientation;
             }
 
-            return Responder.CreateJsonResponse(ResponseStatus.Success, orientation.ToString());
+            return this.JsonResponse(ResponseStatus.Success, orientation.ToString());
         }
 
         #endregion

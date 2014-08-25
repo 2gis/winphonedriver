@@ -1,12 +1,14 @@
 ﻿namespace WindowsPhoneDriver.OuterDriver.CommandExecutors
 {
     using System;
+    using System.Net;
 
     using Newtonsoft.Json;
 
     using OpenQA.Selenium.Remote;
 
     using WindowsPhoneDriver.Common;
+    using WindowsPhoneDriver.Common.Exceptions;
     using WindowsPhoneDriver.OuterDriver.Automator;
 
     internal class CommandExecutorBase
@@ -36,11 +38,22 @@
             {
                 var session = this.ExecutedCommand.SessionId == null ? null : this.ExecutedCommand.SessionId.ToString();
                 this.Automator = Automator.InstanceForSession(session);
-                return this.DoImpl();
+                return HttpResponseHelper.ResponseString(HttpStatusCode.OK, this.DoImpl());
             }
             catch (AutomationException ex)
             {
-                return this.JsonResponse(ex.Status, ex.Message);
+                return HttpResponseHelper.ResponseString(HttpStatusCode.OK, this.JsonResponse(ex.Status, ex.Message));
+            }
+            catch (InnerDriverRequestError ex)
+            {
+                // Bad status returned by Inner Driver when trying to forward command
+                return HttpResponseHelper.ResponseString(ex.StatusCode, ex.Message);
+            }
+            catch (Exception exception)
+            {
+                return HttpResponseHelper.ResponseString(
+                    HttpStatusCode.OK, 
+                    this.JsonResponse(ResponseStatus.UnknownError, "Unknown error: " + exception.Message));
             }
         }
 
@@ -55,10 +68,7 @@
 
         protected string JsonResponse(ResponseStatus status, object value)
         {
-            // TODO: there are no support for sessions at the moment
-            const string Session = "awesomeSession";
-
-            return JsonConvert.SerializeObject(new JsonResponse(Session, status, value));
+            return JsonConvert.SerializeObject(new JsonResponse(this.Automator.Session, status, value));
         }
 
         #endregion

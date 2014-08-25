@@ -2,6 +2,7 @@
 {
     using System;
     using System.Globalization;
+    using System.Net;
     using System.Threading.Tasks;
     using System.Windows;
 
@@ -88,17 +89,23 @@
 
         private async void HandleRequest(StreamSocket socket)
         {
-            // Initialize IO classes
             var reader = new DataReader(socket.InputStream) { InputStreamOptions = InputStreamOptions.Partial };
             var writer = new DataWriter(socket.OutputStream) { UnicodeEncoding = UnicodeEncoding.Utf8 };
 
             var acceptedRequest = new AcceptedRequest();
             await acceptedRequest.AcceptRequest(reader);
 
-            var response = this.automator.ProcessCommand(acceptedRequest.Content);
+            string response;
+            try
+            {
+                response = Common.HttpResponseHelper.ResponseString(HttpStatusCode.OK, this.automator.ProcessCommand(acceptedRequest.Content));
+            }
+            catch (NotImplementedException ex)
+            {
+                response = Common.HttpResponseHelper.ResponseString(HttpStatusCode.NotImplemented, ex.Message);
+            }
 
-            // create response
-            writer.WriteString(Responder.CreateResponse(response));
+            writer.WriteString(response);
             await writer.StoreAsync();
 
             socket.Dispose();

@@ -31,7 +31,7 @@
             var foundObjectsIdList = this.FindElementsBy(relativeElement, searchStrategy);
             result.AddRange(foundObjectsIdList.Select(foundObjectId => new JsonWebElementContent(foundObjectId)));
 
-            return Responder.CreateJsonResponse(ResponseStatus.Success, result.ToArray());
+            return this.JsonResponse(ResponseStatus.Success, result.ToArray());
         }
 
         #endregion

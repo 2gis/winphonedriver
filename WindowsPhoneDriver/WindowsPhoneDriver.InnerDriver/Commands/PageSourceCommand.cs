@@ -35,7 +35,7 @@
                 source = Encoding.UTF8.GetString(buffer, 0, buffer.Length);
             }
 
-            return Responder.CreateJsonResponse(ResponseStatus.Success, source);
+            return this.JsonResponse(ResponseStatus.Success, source);
         }
 
         #endregion

@@ -8,6 +8,7 @@
     using System.Windows.Media;
 
     using WindowsPhoneDriver.Common;
+    using WindowsPhoneDriver.Common.Exceptions;
     using WindowsPhoneDriver.InnerDriver.Commands.FindByHelpers;
 
     internal class AlertCommand : CommandBase

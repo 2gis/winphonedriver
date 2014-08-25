@@ -112,7 +112,7 @@
             }
             else
             {
-                return "<UnimplementedCommand>";
+                throw new NotImplementedException("Not implemented: " + command);
             }
 
             // TODO: Replace passing Automator to command with passing some kind of configuration
@@ -120,6 +120,7 @@
             commandToExecute.Parameters = parameters;
 
             var response = commandToExecute.Do();
+
             return response;
         }
 

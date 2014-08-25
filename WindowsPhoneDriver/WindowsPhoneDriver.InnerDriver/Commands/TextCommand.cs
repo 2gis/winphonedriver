@@ -17,7 +17,7 @@
             var element = this.Automator.WebElements.GetRegisteredElement(this.ElementId);
             var text = element.GetText();
             
-            return Responder.CreateJsonResponse(ResponseStatus.Success, text);
+            return this.JsonResponse(ResponseStatus.Success, text);
         }
 
         #endregion
