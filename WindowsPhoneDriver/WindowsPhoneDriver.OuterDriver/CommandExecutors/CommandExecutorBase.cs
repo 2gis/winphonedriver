@@ -49,6 +49,10 @@
                 // Bad status returned by Inner Driver when trying to forward command
                 return HttpResponseHelper.ResponseString(ex.StatusCode, ex.Message);
             }
+            catch (NotImplementedException exception)
+            {
+                return HttpResponseHelper.ResponseString(HttpStatusCode.NotImplemented, exception.Message);
+            }
             catch (Exception exception)
             {
                 return HttpResponseHelper.ResponseString(
