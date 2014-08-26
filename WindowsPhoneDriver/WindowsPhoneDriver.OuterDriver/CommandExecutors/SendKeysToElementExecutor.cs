@@ -1,6 +1,7 @@
 ﻿namespace WindowsPhoneDriver.OuterDriver.CommandExecutors
 {
     using System.Linq;
+    using System.Windows.Forms;
 
     internal class SendKeysToElementExecutor : CommandExecutorBase
     {
@@ -28,7 +29,7 @@
 
             if (needToClickEnter)
             {
-                this.Automator.EmulatorController.PressEnterKey();
+                this.Automator.EmulatorController.TypeKey(Keys.Enter);
             }
 
             return null;

@@ -161,9 +161,9 @@
             return phoneScreen.Contains(phonePoint);
         }
 
-        public void PressEnterKey()
+        public void TypeKey(Keys key)
         {
-            this.emulatorVm.TypeKey(Keys.Enter);
+            this.emulatorVm.TypeKey(key);
         }
 
         public string TakeScreenshot()
