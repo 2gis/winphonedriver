@@ -12,6 +12,7 @@
     using Microsoft.Xde.Wmi;
 
     using WindowsPhoneDriver.Common;
+    using WindowsPhoneDriver.Common.Exceptions;
 
     internal class EmulatorController
     {

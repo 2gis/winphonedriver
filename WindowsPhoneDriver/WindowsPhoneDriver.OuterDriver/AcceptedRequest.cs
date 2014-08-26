@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Net.Sockets;
 
     internal class AcceptedRequest
@@ -39,7 +40,7 @@
 
         #region Methods
 
-        private static string ReadContent(NetworkStream stream, Dictionary<string, string> headers)
+        private static string ReadContent(NetworkStream stream, IReadOnlyDictionary<string, string> headers)
         {
             string contentLengthString;
             var hasContentLength = headers.TryGetValue("Content-Length", out contentLengthString);
@@ -61,7 +62,7 @@
             return System.Text.Encoding.ASCII.GetString(readBuffer, 0, readBytes);
         }
 
-        private static Dictionary<string, string> ReadHeaders(NetworkStream stream)
+        private static Dictionary<string, string> ReadHeaders(Stream stream)
         {
             var headers = new Dictionary<string, string>();
             string header;
@@ -74,7 +75,7 @@
             return headers;
         }
 
-        private static string ReadString(NetworkStream stream)
+        private static string ReadString(Stream stream)
         {
             // StreamReader reader = new StreamReader(stream);
             var data = string.Empty;

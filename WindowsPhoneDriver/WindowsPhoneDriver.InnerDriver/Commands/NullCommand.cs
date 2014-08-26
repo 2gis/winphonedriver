@@ -8,7 +8,7 @@
 
         public override string DoImpl()
         {
-            return Responder.CreateJsonResponse(ResponseStatus.Success, null);
+            return this.JsonResponse(ResponseStatus.Success, null);
         }
 
         #endregion

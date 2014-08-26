@@ -7,6 +7,7 @@
     using System.Windows;
 
     using WindowsPhoneDriver.Common;
+    using WindowsPhoneDriver.Common.Exceptions;
 
     internal class AutomatorElements
     {

@@ -4,6 +4,7 @@
     using System.Windows;
 
     using WindowsPhoneDriver.Common;
+    using WindowsPhoneDriver.Common.Exceptions;
     using WindowsPhoneDriver.InnerDriver.Commands.FindByHelpers;
 
     internal class ElementCommand : CommandBase
@@ -34,7 +35,7 @@
             }
 
             var webElement = new JsonWebElementContent(webObjectId);
-            return Responder.CreateJsonResponse(ResponseStatus.Success, webElement);
+            return this.JsonResponse(ResponseStatus.Success, webElement);
         }
 
         #endregion

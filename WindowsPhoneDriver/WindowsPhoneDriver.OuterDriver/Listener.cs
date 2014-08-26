@@ -2,10 +2,13 @@
 {
     using System;
     using System.Globalization;
+    using System.IO;
     using System.Net;
     using System.Net.Sockets;
 
     using OpenQA.Selenium.Remote;
+
+    using WindowsPhoneDriver.Common;
 
     public class Listener
     {
@@ -83,33 +86,22 @@
                     var client = this.listener.AcceptTcpClient();
 
                     // Get a stream object for reading and writing
-                    var stream = client.GetStream();
-
-                    var acceptedRequest = new AcceptedRequest();
-                    acceptedRequest.AcceptRequest(stream);
-
-                    var responseBody = this.HandleRequest(acceptedRequest);
-                    var statusCode = HttpStatusCode.OK;
-
-                    if (responseBody == null)
+                    using (var stream = client.GetStream())
                     {
-                        responseBody = string.Empty;
+                        var acceptedRequest = new AcceptedRequest();
+                        acceptedRequest.AcceptRequest(stream);
+
+                        var responseBody = this.HandleRequest(acceptedRequest);
+
+                        using (var writer = new StreamWriter(stream))
+                        {
+                            writer.Write(responseBody);
+                            writer.Flush();
+                        }
+
+                        // Shutdown and end connection
                     }
 
-                    // TODO: temporary solution.
-                    if (responseBody.Trim().Equals("<UnimplementedCommand>"))
-                    {
-                        statusCode = HttpStatusCode.NotImplemented;
-                    }
-                    else if (responseBody.Trim().Equals("<UnknownCommand>"))
-                    {
-                        statusCode = HttpStatusCode.NotFound;
-                    }
-
-                    Responder.WriteResponse(stream, responseBody, statusCode);
-
-                    // Shutdown and end connection
-                    stream.Close();
                     client.Close();
 
                     Console.WriteLine("Client closed\n");
@@ -137,7 +129,6 @@
 
         private string HandleRequest(AcceptedRequest acceptedRequest)
         {
-            Command commandToExecute;
             var request = acceptedRequest.Request;
             var content = acceptedRequest.Content;
 
@@ -145,20 +136,19 @@
             var method = firstHeaderTokens[0];
             var resourcePath = firstHeaderTokens[1];
 
-            try
-            {
-                var matched = this.dispatcher.Match(method, new Uri(this.Prefix, resourcePath));
+            var uriToMatch = new Uri(this.Prefix, resourcePath);
+            var matched = this.dispatcher.Match(method, uriToMatch);
 
-                var commandName = matched.Data.ToString();
-                commandToExecute = new Command(commandName, content);
-                foreach (string variableName in matched.BoundVariables.Keys)
-                {
-                    commandToExecute.Parameters[variableName] = matched.BoundVariables[variableName];
-                }
-            }
-            catch (UriTemplateMatchException)
+            if (matched == null)
             {
-                return "<UnknownCommand>";
+                return HttpResponseHelper.ResponseString(HttpStatusCode.NotFound, "Unknown command " + uriToMatch);
+            }
+
+            var commandName = matched.Data.ToString();
+            var commandToExecute = new Command(commandName, content);
+            foreach (string variableName in matched.BoundVariables.Keys)
+            {
+                commandToExecute.Parameters[variableName] = matched.BoundVariables[variableName];
             }
 
             return this.ProcessCommand(commandToExecute);
@@ -166,10 +156,10 @@
 
         private string ProcessCommand(Command command)
         {
-            // TODO: wrap with try catch and return  500 Internal Server Error?
-            var executor = this.executorDispatcher.GetExecutor(command.Name); 
+            var executor = this.executorDispatcher.GetExecutor(command.Name);
             executor.ExecutedCommand = command;
-            return executor.Do();
+            var respnose = executor.Do();
+            return respnose;
         }
 
         #endregion

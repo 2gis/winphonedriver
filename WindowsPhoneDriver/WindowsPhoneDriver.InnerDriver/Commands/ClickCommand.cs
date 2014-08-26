@@ -21,7 +21,7 @@
             var coordinates = element.GetCoordinates(this.Automator.VisualRoot);
             var strCoordinates = coordinates.X + ":" + coordinates.Y;
 
-            return Responder.CreateJsonResponse(ResponseStatus.Success, strCoordinates);
+            return this.JsonResponse(ResponseStatus.Success, strCoordinates);
         }
 
         #endregion

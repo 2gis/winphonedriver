@@ -17,7 +17,7 @@
             var element = this.Automator.WebElements.GetRegisteredElement(this.ElementId);
             var displayed = element.IsUserVisible(this.Automator.VisualRoot);
 
-            return Responder.CreateJsonResponse(ResponseStatus.Success, displayed);
+            return this.JsonResponse(ResponseStatus.Success, displayed);
         }
 
         #endregion

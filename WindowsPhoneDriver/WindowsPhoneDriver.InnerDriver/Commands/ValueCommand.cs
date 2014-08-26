@@ -5,6 +5,7 @@
     using System.Windows.Controls;
 
     using WindowsPhoneDriver.Common;
+    using WindowsPhoneDriver.Common.Exceptions;
 
     internal class ValueCommand : CommandBase
     {
@@ -28,7 +29,7 @@
             }
 
             TrySetText(textbox, this.KeyString);
-            return Responder.CreateJsonResponse(ResponseStatus.Success, null);
+            return this.JsonResponse(ResponseStatus.Success, null);
         }
 
         #endregion

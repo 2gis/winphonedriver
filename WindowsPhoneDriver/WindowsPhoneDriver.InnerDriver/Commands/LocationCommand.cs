@@ -24,7 +24,7 @@
                                           { "y", (int)coordinates.Y }
                                       };
 
-            return Responder.CreateJsonResponse(ResponseStatus.Success, coordinatesDict);
+            return this.JsonResponse(ResponseStatus.Success, coordinatesDict);
         }
 
         #endregion
