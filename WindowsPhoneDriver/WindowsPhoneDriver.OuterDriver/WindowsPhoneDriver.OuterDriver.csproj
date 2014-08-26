@@ -81,6 +81,8 @@
     <Compile Include="AcceptedRequest.cs" />
     <Compile Include="Automator\Automator.cs" />
     <Compile Include="CommandExecutorDispatchTable.cs" />
+    <Compile Include="CommandExecutors\ExecuteScriptExecutor.cs" />
+    <Compile Include="CommandExecutors\GoBackExecutor.cs" />
     <Compile Include="CommandExecutors\CommandExecutorForward.cs" />
     <Compile Include="CommandExecutors\CommandExecutorBase.cs" />
     <Compile Include="CommandExecutors\GetCurrentWindowHandleExecutor.cs" />
