@@ -69,6 +69,7 @@
             }
 
             Console.WriteLine("Actual Device: " + this.Automator.Deployer.DeviceName);
+            this.Automator.ActualCapabilities.DeviceName = this.Automator.Deployer.DeviceName;
             var emulatorController = new EmulatorController(this.Automator.Deployer.DeviceName);
             this.Automator.EmulatorController = emulatorController;
 
