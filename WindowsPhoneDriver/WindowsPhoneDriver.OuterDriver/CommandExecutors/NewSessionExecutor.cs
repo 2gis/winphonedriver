@@ -18,8 +18,8 @@
 
         protected override string DoImpl()
         {
-            // It is easier to reparse desired capabilities as JSON instead of mapping keys attributes
-            // and calling type conversions, so we will take one time performance hit
+            // It is easier to reparse desired capabilities as JSON instead of re-mapping keys to attributes and calling type conversions, 
+            // so we will take possible one time performance hit by serializing Dictionary and deserializing it as Capabilities object
             var serializedCapability =
                 JsonConvert.SerializeObject(this.ExecutedCommand.Parameters["desiredCapabilities"]);
             this.Automator.ActualCapabilities = Capabilities.CapabilitiesFromJsonString(serializedCapability);
