@@ -1,15 +1,15 @@
 ﻿namespace WindowsPhoneDriver.OuterDriver.CommandExecutors
 {
     using System;
-    using System.Collections.Generic;
     using System.Diagnostics;
     using System.Threading;
 
-    using Newtonsoft.Json.Linq;
+    using Newtonsoft.Json;
 
     using OpenQA.Selenium.Remote;
 
     using WindowsPhoneDriver.Common;
+    using WindowsPhoneDriver.OuterDriver.Automator;
     using WindowsPhoneDriver.OuterDriver.EmulatorHelpers;
 
     internal class NewSessionExecutor : CommandExecutorBase
@@ -18,16 +18,19 @@
 
         protected override string DoImpl()
         {
-            this.Automator.ActualCapabilities = ParseDesiredCapabilitiesJson(
-                this.ExecutedCommand.ParametersAsJsonString);
-            var debugConnectToRunningApp =
-                Convert.ToBoolean(this.Automator.ActualCapabilities["debugConnectToRunningApp"]);
-            var innerIp = this.InitializeApplication(debugConnectToRunningApp);
+            // It is easier to reparse desired capabilities as JSON instead of mapping keys attributes
+            // and calling type conversions, so we will take one time performance hit
+            var serializedCapability =
+                JsonConvert.SerializeObject(this.ExecutedCommand.Parameters["desiredCapabilities"]);
+            this.Automator.ActualCapabilities = Capabilities.CapabilitiesFromJsonString(serializedCapability);
+
+            var innerIp = this.InitializeApplication(this.Automator.ActualCapabilities.DebugConnectToRunningApp);
             const int InnerPort = 9998;
             Console.WriteLine("Inner ip: " + innerIp);
             this.Automator.CommandForwarder = new Requester(innerIp, InnerPort);
 
-            long timeout = Convert.ToInt32(this.Automator.ActualCapabilities["launchTimeout"]);
+            long timeout = this.Automator.ActualCapabilities.LaunchTimeout;
+
             const int PingStep = 500;
             var stopWatch = new Stopwatch();
             while (timeout > 0)
@@ -47,60 +50,19 @@
             }
 
             Console.WriteLine();
-            Thread.Sleep(Convert.ToInt32(this.Automator.ActualCapabilities["launchDelay"]));
 
-            // gives sometime to load visuals
+            // Gives sometime to load visuals (needed only in case of slow emulation)
+            Thread.Sleep(this.Automator.ActualCapabilities.LaunchDelay);
+
             var jsonResponse = this.JsonResponse(ResponseStatus.Success, this.Automator.ActualCapabilities);
 
             return jsonResponse;
         }
 
-        private static Dictionary<string, object> ParseDesiredCapabilitiesJson(string content)
-        {
-            /* Parses JSON and returns dictionary of supported capabilities and their values (or default values if not set)
-             * launchTimeout - App launch timeout (app is pinged every 0.5 sec within launchTimeout;
-             * launchDelay - gives time for visuals to initialize after app launch (successful ping)
-             * reaching timeout will not raise any error, it will still wait for launchDelay and try to execute next command
-            */
-            var supportedCapabilities = new Dictionary<string, object>
-                                            {
-                                                { "app", string.Empty }, 
-                                                { "platform", "WinPhone" }, 
-                                                { "deviceName", string.Empty }, 
-                                                { "launchDelay", 0 }, 
-                                                { "launchTimeout", 10000 }, 
-                                                { "debugConnectToRunningApp", "false" }, 
-                                            };
-
-            var actualCapabilities = new Dictionary<string, object>();
-            var parsedContent = JObject.Parse(content);
-            var desiredCapabilitiesToken = parsedContent["desiredCapabilities"];
-            if (desiredCapabilitiesToken != null)
-            {
-                var desiredCapabilities = desiredCapabilitiesToken.ToObject<Dictionary<string, object>>();
-                foreach (var capability in supportedCapabilities)
-                {
-                    object value;
-                    if (!desiredCapabilities.TryGetValue(capability.Key, out value))
-                    {
-                        value = capability.Value;
-                    }
-
-                    actualCapabilities.Add(capability.Key, value);
-                }
-            }
-            else
-            {
-                actualCapabilities = supportedCapabilities;
-            }
-
-            return actualCapabilities;
-        }
-
         private string InitializeApplication(bool debugDoNotDeploy = false)
         {
-            var appPath = this.Automator.ActualCapabilities["app"].ToString();
-            this.Automator.Deployer = new Deployer81(this.Automator.ActualCapabilities["deviceName"].ToString());
+            var appPath = this.Automator.ActualCapabilities.App;
+            this.Automator.Deployer = new Deployer81(this.Automator.ActualCapabilities.DeviceName);
             if (!debugDoNotDeploy)
             {
                 this.Automator.Deployer.Deploy(appPath);
