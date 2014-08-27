@@ -14,6 +14,7 @@
             this.LaunchDelay = 0;
             this.LaunchTimeout = 10000;
             this.DebugConnectToRunningApp = false;
+            this.InnerPort = 9998;
         }
 
         #endregion
@@ -43,6 +44,9 @@
                 return "WindowsPhone";
             }
         }
+
+        [JsonProperty("innerPort")]
+        public int InnerPort { get; set; }
 
         #endregion
 
