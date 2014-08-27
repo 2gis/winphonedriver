@@ -33,7 +33,7 @@
             else
             {
                 throw new AutomationException(
-                    "Unknown 'mobile:' script command. See https://github.com/2gis/winphonedriver/wiki/Script-execution-support for supported command.", 
+                    "Unknown 'mobile:' script command. See https://github.com/2gis/winphonedriver/wiki/Command-Execute-Script for supported commands.", 
                     ResponseStatus.JavaScriptError);
             }
 
