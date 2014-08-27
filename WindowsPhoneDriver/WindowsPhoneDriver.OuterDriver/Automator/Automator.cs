@@ -41,7 +41,7 @@
 
         #region Public Properties
 
-        public Dictionary<string, object> ActualCapabilities { get; set; }
+        public Capabilities ActualCapabilities { get; set; }
 
         public Requester CommandForwarder { get; set; }
 

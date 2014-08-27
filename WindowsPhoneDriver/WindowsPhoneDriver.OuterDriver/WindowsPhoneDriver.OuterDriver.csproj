@@ -80,6 +80,7 @@
   <ItemGroup>
     <Compile Include="AcceptedRequest.cs" />
     <Compile Include="Automator\Automator.cs" />
+    <Compile Include="Automator\Capabilities.cs" />
     <Compile Include="CommandExecutorDispatchTable.cs" />
     <Compile Include="CommandExecutors\ExecuteScriptExecutor.cs" />
     <Compile Include="CommandExecutors\GoBackExecutor.cs" />
