@@ -25,9 +25,9 @@
             this.Automator.ActualCapabilities = Capabilities.CapabilitiesFromJsonString(serializedCapability);
 
             var innerIp = this.InitializeApplication(this.Automator.ActualCapabilities.DebugConnectToRunningApp);
-            const int InnerPort = 9998;
-            Console.WriteLine("Inner ip: " + innerIp);
-            this.Automator.CommandForwarder = new Requester(innerIp, InnerPort);
+
+            Console.WriteLine("Inner ip: " + this.Automator.ActualCapabilities.InnerPort);
+            this.Automator.CommandForwarder = new Requester(innerIp, this.Automator.ActualCapabilities.InnerPort);
 
             long timeout = this.Automator.ActualCapabilities.LaunchTimeout;
 
@@ -49,6 +49,7 @@
                 timeout -= stopWatch.ElapsedMilliseconds;
             }
 
+            // TODO throw AutomationException with SessionNotCreatedException if timeout and uninstall the app
             Console.WriteLine();
 
             // Gives sometime to load visuals (needed only in case of slow emulation)
