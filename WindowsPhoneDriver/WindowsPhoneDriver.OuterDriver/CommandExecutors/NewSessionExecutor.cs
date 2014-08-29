@@ -26,7 +26,7 @@
 
             var innerIp = this.InitializeApplication(this.Automator.ActualCapabilities.DebugConnectToRunningApp);
 
-            Console.WriteLine("Inner ip: " + this.Automator.ActualCapabilities.InnerPort);
+            Logger.Debug("Inner Driver ip: {0}", this.Automator.ActualCapabilities.InnerPort);
             this.Automator.CommandForwarder = new Requester(innerIp, this.Automator.ActualCapabilities.InnerPort);
 
             long timeout = this.Automator.ActualCapabilities.LaunchTimeout;
@@ -36,9 +36,10 @@
             while (timeout > 0)
             {
                 stopWatch.Restart();
-                Console.Write(".");
+
+                Logger.Trace("Ping inner driver");
                 var pingCommand = new Command(null, "ping", null);
-                var responseBody = this.Automator.CommandForwarder.ForwardCommand(pingCommand, false, 2000);
+                var responseBody = this.Automator.CommandForwarder.ForwardCommand(pingCommand, verbose: false, timeout: 2000);
                 if (responseBody.StartsWith("<pong>"))
                 {
                     break;
@@ -69,7 +70,6 @@
                 this.Automator.Deployer.Deploy(appPath);
             }
 
-            Console.WriteLine("Actual Device: " + this.Automator.Deployer.DeviceName);
             this.Automator.ActualCapabilities.DeviceName = this.Automator.Deployer.DeviceName;
             var emulatorController = new EmulatorController(this.Automator.Deployer.DeviceName);
             this.Automator.EmulatorController = emulatorController;

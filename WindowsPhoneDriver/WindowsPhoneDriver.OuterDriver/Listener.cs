@@ -80,7 +80,7 @@
                 // Enter the listening loop
                 while (true)
                 {
-                    Console.Write("Waiting for a connection... ");
+                    Logger.Debug("Waiting for a connection...");
 
                     // Perform a blocking call to accept requests. 
                     var client = this.listener.AcceptTcpClient();
@@ -95,8 +95,15 @@
 
                         using (var writer = new StreamWriter(stream))
                         {
-                            writer.Write(responseBody);
-                            writer.Flush();
+                            try
+                            {
+                                writer.Write(responseBody);
+                                writer.Flush();
+                            }
+                            catch (IOException ex)
+                            {
+                                Logger.Error("Error occured while writing response: {0}", ex);
+                            }
                         }
 
                         // Shutdown and end connection
@@ -104,12 +111,18 @@
 
                     client.Close();
 
-                    Console.WriteLine("Client closed\n");
+                    Logger.Debug("Client closed\n");
                 }
             }
             catch (SocketException ex)
             {
-                Console.WriteLine("SocketException: {0}", ex);
+                Logger.Error("SocketException occurred while trying to start listner: {0}", ex);
+                throw;
+            }
+            catch (ArgumentException ex)
+            {
+                Logger.Error("ArgumentException occurred while trying to start listner: {0}", ex);
+                throw;
             }
             finally
             {
@@ -141,6 +154,7 @@
 
             if (matched == null)
             {
+                Logger.Warn("Unknown command recived: {0}", uriToMatch);
                 return HttpResponseHelper.ResponseString(HttpStatusCode.NotFound, "Unknown command " + uriToMatch);
             }
 
@@ -156,9 +170,12 @@
 
         private string ProcessCommand(Command command)
         {
+            Logger.Info("COMMAND {0}\r\n{1}", command.Name, command.ParametersAsJsonString);
             var executor = this.executorDispatcher.GetExecutor(command.Name);
             executor.ExecutedCommand = command;
             var respnose = executor.Do();
+            Logger.Debug("RESPONSE:\r\n{0}", respnose);
+
             return respnose;
         }
 

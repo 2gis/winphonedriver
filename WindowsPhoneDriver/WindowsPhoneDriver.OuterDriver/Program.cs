@@ -14,17 +14,37 @@
             var options = new CommandLineOptions();
             if (CommandLine.Parser.Default.ParseArguments(args, options))
             {
-                // Values are available here
                 if (options.Port.HasValue)
                 {
                     listeningPort = options.Port.Value;
                 }
             }
 
-            var listener = new Listener(listeningPort);
-            Listener.UrnPrefix = options.UrlBase;
+            Logger.SetVerbosity(options.Verbose);
 
-            listener.StartListening();
+            if (options.LogPath != null)
+            {
+                Logger.TargetFile(options.LogPath);
+            }
+            else
+            {
+                Logger.TargetConsole();
+            }
+
+            try
+            {
+                var listener = new Listener(listeningPort);
+                Listener.UrnPrefix = options.UrlBase;
+
+                Console.WriteLine("Starting WindowsPhone Driver on port {0}\r\n", listeningPort);
+
+                listener.StartListening();
+            }
+            catch (Exception ex)
+            {
+                Logger.Fatal("Failed to start driver: {0}", ex);
+                throw;
+            }
         }
 
         #endregion

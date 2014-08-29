@@ -64,8 +64,7 @@
 
                 if (verbose)
                 {
-                    // TODO Write normal logging
-                    Console.WriteLine("Sending request: " + requestContent + " to " + uri);
+                    Logger.Debug("Sending request to inner driver: {0}", uri);
                 }
 
                 // send the request and get the response
@@ -96,7 +95,8 @@
             {
                 if (verbose)
                 {
-                    Console.WriteLine(ex.Message);
+                    // No need to log exceptions raised when sending service commands like ping.
+                    Logger.Error("Error occurred while trying to send request to inner driver: {0}", ex);
                 }
             }
             finally

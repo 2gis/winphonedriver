@@ -1,13 +1,13 @@
 Windows Phone Driver
 ====================
 
-Selenium Driver for automated testing of Windows Phone 8.1 applications.
+Selenium Driver for automated testing of Windows Phone 8.1 Silverlight applications.
 
 This repository hosts the code for the Windows Phone driver. You can use it for testing of native Windows Phone 8.1 applications. Currently it implements only limited subset of [WebDriver JSON Wire Protocol](https://code.google.com/p/selenium/wiki/JsonWireProtocol) and supports testing only via an emulator (Windows phone 8.1).
 
 Driver contains of two parts: Outer and Inner. To run tests you will need to add `WindowsPhoneDriver.InnerDriver` to the app you want to test and start `WindowsPhoneDriver.OuterDriver` (Remote WebDriver to send Json Wire Protocol commands to).
 
-Requirements to run test using Windows Phone driver
+Requirements to run tests using Windows Phone driver
 ---------------------------------------------------
 
 * Windows 8 or higher
