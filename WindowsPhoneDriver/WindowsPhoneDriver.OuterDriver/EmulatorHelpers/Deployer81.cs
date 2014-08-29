@@ -33,12 +33,12 @@ namespace WindowsPhoneDriver.OuterDriver.EmulatorHelpers
             // Exclude device
             if (this.deviceInfo == null)
             {
-                Console.WriteLine("Desired target " + desiredDevice + " not found. Using default instead.");
+                Logger.Warn("Desired target {0} not found. Using default instead.", desiredDevice);
 
                 this.deviceInfo = devices.First(x => !x.ToString().Equals("Device"));
             }
 
-            Console.WriteLine("Deploy target: " + this.deviceInfo);
+            Logger.Info("Target emulator: {0}", this.DeviceName);
         }
 
         #endregion
@@ -64,7 +64,7 @@ namespace WindowsPhoneDriver.OuterDriver.EmulatorHelpers
             GlobalOptions.LaunchAfterInstall = true;
             Utils.InstallApplication(this.deviceInfo, this.appManifestInfo, DeploymentOptions.None, appPath);
 
-            Console.WriteLine("Successfully deployed using Microsoft.Phone.Tools.Deploy");
+            Logger.Info("Successfully deployed using Microsoft.Phone.Tools.Deploy");
         }
 
         public void Disconnect()

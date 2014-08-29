@@ -27,7 +27,7 @@
         {
             // read HTTP request
             this.Request = ReadString(stream);
-            Console.WriteLine("Request: " + this.Request);
+            Logger.Debug("ACCEPTED REQUEST {0}", this.Request);
 
             // read HTTP headers
             this.Headers = ReadHeaders(stream);
@@ -48,7 +48,7 @@
             if (hasContentLength)
             {
                 content = ReadContent(stream, Convert.ToInt32(contentLengthString));
-                Console.WriteLine("Content: " + content);
+                Logger.Debug("CONTENT:\n{0}", content);
             }
 
             return content;

@@ -136,9 +136,6 @@
         /// </summary>
         public void UpdatedOrientationForEmulatorController()
         {
-            Console.WriteLine("Updating orientation");
-
-            // TODO: Temporary solution, need to refactor command processing
             var command = new Command(null, DriverCommand.GetOrientation, null);
             var responseBody = this.CommandForwarder.ForwardCommand(command);
             var deserializeObject = JsonConvert.DeserializeObject<JsonResponse>(responseBody);
@@ -147,15 +144,11 @@
                 return;
             }
 
-            Console.WriteLine("Response: {0}", responseBody);
-
             EmulatorController.PhoneOrientation orientation;
             if (Enum.TryParse(deserializeObject.Value.ToString(), true, out orientation))
             {
                 this.emulatorController.PhoneOrientationToUse = orientation;
             }
-
-            Console.WriteLine("Orientation: {0}", orientation);
         }
 
         #endregion

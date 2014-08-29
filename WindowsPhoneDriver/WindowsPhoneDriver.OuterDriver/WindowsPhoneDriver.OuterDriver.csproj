@@ -68,6 +68,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Newtonsoft.Json.6.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="NLog">
+      <HintPath>..\packages\NLog.3.1.0.0\lib\net45\NLog.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -102,6 +105,7 @@
     <Compile Include="CommandExecutors\CloseExecutor.cs" />
     <Compile Include="CommandExecutors\NewSessionExecutor.cs" />
     <Compile Include="CommandLineOptions.cs" />
+    <Compile Include="Logger.cs" />
     <Compile Include="UriDispatchTables.cs" />
     <Compile Include="EmulatorHelpers\Deployer81.cs" />
     <Compile Include="EmulatorHelpers\EmulatorController.cs" />
