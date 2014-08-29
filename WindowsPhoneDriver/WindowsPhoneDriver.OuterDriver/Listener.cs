@@ -117,6 +117,12 @@
             catch (SocketException ex)
             {
                 Logger.Error("SocketException occurred while trying to start listner: {0}", ex);
+                throw;
+            }
+            catch (ArgumentException ex)
+            {
+                Logger.Error("ArgumentException occurred while trying to start listner: {0}", ex);
+                throw;
             }
             finally
             {
@@ -164,10 +170,11 @@
 
         private string ProcessCommand(Command command)
         {
+            Logger.Info("COMMAND {0}\r\n{1}", command.Name, command.ParametersAsJsonString);
             var executor = this.executorDispatcher.GetExecutor(command.Name);
             executor.ExecutedCommand = command;
             var respnose = executor.Do();
-            Logger.Debug("RESPONSE: {0}\n{1}", command.Name, respnose);
+            Logger.Debug("RESPONSE:\r\n{0}", respnose);
 
             return respnose;
         }

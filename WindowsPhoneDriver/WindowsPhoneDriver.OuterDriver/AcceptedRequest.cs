@@ -25,14 +25,11 @@
 
         public void AcceptRequest(NetworkStream stream)
         {
-            // read HTTP request
             this.Request = ReadString(stream);
             Logger.Debug("ACCEPTED REQUEST {0}", this.Request);
 
-            // read HTTP headers
             this.Headers = ReadHeaders(stream);
 
-            // try and read request content
             this.Content = ReadContent(stream, this.Headers);
         }
 
@@ -48,7 +45,6 @@
             if (hasContentLength)
             {
                 content = ReadContent(stream, Convert.ToInt32(contentLengthString));
-                Logger.Debug("CONTENT:\n{0}", content);
             }
 
             return content;

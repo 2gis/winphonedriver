@@ -7,9 +7,17 @@
 
     internal class Logger
     {
+        #region Constants
+
+        private const string LayoutFormat = "${date:format=HH\\:MM\\:ss} [${level:uppercase=true}] ${message}";
+
+        #endregion
+
         #region Static Fields
 
         private static readonly NLog.Logger Log;
+
+        private static LogLevel verbosity;
 
         #endregion
 
@@ -18,22 +26,6 @@
         static Logger()
         {
             Log = LogManager.GetLogger("outerdriver");
-
-            var target = new ColoredConsoleTarget { Layout = "${date:format=HH\\:MM\\:ss} [${level:uppercase=true}] ${message}" };
-
-            NLog.Config.SimpleConfigurator.ConfigureForTargetLogging(target, LogLevel.Debug);
-            LogManager.ReconfigExistingLoggers();
-        }
-
-        #endregion
-
-        #region Enums
-
-        public enum LogVerbositiy
-        {
-            Verbose, 
-
-            Silent
         }
 
         #endregion
@@ -58,6 +50,32 @@
         public static void Info([Localizable(false)] string message, params object[] args)
         {
             Log.Info(message, args);
+        }
+
+        public static void SetVerbosity(bool verbose)
+        {
+            verbosity = verbose ? LogLevel.Debug : LogLevel.Fatal;
+        }
+
+        public static void TargetConsole()
+        {
+            var target = new ConsoleTarget { Layout = LayoutFormat };
+
+            NLog.Config.SimpleConfigurator.ConfigureForTargetLogging(target, verbosity);
+            LogManager.ReconfigExistingLoggers();
+        }
+
+        public static void TargetFile(string fileName)
+        {
+            if (verbosity.CompareTo(LogLevel.Info) > 0)
+            {
+                verbosity = LogLevel.Info;
+            }
+
+            var target = new FileTarget { Layout = LayoutFormat, FileName = fileName };
+
+            NLog.Config.SimpleConfigurator.ConfigureForTargetLogging(target, verbosity);
+            LogManager.ReconfigExistingLoggers();
         }
 
         public static void Trace([Localizable(false)] string message, params object[] args)
