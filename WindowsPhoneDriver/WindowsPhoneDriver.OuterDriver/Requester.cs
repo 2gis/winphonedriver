@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
     using System.IO;
     using System.Net;
 
@@ -43,7 +44,7 @@
                 return response.Value;
             }
 
-            throw new InnerDriverRequestError(response.Value, response.Key);
+            throw new InnerDriverRequestException(response.Value, response.Key);
         }
 
         public KeyValuePair<HttpStatusCode, string> SendRequest(string requestContent, bool verbose, int timeout)
@@ -55,7 +56,7 @@
             try
             {
                 // create the request
-                var uri = string.Format("http://{0}:{1}", this.ip, this.port);
+                var uri = string.Format(CultureInfo.InvariantCulture, "http://{0}:{1}", this.ip, this.port);
                 var request = CreateWebRequest(uri, requestContent);
                 if (timeout != 0)
                 {
@@ -83,7 +84,7 @@
                     var stream = response.GetResponseStream();
                     if (stream == null)
                     {
-                        throw new NullReferenceException();
+                        throw new NullReferenceException("No response stream.");
                     }
 
                     // read and return the response

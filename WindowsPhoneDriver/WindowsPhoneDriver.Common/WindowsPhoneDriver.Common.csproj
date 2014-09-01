@@ -24,6 +24,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -36,7 +37,7 @@
   <ItemGroup>
     <Compile Include="DriverCommand.cs" />
     <Compile Include="Exceptions\AutomationException.cs" />
-    <Compile Include="Exceptions\InnerDriverRequestError.cs" />
+    <Compile Include="Exceptions\InnerDriverRequestException.cs" />
     <Compile Include="HttpResponseHelper.cs" />
     <Compile Include="JsonWireClasses.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

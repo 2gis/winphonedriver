@@ -3,26 +3,26 @@
     using System;
     using System.Net;
 
-    public class InnerDriverRequestError : Exception
+    public class InnerDriverRequestException : Exception
     {
         #region Constructors and Destructors
 
-        public InnerDriverRequestError()
+        public InnerDriverRequestException()
         {
         }
 
-        public InnerDriverRequestError(string message, HttpStatusCode statusCode)
+        public InnerDriverRequestException(string message, HttpStatusCode statusCode)
             : base(message)
         {
             this.StatusCode = statusCode;
         }
 
-        public InnerDriverRequestError(string message, params object[] args)
+        public InnerDriverRequestException(string message, params object[] args)
             : base(string.Format(message, args))
         {
         }
 
-        public InnerDriverRequestError(string message, Exception innerException)
+        public InnerDriverRequestException(string message, Exception innerException)
             : base(message, innerException)
         {
         }

@@ -26,7 +26,6 @@
 
             var innerIp = this.InitializeApplication(this.Automator.ActualCapabilities.DebugConnectToRunningApp);
 
-            Logger.Debug("Inner Driver ip: {0}", this.Automator.ActualCapabilities.InnerPort);
             this.Automator.CommandForwarder = new Requester(innerIp, this.Automator.ActualCapabilities.InnerPort);
 
             long timeout = this.Automator.ActualCapabilities.LaunchTimeout;
@@ -40,7 +39,7 @@
                 Logger.Trace("Ping inner driver");
                 var pingCommand = new Command(null, "ping", null);
                 var responseBody = this.Automator.CommandForwarder.ForwardCommand(pingCommand, verbose: false, timeout: 2000);
-                if (responseBody.StartsWith("<pong>"))
+                if (responseBody.StartsWith("<pong>", StringComparison.Ordinal))
                 {
                     break;
                 }

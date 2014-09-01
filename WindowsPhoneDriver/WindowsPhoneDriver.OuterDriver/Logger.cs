@@ -5,7 +5,7 @@
     using NLog;
     using NLog.Targets;
 
-    internal class Logger
+    internal static class Logger
     {
         #region Constants
 
@@ -15,16 +15,11 @@
 
         #region Static Fields
 
-        private static readonly NLog.Logger Log;
+        private static readonly NLog.Logger Log = LogManager.GetLogger("outerdriver");
 
         #endregion
 
         #region Constructors and Destructors
-
-        static Logger()
-        {
-            Log = LogManager.GetLogger("outerdriver");
-        }
 
         #endregion
 

@@ -99,12 +99,12 @@
             var nic = this.emulatorVm.InternalNic;
             if (nic == null)
             {
-                throw new Exception("Windows Phone Emulator Internal Switch not found");
+                throw new NullReferenceException("Windows Phone Emulator Internal Switch not found");
             }
 
             if (nic.SwitchInformation.HostIpAddress == null)
             {
-                throw new Exception("Unable to determine Windows Phone Emulator IP address.");
+                throw new NullReferenceException("Unable to determine Windows Phone Emulator IP address.");
             }
 
             return nic.SwitchInformation.HostIpAddress;

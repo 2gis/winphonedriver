@@ -40,19 +40,21 @@
             foreach (var popup in popups)
             {
                 var popupChild = popup.Child;
-                var element = (FrameworkElement)Finder.GetDescendantsBy(popupChild, new By("name", buttonName)).FirstOrDefault();
-                if (!(element is Button))
+                var element = (FrameworkElement)Finder.GetDescendantsBy(popupChild, new By("name", buttonName)).FirstOrDefault() as Button;
+                if (element == null)
                 {
                     continue;
                 }
 
-                var peer = new ButtonAutomationPeer(element as Button);
+                var peer = new ButtonAutomationPeer(element);
                 var invokeProv = peer.GetPattern(PatternInterface.Invoke) as IInvokeProvider;
-                if (invokeProv != null)
+                if (invokeProv == null)
                 {
-                    invokeProv.Invoke();
-                    return null;
+                    continue;
                 }
+
+                invokeProv.Invoke();
+                return null;
             }
 
             throw new AutomationException("No alert is displayed", ResponseStatus.NoAlertOpenError);

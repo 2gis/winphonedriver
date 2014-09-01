@@ -34,7 +34,7 @@
                 var listener = new Listener(listeningPort);
                 Listener.UrnPrefix = options.UrlBase;
 
-                Console.WriteLine("Starting WindowsPhone Driver on port {0}\r\n", listeningPort);
+                Console.WriteLine("Starting WindowsPhone Driver on port {0}\n", listeningPort);
 
                 listener.StartListening();
             }

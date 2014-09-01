@@ -28,7 +28,7 @@ namespace WindowsPhoneDriver.OuterDriver.EmulatorHelpers
             var devices = Utils.GetDevices();
 
             this.deviceInfo =
-                devices.FirstOrDefault(x => x.ToString().StartsWith(desiredDevice) && !x.ToString().Equals("Device"));
+                devices.FirstOrDefault(x => x.ToString().StartsWith(desiredDevice, StringComparison.OrdinalIgnoreCase) && !x.ToString().Equals("Device"));
 
             // Exclude device
             if (this.deviceInfo == null)

@@ -105,7 +105,6 @@
     <Compile Include="Commands\FindByHelpers\By.cs" />
     <Compile Include="Commands\FindByHelpers\Finder.cs" />
     <Compile Include="Commands\LocationCommand.cs" />
-    <Compile Include="Commands\NullCommand.cs" />
     <Compile Include="Commands\TextCommand.cs" />
     <Compile Include="Commands\ValueCommand.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

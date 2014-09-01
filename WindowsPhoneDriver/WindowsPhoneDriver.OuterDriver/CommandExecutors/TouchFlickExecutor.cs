@@ -2,6 +2,7 @@
 {
     using System;
     using System.Drawing;
+    using System.Globalization;
 
     using WindowsPhoneDriver.OuterDriver.Automator;
     using WindowsPhoneDriver.OuterDriver.EmulatorHelpers;
@@ -22,19 +23,18 @@
                 startPoint = this.Automator.RequestElementLocation(elementId).GetValueOrDefault();
             }
 
-            object speed;
-            if (this.ExecutedCommand.Parameters.TryGetValue("speed", out speed))
+            if (this.ExecutedCommand.Parameters.ContainsKey("speed"))
             {
-                var xOffset = Convert.ToInt32(this.ExecutedCommand.Parameters["xoffset"]);
-                var yOffset = Convert.ToInt32(this.ExecutedCommand.Parameters["yoffset"]);
+                var xOffset = Convert.ToInt32(this.ExecutedCommand.Parameters["xoffset"], CultureInfo.InvariantCulture);
+                var yOffset = Convert.ToInt32(this.ExecutedCommand.Parameters["yoffset"], CultureInfo.InvariantCulture);
+                var speed = Convert.ToDouble(this.ExecutedCommand.Parameters["speed"], CultureInfo.InvariantCulture);
 
-                this.Automator.EmulatorController.PerformGesture(
-                    new FlickGesture(startPoint, xOffset, yOffset, Convert.ToDouble(speed)));
+                this.Automator.EmulatorController.PerformGesture(new FlickGesture(startPoint, xOffset, yOffset, speed));
             }
             else
             {
-                var xSpeed = Convert.ToDouble(this.ExecutedCommand.Parameters["xspeed"]);
-                var ySpeed = Convert.ToDouble(this.ExecutedCommand.Parameters["yspeed"]);
+                var xSpeed = Convert.ToDouble(this.ExecutedCommand.Parameters["xspeed"], CultureInfo.InvariantCulture);
+                var ySpeed = Convert.ToDouble(this.ExecutedCommand.Parameters["yspeed"], CultureInfo.InvariantCulture);
                 this.Automator.EmulatorController.PerformGesture(new FlickGesture(startPoint, xSpeed, ySpeed));
             }
 

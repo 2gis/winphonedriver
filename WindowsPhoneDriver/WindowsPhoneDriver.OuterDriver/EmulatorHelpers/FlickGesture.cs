@@ -41,8 +41,6 @@
 
         public Point EndPosition { get; set; }
 
-        public Size Offset { get; set; }
-
         public TimeSpan PeriodBetweenPoints { get; set; }
 
         public Point StartPosition { get; set; }

@@ -1,5 +1,7 @@
 ﻿namespace WindowsPhoneDriver.OuterDriver.CommandExecutors
 {
+    using System;
+
     using Newtonsoft.Json;
 
     using WindowsPhoneDriver.Common;
@@ -16,7 +18,7 @@
             if (deserializeObject.Status == ResponseStatus.Success)
             {
                 var value = deserializeObject.Value.ToString();
-                orientation = value.ToLower().StartsWith("landscape") ? "LANDSCAPE" : "PORTRAIT";
+                orientation = value.StartsWith("landscape", StringComparison.OrdinalIgnoreCase) ? "LANDSCAPE" : "PORTRAIT";
             }
 
             return this.JsonResponse(ResponseStatus.Success, orientation);

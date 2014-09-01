@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
     using System.Threading.Tasks;
 
     using Windows.Storage.Streams;
@@ -25,7 +26,7 @@
 
         public Dictionary<string, string> Headers { get; set; }
 
-        public string Request { get; set; }
+        public string Request { get; private set; }
 
         #endregion
 
@@ -36,13 +37,13 @@
             this.Request = await StreamReadLine(reader);
 
             // read HTTP headers
-            this.Headers = await this.ReadHeaders(reader);
+            this.Headers = await ReadHeaders(reader);
 
             // read request contents
-            var contentLength = this.GetContentLength(this.Headers);
+            var contentLength = GetContentLength(this.Headers);
             if (contentLength != 0)
             {
-                this.Content = await this.ReadContent(reader, contentLength);
+                this.Content = await ReadContent(reader, contentLength);
             }
         }
 
@@ -73,27 +74,27 @@
             return data;
         }
 
-        private uint GetContentLength(Dictionary<string, string> headers)
+        private static uint GetContentLength(Dictionary<string, string> headers)
         {
             uint contentLength = 0;
             string contentLengthString;
             var hasContentLength = headers.TryGetValue("Content-Length", out contentLengthString);
             if (hasContentLength)
             {
-                contentLength = Convert.ToUInt32(contentLengthString);
+                contentLength = Convert.ToUInt32(contentLengthString, CultureInfo.InvariantCulture);
             }
 
             return contentLength;
         }
 
-        private async Task<string> ReadContent(DataReader reader, uint contentLength)
+        private static async Task<string> ReadContent(DataReader reader, uint contentLength)
         {
             await reader.LoadAsync(contentLength);
             string content = reader.ReadString(contentLength);
             return content;
         }
 
-        private async Task<Dictionary<string, string>> ReadHeaders(DataReader reader)
+        private static async Task<Dictionary<string, string>> ReadHeaders(DataReader reader)
         {
             var headers = new Dictionary<string, string>();
             string header;

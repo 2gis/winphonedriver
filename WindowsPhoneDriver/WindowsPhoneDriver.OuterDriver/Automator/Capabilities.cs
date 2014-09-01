@@ -7,7 +7,7 @@
     {
         #region Constructors and Destructors
 
-        private Capabilities()
+        internal Capabilities()
         {
             this.App = string.Empty;
             this.DeviceName = string.Empty;
@@ -21,6 +21,15 @@
 
         #region Public Properties
 
+        [JsonProperty("platformName")]
+        public static string PlatformName
+        {
+            get
+            {
+                return "WindowsPhone";
+            }
+        }
+
         [JsonProperty("app")]
         public string App { get; set; }
 
@@ -30,23 +39,14 @@
         [JsonProperty("deviceName")]
         public string DeviceName { get; set; }
 
+        [JsonProperty("innerPort")]
+        public int InnerPort { get; set; }
+
         [JsonProperty("launchDelay")]
         public int LaunchDelay { get; set; }
 
         [JsonProperty("launchTimeout")]
         public int LaunchTimeout { get; set; }
-
-        [JsonProperty("platformName")]
-        public string PlatformName
-        {
-            get
-            {
-                return "WindowsPhone";
-            }
-        }
-
-        [JsonProperty("innerPort")]
-        public int InnerPort { get; set; }
 
         #endregion
 

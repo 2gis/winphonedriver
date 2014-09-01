@@ -29,13 +29,21 @@
 
         #endregion
 
-        #region Delegates
-
-        public delegate void Output(string data);
-
-        #endregion
-
         #region Public Methods and Operators
+
+        /// <summary>
+        /// Initializes and starts <see cref="AutomationServer"/> on default port (9998) with specified parameters.
+        /// </summary>
+        /// <remarks>
+        /// Use it in conjuction with <see cref="Instance"/> to simplify inclusion of server in tested app.
+        /// </remarks>
+        /// <param name="visualRoot">
+        /// </param>
+        public void InitializeAndStart(UIElement visualRoot)
+        {
+            this.SetAutomator(visualRoot);
+            this.Start(9998);
+        }
 
         /// <summary>
         /// Initializes and starts <see cref="AutomationServer"/> with specified parameters.
@@ -47,7 +55,7 @@
         /// </param>
         /// <param name="port">
         /// </param>
-        public void InitializeAndStart(UIElement visualRoot, int port = 9998)
+        public void InitializeAndStart(UIElement visualRoot, int port)
         {
             this.SetAutomator(visualRoot);
             this.Start(port);
@@ -98,7 +106,9 @@
             string response;
             try
             {
-                response = Common.HttpResponseHelper.ResponseString(HttpStatusCode.OK, this.automator.ProcessCommand(acceptedRequest.Content));
+                response = Common.HttpResponseHelper.ResponseString(
+                    HttpStatusCode.OK, 
+                    this.automator.ProcessCommand(acceptedRequest.Content));
             }
             catch (NotImplementedException ex)
             {

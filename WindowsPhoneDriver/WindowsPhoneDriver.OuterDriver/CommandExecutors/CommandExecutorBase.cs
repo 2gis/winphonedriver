@@ -44,7 +44,7 @@
             {
                 return HttpResponseHelper.ResponseString(HttpStatusCode.OK, this.JsonResponse(ex.Status, ex.Message));
             }
-            catch (InnerDriverRequestError ex)
+            catch (InnerDriverRequestException ex)
             {
                 // Bad status returned by Inner Driver when trying to forward command
                 return HttpResponseHelper.ResponseString(ex.StatusCode, ex.Message);
