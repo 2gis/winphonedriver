@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
     using System.Linq;
     using System.Threading;
     using System.Windows;
@@ -68,7 +69,7 @@
             {
                 Interlocked.Increment(ref safeInstanceCount);
 
-                registeredKey = element.GetHashCode() + "-" + safeInstanceCount.ToString(string.Empty);
+                registeredKey = element.GetHashCode() + "-" + safeInstanceCount.ToString(string.Empty, CultureInfo.InvariantCulture);
                 this.registeredElements.Add(registeredKey, new WeakReference(element));
             }
 

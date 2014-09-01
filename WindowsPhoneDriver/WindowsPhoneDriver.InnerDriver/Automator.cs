@@ -42,7 +42,7 @@
             string elementId = null;
             if (parameters == null)
             {
-                throw new NullReferenceException("Parameteres can not be NULL");
+                throw new NullReferenceException("Parameters can not be NULL");
             }
 
             object elementIdObject;
