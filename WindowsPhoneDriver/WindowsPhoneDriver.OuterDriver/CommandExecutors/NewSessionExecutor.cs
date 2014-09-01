@@ -26,7 +26,6 @@
 
             var innerIp = this.InitializeApplication(this.Automator.ActualCapabilities.DebugConnectToRunningApp);
 
-            Logger.Debug("Inner Driver ip: {0}", this.Automator.ActualCapabilities.InnerPort);
             this.Automator.CommandForwarder = new Requester(innerIp, this.Automator.ActualCapabilities.InnerPort);
 
             long timeout = this.Automator.ActualCapabilities.LaunchTimeout;
