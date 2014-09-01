@@ -40,7 +40,7 @@
                 Logger.Trace("Ping inner driver");
                 var pingCommand = new Command(null, "ping", null);
                 var responseBody = this.Automator.CommandForwarder.ForwardCommand(pingCommand, verbose: false, timeout: 2000);
-                if (responseBody.StartsWith("<pong>"))
+                if (responseBody.StartsWith("<pong>", StringComparison.Ordinal))
                 {
                     break;
                 }

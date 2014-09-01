@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Drawing;
+    using System.Globalization;
 
     using Newtonsoft.Json;
 
@@ -34,15 +35,15 @@
                 {
                     var values =
                         JsonConvert.DeserializeObject<Dictionary<string, string>>(deserializeObject.Value.ToString());
-                    coordinates.X = Convert.ToInt32(values["x"]);
-                    coordinates.Y = Convert.ToInt32(values["y"]);
+                    coordinates.X = Convert.ToInt32(values["x"], CultureInfo.InvariantCulture);
+                    coordinates.Y = Convert.ToInt32(values["y"], CultureInfo.InvariantCulture);
                 }
             }
             else
             {
-                var xOffset = this.ExecutedCommand.Parameters["xoffset"].ToString();
-                var yOffset = this.ExecutedCommand.Parameters["yoffset"].ToString();
-                coordinates = new Point(int.Parse(xOffset), int.Parse(yOffset));
+                var xOffset = Convert.ToInt32(this.ExecutedCommand.Parameters["xoffset"], CultureInfo.InvariantCulture);
+                var yOffset = Convert.ToInt32(this.ExecutedCommand.Parameters["yoffset"], CultureInfo.InvariantCulture);
+                coordinates = new Point(xOffset, yOffset);
             }
 
             this.Automator.UpdatedOrientationForEmulatorController();

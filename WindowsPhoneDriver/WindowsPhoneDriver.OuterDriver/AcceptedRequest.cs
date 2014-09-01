@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
     using System.IO;
     using System.Net.Sockets;
 
@@ -44,7 +45,7 @@
             var content = string.Empty;
             if (hasContentLength)
             {
-                content = ReadContent(stream, Convert.ToInt32(contentLengthString));
+                content = ReadContent(stream, Convert.ToInt32(contentLengthString, CultureInfo.InvariantCulture));
             }
 
             return content;

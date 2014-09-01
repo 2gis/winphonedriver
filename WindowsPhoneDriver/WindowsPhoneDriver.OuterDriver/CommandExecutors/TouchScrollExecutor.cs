@@ -2,6 +2,7 @@
 {
     using System;
     using System.Drawing;
+    using System.Globalization;
 
     using WindowsPhoneDriver.OuterDriver.Automator;
     using WindowsPhoneDriver.OuterDriver.EmulatorHelpers;
@@ -24,8 +25,8 @@
             }
 
             // TODO: Add handling of missing parameters. Server should respond with a 400 Bad Request if parameters are missing
-            var xOffset = Convert.ToInt32(this.ExecutedCommand.Parameters["xoffset"]);
-            var yOffset = Convert.ToInt32(this.ExecutedCommand.Parameters["yoffset"]);
+            var xOffset = Convert.ToInt32(this.ExecutedCommand.Parameters["xoffset"], CultureInfo.InvariantCulture);
+            var yOffset = Convert.ToInt32(this.ExecutedCommand.Parameters["yoffset"], CultureInfo.InvariantCulture);
 
             this.Automator.EmulatorController.PerformGesture(new ScrollGesture(startPoint, xOffset, yOffset));
 

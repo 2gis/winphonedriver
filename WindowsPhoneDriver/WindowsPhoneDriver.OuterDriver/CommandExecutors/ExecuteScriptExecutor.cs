@@ -1,6 +1,7 @@
 ﻿namespace WindowsPhoneDriver.OuterDriver.CommandExecutors
 {
     using System;
+    using System.Globalization;
     using System.Windows.Forms;
 
     using WindowsPhoneDriver.Common;
@@ -14,13 +15,13 @@
         {
             const string MobileScriptPrefix = "mobile:";
             var script = this.ExecutedCommand.Parameters["script"].ToString();
-            if (!script.ToLower().StartsWith(MobileScriptPrefix))
+            if (!script.StartsWith(MobileScriptPrefix, StringComparison.OrdinalIgnoreCase))
             {
                 throw new NotImplementedException(
                     "execute partially implemented, supports only mobile: prefixed commands");
             }
 
-            var command = script.Split(':')[1].ToLower().Trim();
+            var command = script.Split(':')[1].ToLower(CultureInfo.InvariantCulture).Trim();
 
             if (command.Equals("start"))
             {
