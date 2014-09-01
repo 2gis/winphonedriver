@@ -17,8 +17,6 @@
 
         private static readonly NLog.Logger Log;
 
-        private static LogLevel verbosity;
-
         #endregion
 
         #region Constructors and Destructors
@@ -52,29 +50,19 @@
             Log.Info(message, args);
         }
 
-        public static void SetVerbosity(bool verbose)
-        {
-            verbosity = verbose ? LogLevel.Debug : LogLevel.Fatal;
-        }
-
-        public static void TargetConsole()
+        public static void TargetConsole(bool verbose)
         {
             var target = new ConsoleTarget { Layout = LayoutFormat };
 
-            NLog.Config.SimpleConfigurator.ConfigureForTargetLogging(target, verbosity);
+            NLog.Config.SimpleConfigurator.ConfigureForTargetLogging(target, verbose ? LogLevel.Debug : LogLevel.Fatal);
             LogManager.ReconfigExistingLoggers();
         }
 
-        public static void TargetFile(string fileName)
+        public static void TargetFile(string fileName, bool verbose)
         {
-            if (verbosity.CompareTo(LogLevel.Info) > 0)
-            {
-                verbosity = LogLevel.Info;
-            }
-
             var target = new FileTarget { Layout = LayoutFormat, FileName = fileName };
 
-            NLog.Config.SimpleConfigurator.ConfigureForTargetLogging(target, verbosity);
+            NLog.Config.SimpleConfigurator.ConfigureForTargetLogging(target, verbose ? LogLevel.Debug : LogLevel.Info);
             LogManager.ReconfigExistingLoggers();
         }
 

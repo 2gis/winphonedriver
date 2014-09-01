@@ -20,15 +20,13 @@
                 }
             }
 
-            Logger.SetVerbosity(options.Verbose);
-
             if (options.LogPath != null)
             {
-                Logger.TargetFile(options.LogPath);
+                Logger.TargetFile(options.LogPath, options.Verbose);
             }
             else
             {
-                Logger.TargetConsole();
+                Logger.TargetConsole(options.Verbose);
             }
 
             try
