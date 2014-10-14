@@ -32,13 +32,10 @@
 
             value = value.Where(val => magicKeys.ContainsKey(val) == false).ToArray();
 
-            if (value.Any())
-            {
-                this.ExecutedCommand.Parameters["value"] = value;
+            this.ExecutedCommand.Parameters["value"] = value;
 
-                // TODO check if response status = success, throw if not
-                var responseBody = this.Automator.CommandForwarder.ForwardCommand(this.ExecutedCommand);
-            }
+            // TODO check if response status = success, throw if not
+            var responseBody = this.Automator.CommandForwarder.ForwardCommand(this.ExecutedCommand);
 
             foreach (var magicKey in foundMagicKeys)
             {

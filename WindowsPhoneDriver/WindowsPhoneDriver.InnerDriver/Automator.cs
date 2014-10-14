@@ -87,7 +87,12 @@
             else if (command.Equals(DriverCommand.SendKeysToElement))
             {
                 var values = ((JArray)parameters["value"]).ToObject<List<string>>();
-                var value = values.Aggregate((aggregated, next) => aggregated + next);
+                var value = string.Empty;
+                if (values.Any())
+                {
+                    value = values.Aggregate((aggregated, next) => aggregated + next);
+                }
+
                 commandToExecute = new ValueCommand { ElementId = elementId, KeyString = value };
             }
             else if (command.Equals(DriverCommand.GetElementText))
