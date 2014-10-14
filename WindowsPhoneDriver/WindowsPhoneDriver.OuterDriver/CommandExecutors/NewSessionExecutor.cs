@@ -1,8 +1,12 @@
 ﻿namespace WindowsPhoneDriver.OuterDriver.CommandExecutors
 {
+    #region using
+
     using System;
     using System.Diagnostics;
     using System.Threading;
+
+    using Microsoft.Xde.Wmi;
 
     using Newtonsoft.Json;
 
@@ -11,6 +15,8 @@
     using WindowsPhoneDriver.Common;
     using WindowsPhoneDriver.OuterDriver.Automator;
     using WindowsPhoneDriver.OuterDriver.EmulatorHelpers;
+
+    #endregion
 
     internal class NewSessionExecutor : CommandExecutorBase
     {
@@ -38,7 +44,7 @@
 
                 Logger.Trace("Ping inner driver");
                 var pingCommand = new Command(null, "ping", null);
-                var responseBody = this.Automator.CommandForwarder.ForwardCommand(pingCommand, verbose: false, timeout: 2000);
+                var responseBody = this.Automator.CommandForwarder.ForwardCommand(pingCommand, false, 2000);
                 if (responseBody.StartsWith("<pong>", StringComparison.Ordinal))
                 {
                     break;
@@ -60,6 +66,25 @@
             return jsonResponse;
         }
 
+        private EmulatorController CreateEmulatorController(bool withFallback)
+        {
+            try
+            {
+                return new EmulatorController(this.Automator.ActualCapabilities.DeviceName);
+            }
+            catch (XdeVirtualMachineException)
+            {
+                if (!withFallback)
+                {
+                    throw;
+                }
+
+                this.Automator.ActualCapabilities.DeviceName =
+                    this.Automator.ActualCapabilities.DeviceName.Split('(')[0];
+                return new EmulatorController(this.Automator.ActualCapabilities.DeviceName);
+            }
+        }
+
         private string InitializeApplication(bool debugDoNotDeploy = false)
         {
             var appPath = this.Automator.ActualCapabilities.App;
@@ -70,7 +95,7 @@
             }
 
             this.Automator.ActualCapabilities.DeviceName = this.Automator.Deployer.DeviceName;
-            var emulatorController = new EmulatorController(this.Automator.Deployer.DeviceName);
+            var emulatorController = this.CreateEmulatorController(debugDoNotDeploy);
             this.Automator.EmulatorController = emulatorController;
 
             return this.Automator.EmulatorController.GetIpAddress();
