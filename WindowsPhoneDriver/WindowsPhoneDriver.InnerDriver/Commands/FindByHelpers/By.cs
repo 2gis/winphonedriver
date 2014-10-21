@@ -40,7 +40,7 @@
             }
             else
             {
-                throw new NotImplementedException();
+                throw new NotImplementedException(string.Format("{0} is not valid or implemented searching strategy.", strategy));
             }
         }
 
