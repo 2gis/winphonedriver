@@ -2,7 +2,6 @@
 {
     using System;
     using System.Windows;
-    using System.Windows.Automation;
 
     internal class By
     {
@@ -18,7 +17,7 @@
             {
                 this.Predicate = x =>
                 {
-                    var automationId = x.GetValue(AutomationProperties.AutomationIdProperty) as string;
+                    var automationId = (x as FrameworkElement).AutomationId();
                     return automationId != null && automationId.Equals(value);
                 };
             }
@@ -26,7 +25,7 @@
             {
                 this.Predicate = x =>
                     {
-                        var automationName = x.GetValue(AutomationProperties.NameProperty) as string;
+                        var automationName = (x as FrameworkElement).AutomationName();
                         return automationName != null && automationName.Equals(value);
                     };
             }

@@ -3,11 +3,22 @@
     using System.Collections.Generic;
     using System.Linq;
     using System.Windows;
+    using System.Windows.Automation;
     using System.Windows.Media;
 
     internal static class FrameworkElementExtensions
     {
         #region Methods
+
+        internal static string AutomationId(this FrameworkElement element)
+        {
+            return element == null ? null : element.GetValue(AutomationProperties.AutomationIdProperty) as string;
+        }
+
+        internal static string AutomationName(this FrameworkElement element)
+        {
+            return element == null ? null : element.GetValue(AutomationProperties.NameProperty) as string;
+        }
 
         internal static Point GetCoordinates(this FrameworkElement element, UIElement visualRoot)
         {
