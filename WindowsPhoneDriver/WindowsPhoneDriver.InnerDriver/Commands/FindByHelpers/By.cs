@@ -31,6 +31,7 @@
             }
             else if (strategy.Equals("xname"))
             {
+                // TODO: transitional. to be depricated
                 this.Predicate = x =>
                     {
                         var frameworkElement = x as FrameworkElement;
