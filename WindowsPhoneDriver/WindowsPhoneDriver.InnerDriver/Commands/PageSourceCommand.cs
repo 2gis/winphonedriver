@@ -53,7 +53,9 @@
             var coordinates = item.GetCoordinates(this.Automator.VisualRoot);
             var attributes = new Dictionary<string, string>
                                  {
-                                     { "name", item.Name }, 
+                                     { "name", item.AutomationName() },
+                                     { "id", item.AutomationId() },
+                                     { "xname", item.Name }, 
                                      {
                                          "visible", 
                                          item.IsUserVisible(this.Automator.VisualRoot)
