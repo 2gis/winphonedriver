@@ -115,6 +115,10 @@
             {
                 commandToExecute = new OrientationCommand();
             }
+            else if (command.Equals(DriverCommand.GetElementAttribute))
+            {
+                commandToExecute = new GetElementAttributeCommand { ElementId = elementId };
+            }
             else
             {
                 throw new NotImplementedException("Not implemented: " + command);
