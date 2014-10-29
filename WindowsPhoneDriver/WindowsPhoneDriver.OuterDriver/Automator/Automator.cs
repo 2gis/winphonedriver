@@ -98,10 +98,7 @@
 
         public Point? RequestElementLocation(string element)
         {
-            var command = new Command(
-                null, 
-                DriverCommand.GetElementLocation, 
-                new Dictionary<string, object> { { "ID", element } });
+            var command = new Command(null, DriverCommand.GetElementLocationOnceScrolledIntoView, new Dictionary<string, object> { { "ID", element } });
 
             var responseBody = this.CommandForwarder.ForwardCommand(command);
 

@@ -1,17 +1,10 @@
 ﻿namespace WindowsPhoneDriver.OuterDriver.CommandExecutors
 {
     using System;
-    using System.Collections.Generic;
     using System.Drawing;
     using System.Globalization;
 
-    using Newtonsoft.Json;
-
-    using OpenQA.Selenium.Remote;
-
-    using WindowsPhoneDriver.Common;
-
-    using DriverCommand = OpenQA.Selenium.Remote.DriverCommand;
+    using WindowsPhoneDriver.OuterDriver.Automator;
 
     internal class MouseMoveToExecutor : CommandExecutorBase
     {
@@ -19,25 +12,13 @@
 
         protected override string DoImpl()
         {
-            object elementId;
-            this.ExecutedCommand.Parameters.TryGetValue("element", out elementId);
+            this.Automator.UpdatedOrientationForEmulatorController();
 
-            var coordinates = new Point();
+            var elementId = Automator.GetValue<string>(this.ExecutedCommand.Parameters, "element");
+            Point coordinates;
             if (elementId != null)
             {
-                var parameters = new Dictionary<string, object> { { "ID", elementId } };
-                var locationCommand = new Command(null, DriverCommand.GetElementLocation, parameters);
-
-                var responseBody = this.Automator.CommandForwarder.ForwardCommand(locationCommand);
-
-                var deserializeObject = JsonConvert.DeserializeObject<JsonResponse>(responseBody);
-                if (deserializeObject.Status == ResponseStatus.Success)
-                {
-                    var values =
-                        JsonConvert.DeserializeObject<Dictionary<string, string>>(deserializeObject.Value.ToString());
-                    coordinates.X = Convert.ToInt32(values["x"], CultureInfo.InvariantCulture);
-                    coordinates.Y = Convert.ToInt32(values["y"], CultureInfo.InvariantCulture);
-                }
+                coordinates = this.Automator.RequestElementLocation(elementId).GetValueOrDefault();
             }
             else
             {

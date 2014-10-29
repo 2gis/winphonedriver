@@ -107,6 +107,10 @@
             {
                 commandToExecute = new LocationCommand { ElementId = elementId };
             }
+            else if (command.Equals(DriverCommand.GetElementLocationOnceScrolledIntoView))
+            {
+                commandToExecute = new LocationInViewCommand { ElementId = elementId };
+            }
             else if (command.Equals(DriverCommand.GetPageSource))
             {
                 commandToExecute = new PageSourceCommand { ElementId = elementId };
