@@ -59,11 +59,11 @@
             var fields = typeof(DriverCommand).GetFields(BindingFlags.Public | BindingFlags.Static);
             foreach (var field in fields)
             {
-                var fieldValue = field.GetValue(null).ToString();
-                var executor = q.FirstOrDefault(x => x.Name.Equals(field.Name + "Executor"));
+                var localField = field;
+                var executor = q.FirstOrDefault(x => x.Name.Equals(localField.Name + "Executor"));
                 if (executor != null)
                 {
-                    this.commandExecutorsRepository.Add(fieldValue, executor);
+                    this.commandExecutorsRepository.Add(localField.GetValue(null).ToString(), executor);
                 }
             }
         }
