@@ -1,8 +1,16 @@
 ﻿namespace WindowsPhoneDriver.OuterDriver.CommandExecutors
 {
+    #region
+
     using System.Collections.Generic;
     using System.Linq;
     using System.Windows.Forms;
+
+    using Newtonsoft.Json;
+
+    using WindowsPhoneDriver.Common;
+
+    #endregion
 
     internal class SendKeysToElementExecutor : CommandExecutorBase
     {
@@ -36,6 +44,11 @@
 
             // TODO check if response status = success, throw if not
             var responseBody = this.Automator.CommandForwarder.ForwardCommand(this.ExecutedCommand);
+            var response = JsonConvert.DeserializeObject<JsonResponse>(responseBody);
+            if (response.Status != ResponseStatus.Success)
+            {
+                return responseBody;
+            }
 
             foreach (var magicKey in foundMagicKeys)
             {

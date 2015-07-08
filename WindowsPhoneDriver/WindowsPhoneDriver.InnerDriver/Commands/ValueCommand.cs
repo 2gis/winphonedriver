@@ -22,13 +22,13 @@
         public override string DoImpl()
         {
             var element = this.Automator.WebElements.GetRegisteredElement(this.ElementId);
-            var textbox = element as TextBox;
-            if (textbox == null)
+            var control = element as Control;
+            if (control == null)
             {
-                throw new AutomationException("Element referenced is not a TextBox.", ResponseStatus.UnknownError);
+                throw new AutomationException("Element referenced is not of control type.", ResponseStatus.UnknownError);
             }
 
-            TrySetText(textbox, this.KeyString);
+            TrySetText(control, this.KeyString);
             return this.JsonResponse(ResponseStatus.Success, null);
         }
 
@@ -36,17 +36,35 @@
 
         #region Methods
 
-        private static void TrySetText(TextBox textbox, string text)
+        private static void TrySetText(Control element, string text)
         {
-            var peer = new TextBoxAutomationPeer(textbox);
-            var valueProvider = peer.GetPattern(PatternInterface.Value) as IValueProvider;
-            if (valueProvider != null)
+            var peer = FrameworkElementAutomationPeer.FromElement(element);
+            var provider = peer == null ? null : peer.GetPattern(PatternInterface.Value) as IValueProvider;
+
+            if (provider != null)
             {
-                valueProvider.SetValue(text);
+                provider.SetValue(text);
+            }
+            else if (element is TextBox)
+            {
+                var textBox = element as TextBox;
+                textBox.Text = text;
+                textBox.SelectionStart = text.Length;
+            }
+            else if (element is PasswordBox)
+            {
+                var passwordBox = element as PasswordBox;
+                passwordBox.Password = text;
+            }
+            else
+            {
+                throw new AutomationException("Element does not support SendKeys.", ResponseStatus.UnknownError);
             }
 
-            textbox.Focus();
+            // TODO: new parameter - FocusState
+            element.Focus();
         }
+
 
         #endregion
     }
