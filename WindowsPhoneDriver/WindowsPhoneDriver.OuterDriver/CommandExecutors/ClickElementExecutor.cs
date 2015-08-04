@@ -11,14 +11,14 @@
             if (!location.HasValue)
             {
                 // TODO return bad parameters?
-                return null;
+                return this.JsonResponse();
             }
 
             this.Automator.UpdatedOrientationForEmulatorController();
 
             this.Automator.EmulatorController.LeftButtonClick(location.Value);
 
-            return null;
+            return this.JsonResponse();
         }
 
         #endregion

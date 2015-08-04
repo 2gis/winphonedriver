@@ -55,7 +55,7 @@
                 this.Automator.EmulatorController.TypeKey(magicKey);
             }
 
-            return null;
+            return this.JsonResponse();
         }
 
         #endregion

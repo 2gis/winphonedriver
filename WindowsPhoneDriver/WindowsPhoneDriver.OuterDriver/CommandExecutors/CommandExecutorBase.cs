@@ -40,24 +40,30 @@
                 this.Automator = Automator.InstanceForSession(session);
                 return HttpResponseHelper.ResponseString(HttpStatusCode.OK, this.DoImpl());
             }
-            catch (AutomationException ex)
+            catch (AutomationException exception)
             {
-                return HttpResponseHelper.ResponseString(HttpStatusCode.OK, this.JsonResponse(ex.Status, ex.Message));
+                return HttpResponseHelper.ResponseString(
+                    HttpStatusCode.OK,
+                    this.JsonResponse(exception.Status, exception));
             }
-            catch (InnerDriverRequestException ex)
+            catch (InnerDriverRequestException exception)
             {
                 // Bad status returned by Inner Driver when trying to forward command
-                return HttpResponseHelper.ResponseString(ex.StatusCode, ex.Message);
+                return HttpResponseHelper.ResponseString(
+                    exception.StatusCode,
+                    this.JsonResponse(ResponseStatus.UnknownError, exception));
             }
             catch (NotImplementedException exception)
             {
-                return HttpResponseHelper.ResponseString(HttpStatusCode.NotImplemented, exception.Message);
+                return HttpResponseHelper.ResponseString(
+                    HttpStatusCode.NotImplemented,
+                    this.JsonResponse(ResponseStatus.UnknownCommand, exception));
             }
             catch (Exception exception)
             {
                 return HttpResponseHelper.ResponseString(
                     HttpStatusCode.OK, 
-                    this.JsonResponse(ResponseStatus.UnknownError, "Unknown error: " + exception.Message));
+                    this.JsonResponse(ResponseStatus.UnknownError, exception));
             }
         }
 
@@ -68,6 +74,17 @@
         protected virtual string DoImpl()
         {
             throw new InvalidOperationException("DoImpl should never be called in CommandExecutorBase");
+        }
+
+        /// <summary>
+        /// The JsonResponse with SUCCESS status and NULL value.
+        /// </summary>
+        /// <returns>
+        /// The <see cref="string"/>.
+        /// </returns>
+        protected string JsonResponse()
+        {
+            return this.JsonResponse(ResponseStatus.Success, null);
         }
 
         protected string JsonResponse(ResponseStatus status, object value)

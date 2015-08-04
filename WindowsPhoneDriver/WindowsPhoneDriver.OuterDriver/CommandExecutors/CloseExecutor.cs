@@ -8,7 +8,7 @@
         {
             this.Automator.Deployer.Disconnect();
 
-            return null;
+            return this.JsonResponse();
         }
 
         #endregion

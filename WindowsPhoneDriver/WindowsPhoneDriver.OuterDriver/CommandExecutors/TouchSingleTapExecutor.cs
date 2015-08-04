@@ -14,13 +14,13 @@
             var elementId = Automator.GetValue<string>(this.ExecutedCommand.Parameters, "element");
             if (elementId == null)
             {
-                return null;
+                return this.JsonResponse();
             }
 
             var tapPoint = this.Automator.RequestElementLocation(elementId).GetValueOrDefault();
             this.Automator.EmulatorController.PerformGesture(new TapGesture(tapPoint));
 
-            return null;
+            return this.JsonResponse();
         }
 
         #endregion
