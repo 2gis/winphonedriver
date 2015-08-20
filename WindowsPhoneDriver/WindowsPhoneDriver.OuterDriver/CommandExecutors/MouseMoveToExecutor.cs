@@ -30,7 +30,7 @@
             this.Automator.UpdatedOrientationForEmulatorController();
             this.Automator.EmulatorController.MoveCursorTo(coordinates);
 
-            return null;
+            return this.JsonResponse();
         }
 
         #endregion

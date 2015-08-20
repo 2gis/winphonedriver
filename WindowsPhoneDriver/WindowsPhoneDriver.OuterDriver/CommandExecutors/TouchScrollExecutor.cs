@@ -30,7 +30,7 @@
 
             this.Automator.EmulatorController.PerformGesture(new ScrollGesture(startPoint, xOffset, yOffset));
 
-            return null;
+            return this.JsonResponse();
         }
 
         #endregion

@@ -9,6 +9,8 @@
     using Windows.Networking.Sockets;
     using Windows.Storage.Streams;
 
+    using WindowsPhoneDriver.Common;
+
     public class AutomationServer
     {
         #region Static Fields
@@ -106,13 +108,17 @@
             string response;
             try
             {
-                response = Common.HttpResponseHelper.ResponseString(
-                    HttpStatusCode.OK, 
+                response = HttpResponseHelper.ResponseString(
+                    HttpStatusCode.OK,
                     this.automator.ProcessCommand(acceptedRequest.Content));
             }
-            catch (NotImplementedException ex)
+            catch (NotImplementedException exception)
             {
-                response = Common.HttpResponseHelper.ResponseString(HttpStatusCode.NotImplemented, ex.Message);
+                response = HttpResponseHelper.ResponseString(HttpStatusCode.NotImplemented, exception.Message);
+            }
+            catch (Exception exception)
+            {
+                response = HttpResponseHelper.ResponseString(HttpStatusCode.InternalServerError, exception.Message);
             }
 
             writer.WriteString(response);

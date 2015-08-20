@@ -38,7 +38,7 @@
                 this.Automator.EmulatorController.PerformGesture(new FlickGesture(startPoint, xSpeed, ySpeed));
             }
 
-            return null;
+            return this.JsonResponse();
         }
 
         #endregion

@@ -38,7 +38,7 @@
                     ResponseStatus.JavaScriptError);
             }
 
-            return null;
+            return this.JsonResponse();
         }
 
         #endregion
