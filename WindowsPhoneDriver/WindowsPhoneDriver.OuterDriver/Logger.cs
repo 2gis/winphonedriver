@@ -9,7 +9,7 @@
     {
         #region Constants
 
-        private const string LayoutFormat = "${date:format=HH\\:MM\\:ss} [${level:uppercase=true}] ${message}";
+        private const string LayoutFormat = "${date:format=HH\\:mm\\:ss} [${level:uppercase=true}] ${message}";
 
         #endregion
 

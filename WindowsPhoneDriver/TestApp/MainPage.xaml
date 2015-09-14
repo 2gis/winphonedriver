@@ -19,26 +19,36 @@
 
         <!--Pivot Control-->
         <phone:Pivot Title="MY APPLICATION">
-            <phone:PivotItem Header="zero">
-                <StackPanel>
-                    <Button AutomationProperties.AutomationId="TestBtn">Hello</Button>
-                    <PasswordBox AutomationProperties.AutomationId="PB1"/>
-                    <TextBox AutomationProperties.AutomationId="TB1"/>
-                </StackPanel>
+            <phone:PivotItem Header="first">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="100"/>
+                        <RowDefinition Height="2*"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBox Name="TextBox" Grid.Row="0" Width="400" Height="100"
+                         AcceptsReturn="True"
+                         VerticalAlignment="Center"
+                         AutomationProperties.AutomationId="MyTextBox" AutomationProperties.Name="NonUniqueName"/>
+                    <Button Content="Set 'CARAMBA' text to TextBox" Grid.Row="1" 
+                        HorizontalAlignment="Center" 
+                        AutomationProperties.AutomationId="SetButton" AutomationProperties.Name="NonUniqueName" Click="Button_Click"/>
+                    <ListBox Name="ListBox" Height="200" Grid.Row="2" Width="400"
+                         AutomationProperties.AutomationId="MyListBox"/>
+                </Grid>
             </phone:PivotItem>
             <!--Pivot item one-->
-            <phone:PivotItem Header="first">
-                <!--Double line list with text wrapping-->
-                <phone:LongListSelector Margin="0,0,-12,0" ItemsSource="{Binding Items}">
-                    <phone:LongListSelector.ItemTemplate>
-                        <DataTemplate>
-                            <StackPanel Margin="0,0,0,17">
-                                <TextBlock Text="{Binding LineOne}" TextWrapping="Wrap" Style="{StaticResource PhoneTextExtraLargeStyle}"/>
-                                <TextBlock Text="{Binding LineTwo}" TextWrapping="Wrap" Margin="12,-6,12,0" Style="{StaticResource PhoneTextSubtleStyle}"/>
-                            </StackPanel>
-                        </DataTemplate>
-                    </phone:LongListSelector.ItemTemplate>
-                </phone:LongListSelector>
+            <phone:PivotItem Header="second">
+                <StackPanel Orientation="Vertical">
+                    <TextBox
+                x:Name="SecondTabTextBox"
+                Text ="Nice swipe!"
+                AutomationProperties.AutomationId="SecondTabTextBox" />
+                    <PasswordBox AutomationProperties.AutomationId="MyPasswordBox"/>
+                    <Button Content="Show Msg" 
+                        AutomationProperties.AutomationId="MsgBtn" />
+                </StackPanel>
             </phone:PivotItem>
         </phone:Pivot>
     </Grid>

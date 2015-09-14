@@ -88,16 +88,15 @@
                     // Get a stream object for reading and writing
                     using (var stream = client.GetStream())
                     {
-                        var acceptedRequest = new AcceptedRequest();
-                        acceptedRequest.AcceptRequest(stream);
+                        var acceptedRequest = HttpRequest.ReadFromStreamWithoutClosing(stream);
+                        Logger.Debug("ACCEPTED REQUEST {0}", acceptedRequest.StartingLine);
 
-                        var responseBody = this.HandleRequest(acceptedRequest);
-
+                        var response = this.HandleRequest(acceptedRequest);
                         using (var writer = new StreamWriter(stream))
                         {
                             try
                             {
-                                writer.Write(responseBody);
+                                writer.Write(response);
                                 writer.Flush();
                             }
                             catch (IOException ex)
@@ -140,12 +139,16 @@
 
         #region Methods
 
-        private string HandleRequest(AcceptedRequest acceptedRequest)
+        private string HandleRequest(HttpRequest acceptedRequest)
         {
-            var request = acceptedRequest.Request;
-            var content = acceptedRequest.Content;
+            if (string.IsNullOrEmpty(acceptedRequest.StartingLine))
+            {
+                return HttpResponseHelper.ResponseString(
+                    HttpStatusCode.BadRequest,
+                    "Bad request URL");
+            }
 
-            var firstHeaderTokens = request.Split(' ');
+            var firstHeaderTokens = acceptedRequest.StartingLine.Split(' ');
             var method = firstHeaderTokens[0];
             var resourcePath = firstHeaderTokens[1];
 
@@ -159,16 +162,17 @@
             }
 
             var commandName = matched.Data.ToString();
-            var commandToExecute = new Command(commandName, content);
+            var commandToExecute = new Command(commandName, acceptedRequest.MessageBody);
             foreach (string variableName in matched.BoundVariables.Keys)
             {
                 commandToExecute.Parameters[variableName] = matched.BoundVariables[variableName];
             }
 
-            return this.ProcessCommand(commandToExecute);
+            var commandResponse = this.ProcessCommand(commandToExecute);
+            return HttpResponseHelper.ResponseString(commandResponse.HttpStatusCode, commandResponse.Content);
         }
 
-        private string ProcessCommand(Command command)
+        private CommandResponse ProcessCommand(Command command)
         {
             Logger.Info("COMMAND {0}\r\n{1}", command.Name, command.ParametersAsJsonString);
             var executor = this.executorDispatcher.GetExecutor(command.Name);

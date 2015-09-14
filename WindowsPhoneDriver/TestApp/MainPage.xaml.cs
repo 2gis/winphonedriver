@@ -11,8 +11,39 @@ using TestApp.Resources;
 
 namespace TestApp
 {
+    using System.Windows.Automation;
+
     public partial class MainPage : PhoneApplicationPage
     {
+        private readonly List<string> _monthsList = new List<string>
+        {
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December",
+            "Moses",
+            "Homer",
+            "Aristotle",
+            "Archimedes",
+            "Caesar",
+            "Saint Paul",
+            "Charlemagnev",
+            "Dante",
+            "Gutenberg",
+            "Shakespeare",
+            "Descartes",
+            "Frederick",
+            "Bichat"
+        };
+
         // Constructor
         public MainPage()
         {
@@ -23,6 +54,14 @@ namespace TestApp
 
             // Sample code to localize the ApplicationBar
             //BuildLocalizedApplicationBar();
+            foreach (var month in _monthsList)
+            {
+                var textBlock = new TextBlock { Text = month };
+                textBlock.SetValue(AutomationProperties.NameProperty, month);
+
+                // ReSharper disable once PossibleNullReferenceException
+                this.ListBox.Items.Add(textBlock);
+            }
         }
 
         // Load data for the ViewModel Items
@@ -32,6 +71,11 @@ namespace TestApp
             {
                 App.ViewModel.LoadData();
             }
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            TextBox.Text = "CARAMBA";
         }
 
         // Sample code for building a localized ApplicationBar
