@@ -27,7 +27,7 @@
 
         #region Public Methods and Operators
 
-        public string Do()
+        public CommandResponse Do()
         {
             if (this.ExecutedCommand == null)
             {
@@ -38,30 +38,30 @@
             {
                 var session = this.ExecutedCommand.SessionId == null ? null : this.ExecutedCommand.SessionId.ToString();
                 this.Automator = Automator.InstanceForSession(session);
-                return HttpResponseHelper.ResponseString(HttpStatusCode.OK, this.DoImpl());
+                return CommandResponse.Create(HttpStatusCode.OK, this.DoImpl());
             }
             catch (AutomationException exception)
             {
-                return HttpResponseHelper.ResponseString(
+                return CommandResponse.Create(
                     HttpStatusCode.OK,
                     this.JsonResponse(exception.Status, exception));
             }
             catch (InnerDriverRequestException exception)
             {
                 // Bad status returned by Inner Driver when trying to forward command
-                return HttpResponseHelper.ResponseString(
+                return CommandResponse.Create(
                     exception.StatusCode,
                     this.JsonResponse(ResponseStatus.UnknownError, exception));
             }
             catch (NotImplementedException exception)
             {
-                return HttpResponseHelper.ResponseString(
+                return CommandResponse.Create(
                     HttpStatusCode.NotImplemented,
                     this.JsonResponse(ResponseStatus.UnknownCommand, exception));
             }
             catch (Exception exception)
             {
-                return HttpResponseHelper.ResponseString(
+                return CommandResponse.Create(
                     HttpStatusCode.OK, 
                     this.JsonResponse(ResponseStatus.UnknownError, exception));
             }

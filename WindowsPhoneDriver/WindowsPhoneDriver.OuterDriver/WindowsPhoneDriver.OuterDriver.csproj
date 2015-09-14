@@ -82,10 +82,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AcceptedRequest.cs" />
     <Compile Include="Automator\Automator.cs" />
     <Compile Include="Automator\Capabilities.cs" />
     <Compile Include="CommandExecutorDispatchTable.cs" />
+    <Compile Include="CommandExecutors\CommandHelpers\BuildInfo.cs" />
     <Compile Include="CommandExecutors\ExecuteScriptExecutor.cs" />
     <Compile Include="CommandExecutors\GoBackExecutor.cs" />
     <Compile Include="CommandExecutors\CommandExecutorForward.cs" />
@@ -98,6 +98,8 @@
     <Compile Include="CommandExecutors\ClickElementExecutor.cs" />
     <Compile Include="CommandExecutors\MouseUpExecutor.cs" />
     <Compile Include="CommandExecutors\MouseDownExecutor.cs" />
+    <Compile Include="CommandExecutors\QuitExecutor.cs" />
+    <Compile Include="CommandExecutors\StatusExecutor.cs" />
     <Compile Include="CommandExecutors\TouchSingleTapExecutor.cs" />
     <Compile Include="CommandExecutors\TouchScrollExecutor.cs" />
     <Compile Include="CommandExecutors\TouchFlickExecutor.cs" />
@@ -106,6 +108,7 @@
     <Compile Include="CommandExecutors\CloseExecutor.cs" />
     <Compile Include="CommandExecutors\NewSessionExecutor.cs" />
     <Compile Include="CommandLineOptions.cs" />
+    <Compile Include="HttpRequest.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="UriDispatchTables.cs" />
     <Compile Include="EmulatorHelpers\Deployer81.cs" />
