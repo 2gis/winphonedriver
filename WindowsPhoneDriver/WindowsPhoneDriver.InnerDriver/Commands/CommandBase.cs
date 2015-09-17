@@ -1,5 +1,7 @@
 ﻿namespace WindowsPhoneDriver.InnerDriver.Commands
 {
+    #region
+
     using System;
     using System.Collections.Generic;
     using System.Threading;
@@ -9,6 +11,8 @@
 
     using WindowsPhoneDriver.Common;
     using WindowsPhoneDriver.Common.Exceptions;
+
+    #endregion
 
     internal class CommandBase
     {
@@ -87,7 +91,7 @@
                 value = string.Format("WebDriverException {0}", Enum.GetName(typeof(ResponseStatus), status));
             }
 
-            return JsonConvert.SerializeObject(new JsonResponse(this.Session, status, value));
+            return JsonConvert.SerializeObject(new JsonResponse(this.Session, status, value), Formatting.Indented);
         }
 
         #endregion
