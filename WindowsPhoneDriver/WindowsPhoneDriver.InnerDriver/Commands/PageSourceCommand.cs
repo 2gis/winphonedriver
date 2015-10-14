@@ -3,12 +3,12 @@
     using System.Collections.Generic;
     using System.Globalization;
     using System.IO;
+    using System.Linq;
     using System.Text;
     using System.Windows;
-    using System.Windows.Media;
     using System.Xml;
-
-    using WindowsPhoneDriver.Common;
+    using Common;
+    using FindByHelpers;
 
     internal class PageSourceCommand : CommandBase
     {
@@ -77,10 +77,14 @@
                 writer.WriteAttributeString(attribute.Key, attribute.Value);
             }
 
-            var childrenCount = VisualTreeHelper.GetChildrenCount(item);
-            for (var i = 0; i < childrenCount; ++i)
+            var children = Finder.GetChildren(item);
+            if (item == this.Automator.VisualRoot)
             {
-                var child = VisualTreeHelper.GetChild(item, i);
+                children = children.Concat(Finder.GetPopupsChildren());
+            }
+
+            foreach (var child in children)
+            {
                 this.WriteElementToXml(writer, child as FrameworkElement);
             }
 
