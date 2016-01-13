@@ -4,6 +4,7 @@
     using System.Linq;
     using System.Windows;
     using System.Windows.Automation;
+    using System.Windows.Controls;
     using System.Windows.Media;
 
     internal static class FrameworkElementExtensions
@@ -40,6 +41,12 @@
 
         internal static string GetText(this FrameworkElement element)
         {
+            if (element is RichTextBox)
+            {
+                var rtb = element as RichTextBox;
+                return rtb.Xaml;
+            }
+
             var propertyNames = new List<string> { "Text", "Content" };
 
             foreach (var textProperty in from propertyName in propertyNames
