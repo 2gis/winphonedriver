@@ -41,10 +41,14 @@
         private IEnumerable<string> FindElementsBy(DependencyObject relativeElement, By searchStrategy)
         {
             var foundIds = new List<string>();
+            var descendant = Finder.GetDescendantsBy(relativeElement, searchStrategy);
+            if (relativeElement == this.Automator.VisualRoot)
+            {
+                descendant = descendant.Concat(Finder.GetPopupsDescendantsBy(searchStrategy));
+            }
 
             foundIds.AddRange(
-                Finder.GetDescendantsBy(relativeElement, searchStrategy)
-                    .Select(element => this.Automator.WebElements.RegisterElement((FrameworkElement)element)));
+                descendant.Select(element => this.Automator.WebElements.RegisterElement((FrameworkElement)element)));
             return foundIds;
         }
 
