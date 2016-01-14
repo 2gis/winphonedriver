@@ -45,8 +45,13 @@
         private string FindElementBy(DependencyObject relativeElement, By searchStrategy)
         {
             string foundId = null;
+            var descendant = Finder.GetDescendantsBy(relativeElement, searchStrategy);
+            if (relativeElement == this.Automator.VisualRoot)
+            {
+                descendant = descendant.Concat(Finder.GetPopupsDescendantsBy(searchStrategy));
+            }
 
-            var element = (FrameworkElement)Finder.GetDescendantsBy(relativeElement, searchStrategy).FirstOrDefault();
+            var element = (FrameworkElement)descendant.FirstOrDefault();
             if (element != null)
             {
                 foundId = this.Automator.WebElements.RegisterElement(element);
