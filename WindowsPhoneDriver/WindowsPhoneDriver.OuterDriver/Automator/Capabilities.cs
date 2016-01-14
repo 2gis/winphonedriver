@@ -15,6 +15,7 @@
             this.LaunchTimeout = 10000;
             this.DebugConnectToRunningApp = false;
             this.InnerPort = 9998;
+            this.EnableJavascript = true;
         }
 
         #endregion
@@ -35,6 +36,9 @@
 
         [JsonProperty("debugConnectToRunningApp")]
         public bool DebugConnectToRunningApp { get; set; }
+
+        [JsonProperty("javascriptEnabled")]
+        public bool EnableJavascript { get; set; }
 
         [JsonProperty("deviceName")]
         public string DeviceName { get; set; }
