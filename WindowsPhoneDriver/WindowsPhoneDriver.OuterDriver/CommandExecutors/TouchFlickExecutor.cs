@@ -5,7 +5,8 @@
     using System.Globalization;
 
     using WindowsPhoneDriver.OuterDriver.Automator;
-    using WindowsPhoneDriver.OuterDriver.EmulatorHelpers;
+
+    using Winium.Mobile.Connectivity.Gestures;
 
     internal class TouchFlickExecutor : CommandExecutorBase
     {
@@ -13,8 +14,6 @@
 
         protected override string DoImpl()
         {
-            this.Automator.UpdatedOrientationForEmulatorController();
-
             var screen = this.Automator.EmulatorController.PhoneScreenSize;
             var startPoint = new Point(screen.Width / 2, screen.Height / 2);
             var elementId = Automator.GetValue<string>(this.ExecutedCommand.Parameters, "element");

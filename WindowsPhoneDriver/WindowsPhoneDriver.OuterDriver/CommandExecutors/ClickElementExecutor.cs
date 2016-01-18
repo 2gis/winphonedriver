@@ -14,8 +14,6 @@
                 return this.JsonResponse();
             }
 
-            this.Automator.UpdatedOrientationForEmulatorController();
-
             this.Automator.EmulatorController.LeftButtonClick(location.Value);
 
             return this.JsonResponse();

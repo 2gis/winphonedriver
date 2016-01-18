@@ -1,6 +1,5 @@
 ﻿namespace WindowsPhoneDriver.OuterDriver.Automator
 {
-    using System;
     using System.Collections.Generic;
     using System.Drawing;
 
@@ -10,7 +9,8 @@
     using OpenQA.Selenium.Remote;
 
     using WindowsPhoneDriver.Common;
-    using WindowsPhoneDriver.OuterDriver.EmulatorHelpers;
+
+    using Winium.Mobile.Connectivity.Emulator;
 
     using DriverCommand = WindowsPhoneDriver.Common.DriverCommand;
 
@@ -25,8 +25,6 @@
         #endregion
 
         #region Fields
-
-        private EmulatorController emulatorController;
 
         #endregion
 
@@ -45,20 +43,9 @@
 
         public Requester CommandForwarder { get; set; }
 
-        public IDeployer Deployer { get; set; }
+        public Winium.Mobile.Connectivity.IDeployer Deployer { get; set; }
 
-        public EmulatorController EmulatorController
-        {
-            get
-            {
-                return this.emulatorController;
-            }
-
-            set
-            {
-                this.emulatorController = value;
-            }
-        }
+        public EmulatorController EmulatorController { get; set; }
 
         public string Session { get; private set; }
 
@@ -127,24 +114,21 @@
             return new Point(x, y);
         }
 
-        /// <summary>
-        /// This method should be called before any EmulatorController methods that move cursor or use screen size.
-        /// Orientation value is used by EmulatorController to translate phone screen coordinates into virtual machine coordinates
-        /// </summary>
-        public void UpdatedOrientationForEmulatorController()
+        public EmulatorController CreateEmulatorController(bool withFallback)
         {
-            var command = new Command(null, DriverCommand.GetOrientation, null);
-            var responseBody = this.CommandForwarder.ForwardCommand(command);
-            var deserializeObject = JsonConvert.DeserializeObject<JsonResponse>(responseBody);
-            if (deserializeObject.Status != ResponseStatus.Success)
+            try
             {
-                return;
+                return new EmulatorController(this.ActualCapabilities.DeviceName);
             }
-
-            EmulatorController.PhoneOrientation orientation;
-            if (Enum.TryParse(deserializeObject.Value.ToString(), true, out orientation))
+            catch (VirtualMachineException)
             {
-                this.emulatorController.PhoneOrientationToUse = orientation;
+                if (!withFallback)
+                {
+                    throw;
+                }
+
+                this.ActualCapabilities.DeviceName = this.ActualCapabilities.DeviceName.Split('(')[0];
+                return new EmulatorController(this.ActualCapabilities.DeviceName);
             }
         }
 

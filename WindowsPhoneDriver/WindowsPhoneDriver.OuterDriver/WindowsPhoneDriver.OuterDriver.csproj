@@ -9,11 +9,12 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>WindowsPhoneDriver.OuterDriver</RootNamespace>
     <AssemblyName>WindowsPhoneDriver.OuterDriver</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -57,20 +58,13 @@
     <Reference Include="CommandLine">
       <HintPath>..\packages\CommandLineParser.1.9.71\lib\net45\CommandLine.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Phone.Tools.Deploy">
-      <HintPath>C:\Program Files (x86)\Microsoft SDKs\Windows Phone\v8.1\Tools\AppDeploy\Microsoft.Phone.Tools.Deploy.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Microsoft.Xde.Common, Version=8.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=x86" />
-    <Reference Include="Microsoft.Xde.Wmi">
-      <HintPath>C:\Program Files (x86)\Microsoft XDE\8.1\Microsoft.Xde.Wmi.dll</HintPath>
-    </Reference>
     <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Newtonsoft.Json.6.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="NLog">
-      <HintPath>..\packages\NLog.3.1.0.0\lib\net45\NLog.dll</HintPath>
+    <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
+      <HintPath>..\packages\NLog.4.2.3\lib\net45\NLog.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -111,13 +105,6 @@
     <Compile Include="HttpRequest.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="UriDispatchTables.cs" />
-    <Compile Include="EmulatorHelpers\Deployer81.cs" />
-    <Compile Include="EmulatorHelpers\EmulatorController.cs" />
-    <Compile Include="EmulatorHelpers\FlickGesture.cs" />
-    <Compile Include="EmulatorHelpers\IGesture.cs" />
-    <Compile Include="EmulatorHelpers\IDeployer.cs" />
-    <Compile Include="EmulatorHelpers\ScrollGesture.cs" />
-    <Compile Include="EmulatorHelpers\TapGesture.cs" />
     <Compile Include="Listener.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -131,6 +118,10 @@
     <ProjectReference Include="..\WindowsPhoneDriver.Common\WindowsPhoneDriver.Common.csproj">
       <Project>{a4248ec1-20ad-47b9-956f-a036e4d7425b}</Project>
       <Name>WindowsPhoneDriver.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Winium.Mobile.Connectivity\Winium.Mobile.Connectivity.csproj">
+      <Project>{da38085e-f3db-46ef-8889-d89283924917}</Project>
+      <Name>Winium.Mobile.Connectivity</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup />

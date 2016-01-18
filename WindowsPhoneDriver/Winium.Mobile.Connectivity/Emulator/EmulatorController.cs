@@ -1,5 +1,7 @@
-﻿namespace WindowsPhoneDriver.OuterDriver.EmulatorHelpers
+﻿namespace Winium.Mobile.Connectivity.Emulator
 {
+    #region
+
     using System;
     using System.Drawing;
     using System.Drawing.Imaging;
@@ -9,16 +11,20 @@
     using System.Windows.Forms;
 
     using Microsoft.Xde.Common;
+    using Microsoft.Xde.Interface;
     using Microsoft.Xde.Wmi;
 
-    using WindowsPhoneDriver.Common;
-    using WindowsPhoneDriver.Common.Exceptions;
+    using Winium.Mobile.Connectivity.Gestures;
 
-    internal class EmulatorController
+    #endregion
+
+    public class EmulatorController
     {
         #region Fields
 
-        private readonly IXdeVirtualMachine emulatorVm;
+        private readonly IXdeAutomation client;
+
+        private readonly VirtualMachine emulatorVm;
 
         private Point cursor;
 
@@ -30,39 +36,38 @@
 
         public EmulatorController(string emulatorName)
         {
-            this.emulatorVm = GetEmulatorVm(emulatorName);
-            this.cursor = new Point(0, 0);
-            this.PhoneOrientationToUse = PhoneOrientation.Landscape;
-
-            if (this.emulatorVm == null)
+            try
             {
-                throw new NullReferenceException(
-                    string.Format("Could not get running XDE virtual machine {0}", emulatorName));
-            }
+                this.emulatorVm = EmulatorFactory.Instance.GetVm(emulatorName);
 
-            this.PhoneScreenSize = this.emulatorVm.GetCurrentResolution();
+                if (this.emulatorVm == null)
+                {
+                    throw new NullReferenceException(
+                        string.Format("Could not get running XDE virtual machine {0}", emulatorName));
+                }
+
+                this.client = AutomationClient.CreateAutomationClient(this.emulatorVm.Name);
+
+                this.cursor = new Point(0, 0);
+                this.PhoneScreenSize = this.emulatorVm.GetCurrentResolution();
+            }
+            catch (XdeVirtualMachineException exception)
+            {
+                throw new VirtualMachineException(
+                    string.Format("Could not get Virtual Machine for {0}", emulatorName), 
+                    exception);
+            }
         }
 
         #endregion
 
         #region Enums
 
-        [Flags]
         public enum PhoneOrientation
         {
-            None = 0, 
-
             Portrait = 1, 
 
             Landscape = 2, 
-
-            PortraitUp = 5, 
-
-            PortraitDown = 9, 
-
-            LandscapeLeft = 18, 
-
-            LandscapeRight = 34, 
         }
 
         #endregion
@@ -73,13 +78,30 @@
         /// Current phone orientation to be used when translating phone screen coordinates into virtual machine screen coordinates.
         /// Should be set before using PhoneScreenSize or any mouse moving methods
         /// </summary>
-        public PhoneOrientation PhoneOrientationToUse { get; set; }
+        public PhoneOrientation Orientation
+        {
+            get
+            {
+                return this.client.DisplayOrientation == DisplayOrientation.Portrait
+                           ? PhoneOrientation.Portrait
+                           : PhoneOrientation.Landscape;
+            }
+
+            set
+            {
+                this.client.DisplayOrientation = (value == PhoneOrientation.Portrait)
+                                                     ? DisplayOrientation.Portrait
+                                                     : DisplayOrientation.LandscapeLeft;
+                Thread.Sleep(1500);
+            }
+        }
 
         public Size PhoneScreenSize
         {
             get
             {
-                return (this.PhoneOrientationToUse & PhoneOrientation.Landscape) == PhoneOrientation.Landscape
+                var landscape = this.Orientation.HasFlag(PhoneOrientation.Landscape);
+                return landscape
                            ? new Size(this.virtualScreenSize.Height, this.virtualScreenSize.Width)
                            : this.virtualScreenSize;
             }
@@ -90,9 +112,23 @@
             }
         }
 
+        public string VmName
+        {
+            get
+            {
+                return this.emulatorVm.Name;
+            }
+        }
+
         #endregion
 
         #region Public Methods and Operators
+
+        public void Disconnect()
+        {
+            this.client.Dispose();
+            this.emulatorVm.Dispose();
+        }
 
         public string GetIpAddress()
         {
@@ -155,20 +191,9 @@
             this.LeftButtonUp();
         }
 
-        public bool PhonePointVisibleOnScreen(Point phonePoint)
-        {
-            var phoneScreen = new Rectangle(new Point(0, 0), this.PhoneScreenSize);
-            return phoneScreen.Contains(phonePoint);
-        }
-
-        public void TypeKey(Keys key)
-        {
-            this.emulatorVm.TypeKey(key);
-        }
-
         public string TakeScreenshot()
         {
-            var size = this.emulatorVm.GetCurrentResolution();
+            var size = this.virtualScreenSize;
             var screen = this.emulatorVm.GetScreenShot(0, 0, size.Width, size.Height);
 
             var base64 = ImageToBase64String(screen, ImageFormat.Png);
@@ -176,21 +201,14 @@
             return base64;
         }
 
+        public void TypeKey(Keys key)
+        {
+            this.emulatorVm.TypeKey(key);
+        }
+
         #endregion
 
         #region Methods
-
-        private static IXdeVirtualMachine GetEmulatorVm(string emulatorName)
-        {
-            var factory = new XdeWmiFactory();
-            var vm = factory.GetVirtualMachine(emulatorName + "." + Environment.UserName);
-            if (vm.EnabledState != VirtualMachineEnabledState.Enabled)
-            {
-                throw new XdeVirtualMachineException("Emulator is not running. ");
-            }
-
-            return vm;
-        }
 
         private static string ImageToBase64String(Image image, ImageFormat imageFormat)
         {
@@ -205,7 +223,7 @@
 
             if (byteBuffer == null)
             {
-                throw new AutomationException("Could not take screenshot.", ResponseStatus.UnknownError);
+                throw new ConnectivityException("Could not take screenshot.");
             }
 
             return Convert.ToBase64String(byteBuffer);
@@ -214,19 +232,14 @@
         private Point TranslatePhoneToVirtualmachinePoint(Point location)
         {
             var translatedPoint = location;
-            switch (this.PhoneOrientationToUse)
+            switch (this.client.DisplayOrientation)
             {
-                case PhoneOrientation.PortraitDown:
-                    translatedPoint.X = this.virtualScreenSize.Width - location.X;
-                    translatedPoint.Y = this.virtualScreenSize.Height - location.Y;
-                    break;
-
-                case PhoneOrientation.LandscapeLeft:
+                case DisplayOrientation.LandscapeLeft:
                     translatedPoint.X = this.virtualScreenSize.Width - location.Y;
                     translatedPoint.Y = location.X;
                     break;
 
-                case PhoneOrientation.LandscapeRight:
+                case DisplayOrientation.LandscapeRight:
                     translatedPoint.X = location.Y;
                     translatedPoint.Y = this.virtualScreenSize.Height - location.X;
                     break;
