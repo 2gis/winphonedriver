@@ -123,6 +123,10 @@
             {
                 commandToExecute = new GetElementAttributeCommand { ElementId = elementId };
             }
+            else if (command.Equals(ExtendedDriverCommand.InvokeAppBarItemCommand))
+            {
+                commandToExecute = new InvokeAppBarItemCommand();
+            }
             else
             {
                 throw new NotImplementedException("Not implemented: " + command);

@@ -6,6 +6,8 @@
     xmlns:shell="clr-namespace:Microsoft.Phone.Shell;assembly=Microsoft.Phone"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:innerDriver="clr-namespace:WindowsPhoneDriver.InnerDriver;assembly=WindowsPhoneDriver.InnerDriver"
+    xmlns:public="clr-namespace:WindowsPhoneDriver.InnerDriver.Public;assembly=WindowsPhoneDriver.InnerDriver"
     mc:Ignorable="d"
     d:DataContext="{d:DesignData SampleData/MainViewModelSampleData.xaml}"
     FontFamily="{StaticResource PhoneFontFamilyNormal}"
@@ -51,6 +53,16 @@
                 </StackPanel>
             </phone:PivotItem>
         </phone:Pivot>
+        
     </Grid>
-
+    <phone:PhoneApplicationPage.ApplicationBar>
+        <shell:ApplicationBar IsVisible="True" IsMenuEnabled="True">
+            <public:ClickableApplicationBarIconButton Click="ClickableApplicationBarIconButton_OnClick" IconUri="/Resources/save.png" Text="Button 1"/>
+            <public:ClickableApplicationBarIconButton Click="ClickableApplicationBarIconButton_OnClick" IconUri="/Resources/feature.settings.png" Text="Button 2"/>
+            <shell:ApplicationBar.MenuItems>
+                <public:ClickableApplicationBarMenuItem Click="ClickableApplicationBarMenuItem_OnClick"  Text="MenuItem 1"/>
+                <public:ClickableApplicationBarMenuItem Click="ClickableApplicationBarMenuItem_OnClick" Text="MenuItem 2"/>
+            </shell:ApplicationBar.MenuItems>
+        </shell:ApplicationBar>
+    </phone:PhoneApplicationPage.ApplicationBar>
 </phone:PhoneApplicationPage>

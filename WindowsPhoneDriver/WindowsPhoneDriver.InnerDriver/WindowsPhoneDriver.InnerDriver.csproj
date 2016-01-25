@@ -95,8 +95,11 @@
     <Compile Include="AcceptedRequest.cs" />
     <Compile Include="Automator.cs" />
     <Compile Include="AutomatorElements.cs" />
+    <Compile Include="Public\ClickableApplicationBarMenuItem.cs" />
+    <Compile Include="Public\ClickableApplicationBarIconButton.cs" />
     <Compile Include="Commands\AlertCommand.cs" />
     <Compile Include="Commands\AlertTextCommand.cs" />
+    <Compile Include="Commands\InvokeAppBarItemCommand.cs" />
     <Compile Include="Commands\GetElementAttributeCommand.cs" />
     <Compile Include="Commands\LocationInViewCommand.cs" />
     <Compile Include="Commands\OrientationCommand.cs" />

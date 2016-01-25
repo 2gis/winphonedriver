@@ -158,3 +158,10 @@ class TestBasicInput(WuaTestCase):
         element = self.driver.find_element_by_id('SetButton')
         element.click()
         assert 'CARAMBA' == self.driver.find_element_by_id('MyTextBox').text
+
+    def test_app_bar_item_invoke(self):
+        element = self.driver.find_element_by_id('MyTextBox')
+        self.driver.execute_script("mobile: invokeAppBarItem", 'iconButton', 1)
+        assert 'Button 2' == element.text
+        self.driver.execute_script("mobile: invokeAppBarItem", 'menuItem', 0)
+        assert 'MenuItem 1' == element.text

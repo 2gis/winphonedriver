@@ -1,11 +1,13 @@
 ﻿namespace WindowsPhoneDriver.OuterDriver.CommandExecutors
 {
     using System;
+    using System.Collections.Generic;
     using System.Globalization;
     using System.Windows.Forms;
+    using OpenQA.Selenium.Remote;
 
-    using WindowsPhoneDriver.Common;
-    using WindowsPhoneDriver.Common.Exceptions;
+    using Common;
+    using Common.Exceptions;
 
     internal class ExecuteScriptExecutor : CommandExecutorBase
     {
@@ -30,6 +32,24 @@
             else if (command.Equals("search"))
             {
                 this.Automator.EmulatorController.TypeKey(Keys.F3);
+            }
+            else if (command.Equals("invokeAppBarItem", StringComparison.OrdinalIgnoreCase))
+            {
+                var arguments = this.ExecutedCommand.Parameters["args"] as Array;
+                if (arguments == null)
+                {
+                    throw new AutomationException("Bad parameters", ResponseStatus.JavaScriptError);
+                }
+
+                var itemType = arguments.GetValue(0);
+                var index = arguments.GetValue(1);
+
+                var parameters = new Dictionary<string, object>();
+                parameters["itemType"] = itemType;
+                parameters["index"] = index;
+
+                var invokeCommand = new Command(this.ExecutedCommand.SessionId, ExtendedDriverCommand.InvokeAppBarItemCommand, parameters);
+                return this.Automator.CommandForwarder.ForwardCommand(invokeCommand);
             }
             else
             {
