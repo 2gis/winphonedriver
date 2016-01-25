@@ -5,6 +5,16 @@
 
     public class ClickableApplicationBarMenuItem : ApplicationBarMenuItem
     {
+        public ClickableApplicationBarMenuItem()
+            : base()
+        {
+        }
+
+        public ClickableApplicationBarMenuItem(string text)
+            : base(text)
+        {
+        }
+
         public new event EventHandler Click;
 
         public void RaiseClick()
