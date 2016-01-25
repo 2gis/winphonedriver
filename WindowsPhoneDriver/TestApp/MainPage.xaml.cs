@@ -5,6 +5,7 @@ using System.Net;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Navigation;
+using WindowsPhoneDriver.InnerDriver.Public;
 using Microsoft.Phone.Controls;
 using Microsoft.Phone.Shell;
 using TestApp.Resources;
@@ -93,5 +94,22 @@ namespace TestApp
         //    ApplicationBarMenuItem appBarMenuItem = new ApplicationBarMenuItem(AppResources.AppBarMenuItemText);
         //    ApplicationBar.MenuItems.Add(appBarMenuItem);
         //}
+        private void ClickableApplicationBarIconButton_OnClick(object sender, EventArgs e)
+        {
+            var clickableApplicationBarIconButton = sender as ClickableApplicationBarIconButton;
+            if (clickableApplicationBarIconButton != null)
+            {
+                TextBox.Text = clickableApplicationBarIconButton.Text;
+            }
+        }
+
+        private void ClickableApplicationBarMenuItem_OnClick(object sender, EventArgs e)
+        {
+            var clickableApplicationBarMenuItem = sender as ClickableApplicationBarMenuItem;
+            if (clickableApplicationBarMenuItem != null)
+            {
+                TextBox.Text = clickableApplicationBarMenuItem.Text;
+            }
+        }
     }
 }

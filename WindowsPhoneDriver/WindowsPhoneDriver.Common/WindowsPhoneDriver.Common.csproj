@@ -41,6 +41,7 @@
     <Compile Include="DriverCommand.cs" />
     <Compile Include="Exceptions\AutomationException.cs" />
     <Compile Include="Exceptions\InnerDriverRequestException.cs" />
+    <Compile Include="ExtendedCommand.cs" />
     <Compile Include="HttpResponseHelper.cs" />
     <Compile Include="JsonErrorCodes.cs" />
     <Compile Include="JsonWireClasses.cs" />
