@@ -10,7 +10,6 @@
 
         protected override string DoImpl()
         {
-            this.Automator.UpdatedOrientationForEmulatorController();
             var phoneScreenSize = this.Automator.EmulatorController.PhoneScreenSize;
 
             return this.JsonResponse(

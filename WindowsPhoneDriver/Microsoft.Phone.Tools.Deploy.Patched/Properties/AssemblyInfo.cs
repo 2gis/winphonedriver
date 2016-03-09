@@ -1,16 +1,15 @@
 ﻿using System.Reflection;
-using System.Resources;
 using System.Runtime.InteropServices;
 
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("WindowsPhoneDriver.InnerDriver")]
-[assembly: AssemblyDescription("Inner driver. Part of Windows Phone Driver. Selenium Driver for automated testing of Windows Phone 8.1 Silverlight applications.")]
+[assembly: AssemblyTitle("Microsoft.Phone.Tools.Deploy.Patched")]
+[assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("2gis")]
-[assembly: AssemblyProduct("WindowsPhoneDriver.InnerDriver")]
-[assembly: AssemblyCopyright("Copyright ©  2014")]
+[assembly: AssemblyCompany("")]
+[assembly: AssemblyProduct("Microsoft.Phone.Tools.Deploy.Patched")]
+[assembly: AssemblyCopyright("Copyright ©  2015")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -20,18 +19,15 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("bc2b2946-0f51-4c34-b8eb-1331bf076a70")]
+[assembly: Guid("8da9d33e-bbc8-4cfc-9e3d-e39abd2c811a")]
 
 // Version information for an assembly consists of the following four values:
-//
 //      Major Version
 //      Minor Version 
 //      Build Number
 //      Revision
-//
-// You can specify all the values or you can default the Revision and Build Numbers 
+// You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("0.2.0.*")]
-[assembly: AssemblyFileVersion("0.2.0.0")]
-
-[assembly: NeutralResourcesLanguageAttribute("en-US")]
+// [assembly: AssemblyVersion("1.0.*")]
+[assembly: AssemblyVersion("1.0.0.0")]
+[assembly: AssemblyFileVersion("1.0.0.0")]

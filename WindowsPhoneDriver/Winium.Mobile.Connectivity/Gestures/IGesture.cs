@@ -1,10 +1,14 @@
-﻿namespace WindowsPhoneDriver.OuterDriver.EmulatorHelpers
+﻿namespace Winium.Mobile.Connectivity.Gestures
 {
+    #region
+
     using System;
     using System.Collections.Generic;
     using System.Drawing;
 
-    internal interface IGesture
+    #endregion
+
+    public interface IGesture
     {
         #region Public Properties
 

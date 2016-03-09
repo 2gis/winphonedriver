@@ -1,7 +1,8 @@
 ﻿namespace WindowsPhoneDriver.OuterDriver.CommandExecutors
 {
     using WindowsPhoneDriver.OuterDriver.Automator;
-    using WindowsPhoneDriver.OuterDriver.EmulatorHelpers;
+
+    using Winium.Mobile.Connectivity.Gestures;
 
     internal class TouchSingleTapExecutor : CommandExecutorBase
     {
@@ -9,8 +10,6 @@
 
         protected override string DoImpl()
         {
-            this.Automator.UpdatedOrientationForEmulatorController();
-
             var elementId = Automator.GetValue<string>(this.ExecutedCommand.Parameters, "element");
             if (elementId == null)
             {

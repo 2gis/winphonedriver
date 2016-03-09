@@ -6,15 +6,12 @@
     using System.Diagnostics;
     using System.Threading;
 
-    using Microsoft.Xde.Wmi;
-
     using Newtonsoft.Json;
 
     using OpenQA.Selenium.Remote;
 
     using WindowsPhoneDriver.Common;
     using WindowsPhoneDriver.OuterDriver.Automator;
-    using WindowsPhoneDriver.OuterDriver.EmulatorHelpers;
 
     #endregion
 
@@ -34,6 +31,20 @@
 
             this.Automator.CommandForwarder = new Requester(innerIp, this.Automator.ActualCapabilities.InnerPort);
 
+            this.ConnectToApp();
+
+            // TODO throw AutomationException with SessionNotCreatedException if timeout and uninstall the app
+
+            // Gives sometime to load visuals (needed only in case of slow emulation)
+            Thread.Sleep(this.Automator.ActualCapabilities.LaunchDelay);
+
+            var jsonResponse = this.JsonResponse(ResponseStatus.Success, this.Automator.ActualCapabilities);
+
+            return jsonResponse;
+        }
+
+        private void ConnectToApp()
+        {
             long timeout = this.Automator.ActualCapabilities.LaunchTimeout;
 
             const int PingStep = 500;
@@ -54,48 +65,20 @@
                 stopWatch.Stop();
                 timeout -= stopWatch.ElapsedMilliseconds;
             }
-
-            // TODO throw AutomationException with SessionNotCreatedException if timeout and uninstall the app
-            Console.WriteLine();
-
-            // Gives sometime to load visuals (needed only in case of slow emulation)
-            Thread.Sleep(this.Automator.ActualCapabilities.LaunchDelay);
-
-            var jsonResponse = this.JsonResponse(ResponseStatus.Success, this.Automator.ActualCapabilities);
-
-            return jsonResponse;
-        }
-
-        private EmulatorController CreateEmulatorController(bool withFallback)
-        {
-            try
-            {
-                return new EmulatorController(this.Automator.ActualCapabilities.DeviceName);
-            }
-            catch (XdeVirtualMachineException)
-            {
-                if (!withFallback)
-                {
-                    throw;
-                }
-
-                this.Automator.ActualCapabilities.DeviceName =
-                    this.Automator.ActualCapabilities.DeviceName.Split('(')[0];
-                return new EmulatorController(this.Automator.ActualCapabilities.DeviceName);
-            }
         }
 
         private string InitializeApplication(bool debugDoNotDeploy = false)
         {
             var appPath = this.Automator.ActualCapabilities.App;
-            this.Automator.Deployer = new Deployer81(this.Automator.ActualCapabilities.DeviceName);
+            this.Automator.Deployer = new Winium.Mobile.Connectivity.Deployer(this.Automator.ActualCapabilities.DeviceName, false);
             if (!debugDoNotDeploy)
             {
-                this.Automator.Deployer.Deploy(appPath);
+                this.Automator.Deployer.Install(appPath, null);
+                this.Automator.Deployer.Launch();
             }
 
             this.Automator.ActualCapabilities.DeviceName = this.Automator.Deployer.DeviceName;
-            var emulatorController = this.CreateEmulatorController(debugDoNotDeploy);
+            var emulatorController = this.Automator.CreateEmulatorController(debugDoNotDeploy);
             this.Automator.EmulatorController = emulatorController;
 
             return this.Automator.EmulatorController.GetIpAddress();

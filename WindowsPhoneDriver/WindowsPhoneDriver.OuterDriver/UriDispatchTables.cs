@@ -12,6 +12,8 @@
     {
         #region Fields
 
+        private static Dictionary<string, CommandInfo> extendedCommands;
+
         private UriTemplateTable deleteDispatcherTable;
 
         private UriTemplateTable getDispatcherTable;
@@ -24,6 +26,21 @@
 
         public UriDispatchTables(Uri prefix)
         {
+            extendedCommands = new Dictionary<string, CommandInfo>
+                                   {
+                                       {
+                                           "pullFile", 
+                                           new CommandInfo(
+                                           "POST", 
+                                           "/session/{sessionId}/appium/device/pull_file")
+                                       }, 
+                                       {
+                                           "pushFile", 
+                                           new CommandInfo(
+                                           "POST", 
+                                           "/session/{sessionId}/appium/device/push_file")
+                                       }
+                                   };
             this.ConstructDispatcherTables(prefix);
         }
 
@@ -61,20 +78,49 @@
             return tableToReturn;
         }
 
+        private CommandInfo GetCommandInfo(string name)
+        {
+            var commandInformation = CommandInfoRepository.Instance.GetCommandInfo(name);
+            if (commandInformation != null)
+            {
+                return commandInformation;
+            }
+
+            if (extendedCommands.ContainsKey(name))
+            {
+                commandInformation = extendedCommands[name];
+            }
+
+            return commandInformation;
+        }
+
+        private IReadOnlyDictionary<string, CommandInfo> GetCommands()
+        {
+            var commands = new Dictionary<string, CommandInfo>();
+            var fields = typeof(DriverCommand).GetFields(BindingFlags.Public | BindingFlags.Static);
+            foreach (var field in fields)
+            {
+                var commandName = field.GetValue(null).ToString();
+                var commandInformation = this.GetCommandInfo(commandName);
+                commands.Add(commandName, commandInformation);
+            }
+
+            return commands;
+        }
+
         private void ConstructDispatcherTables(Uri prefix)
         {
             this.getDispatcherTable = new UriTemplateTable(prefix);
             this.postDispatcherTable = new UriTemplateTable(prefix);
             this.deleteDispatcherTable = new UriTemplateTable(prefix);
 
-            var fields = typeof(DriverCommand).GetFields(BindingFlags.Public | BindingFlags.Static);
-            foreach (var field in fields)
+            var commands = this.GetCommands();
+
+            foreach (var command in commands)
             {
-                var commandName = field.GetValue(null).ToString();
-                var commandInformation = CommandInfoRepository.Instance.GetCommandInfo(commandName);
-                var commandUriTemplate = new UriTemplate(commandInformation.ResourcePath);
-                var templateTable = this.FindDispatcherTable(commandInformation.Method);
-                templateTable.KeyValuePairs.Add(new KeyValuePair<UriTemplate, object>(commandUriTemplate, commandName));
+                var commandUriTemplate = new UriTemplate(command.Value.ResourcePath);
+                var templateTable = this.FindDispatcherTable(command.Value.Method);
+                templateTable.KeyValuePairs.Add(new KeyValuePair<UriTemplate, object>(commandUriTemplate, command.Key));
             }
 
             this.getDispatcherTable.MakeReadOnly(false);

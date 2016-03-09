@@ -1,2 +1,2 @@
-pytest==2.6.4
-selenium==2.45.0
+Appium-Python-Client==0.20
+pytest==2.8.5

@@ -1,4 +1,4 @@
-﻿namespace Winium.StoreApps.Driver.CommandHelpers
+﻿namespace WindowsPhoneDriver.OuterDriver.CommandExecutors.CommandHelpers
 {
     #region
 

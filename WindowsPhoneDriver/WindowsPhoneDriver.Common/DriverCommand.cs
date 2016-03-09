@@ -459,6 +459,16 @@ namespace WindowsPhoneDriver.Common
         /// </summary>
         public static readonly string UploadFile = "uploadFile";
 
+        /// <summary>
+        /// Represents the PullFile command (Appium).
+        /// </summary>
+        public static readonly string PullFile = "pullFile";
+
+        /// <summary>
+        /// Represents the PushFile command (Appium).
+        /// </summary>
+        public static readonly string PushFile = "pushFile";
+
         #endregion
     }
 }

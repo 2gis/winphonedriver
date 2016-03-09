@@ -5,8 +5,7 @@
     using System.Collections.Generic;
 
     using WindowsPhoneDriver.Common;
-
-    using Winium.StoreApps.Driver.CommandHelpers;
+    using WindowsPhoneDriver.OuterDriver.CommandExecutors.CommandHelpers;
 
     #endregion
 
