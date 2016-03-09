@@ -50,6 +50,16 @@
                     <PasswordBox AutomationProperties.AutomationId="MyPasswordBox"/>
                     <Button Content="Show Msg" 
                         AutomationProperties.AutomationId="MsgBtn" />
+                    <RichTextBox Height="150"
+                                 x:Name="Rich"
+                                 AutomationProperties.AutomationId="Rich">
+                        <Paragraph>
+                            My test 1
+                        </Paragraph>
+                        <Paragraph>
+                            My test 2
+                        </Paragraph>
+                    </RichTextBox>
                 </StackPanel>
             </phone:PivotItem>
         </phone:Pivot>
