@@ -29,16 +29,22 @@
             extendedCommands = new Dictionary<string, CommandInfo>
                                    {
                                        {
-                                           "pullFile", 
+                                           DriverCommand.PullFile,
                                            new CommandInfo(
-                                           "POST", 
+                                           "POST",
                                            "/session/{sessionId}/appium/device/pull_file")
-                                       }, 
+                                       },
                                        {
-                                           "pushFile", 
+                                           DriverCommand.PushFile,
                                            new CommandInfo(
-                                           "POST", 
+                                           "POST",
                                            "/session/{sessionId}/appium/device/push_file")
+                                       },
+                                       {
+                                           DriverCommand.GetElementRect,
+                                           new CommandInfo(
+                                           "GET",
+                                           "/session/{sessionId}/element/{id}/rect")
                                        }
                                    };
             this.ConstructDispatcherTables(prefix);
@@ -54,7 +60,7 @@
         }
 
         #endregion
-
+        
         #region Methods
 
         internal UriTemplateTable FindDispatcherTable(string httpMethod)

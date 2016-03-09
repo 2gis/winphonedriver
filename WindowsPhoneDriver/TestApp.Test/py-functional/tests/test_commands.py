@@ -123,7 +123,15 @@ class TestGetCommands(WuaTestCase):
         GET /session/:sessionId/element/:id/location Determine an element's location on the page.
         """
         location = self.driver.find_element_by_id('MyTextBox').location
-        assert {'x': 240, 'y': 281} == location
+        assert {'x': 240, 'y': 269} == location
+
+    def test_get_element_size(self):
+        size = self.driver.find_element_by_id('MyTextBox').size
+        assert {'height': 100, 'width': 400} == size
+
+    def test_get_element_rect(self):
+        rect = self.driver.find_element_by_id('MyTextBox').rect
+        assert {'x': 40, 'y': 219, 'height': 100, 'width': 400} == rect
 
     def test_get_orientation(self):
         """

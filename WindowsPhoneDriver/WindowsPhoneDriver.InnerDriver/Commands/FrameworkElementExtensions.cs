@@ -39,6 +39,12 @@
             return boundsInView.IsEmpty ? center : new Point(boundsInView.X + (int)(boundsInView.Width / 2), boundsInView.Y + (int)(boundsInView.Height / 2));
         }
 
+        internal static Rect GetRect(this FrameworkElement element, UIElement visualRoot)
+        {
+            var rect = new Rect(0, 0, element.ActualWidth, element.ActualHeight);
+            return element.TransformToVisual(visualRoot).TransformBounds(rect);
+        }
+
         internal static string GetText(this FrameworkElement element)
         {
             if (element is RichTextBox)
