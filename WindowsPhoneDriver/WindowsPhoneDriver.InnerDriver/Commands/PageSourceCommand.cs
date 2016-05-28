@@ -50,7 +50,8 @@
             }
 
             writer.WriteStartElement(item.GetType().ToString());
-            var coordinates = item.GetCoordinates(this.Automator.VisualRoot);
+            var coordinates = item.GetCoordinatesInView(this.Automator.VisualRoot);
+            var rect = item.GetRect(this.Automator.VisualRoot);
             var attributes = new Dictionary<string, string>
                                  {
                                      { "name", item.AutomationName() },
@@ -63,13 +64,19 @@
                                          .ToLowerInvariant()
                                      }, 
                                      { "value", item.GetText() }, 
+                                     { "x", rect.X.ToString(CultureInfo.InvariantCulture) }, 
+                                     { "y", rect.Y.ToString(CultureInfo.InvariantCulture) }, 
                                      {
-                                         "x", 
-                                         coordinates.X.ToString(CultureInfo.InvariantCulture)
+                                         "width", 
+                                         rect.Width.ToString(CultureInfo.InvariantCulture)
                                      }, 
                                      {
-                                         "y", 
-                                         coordinates.Y.ToString(CultureInfo.InvariantCulture)
+                                         "height", 
+                                         rect.Height.ToString(CultureInfo.InvariantCulture)
+                                     }, 
+                                     {
+                                         "clickable_point",
+                                         coordinates.ToString(CultureInfo.InvariantCulture)
                                      }
                                  };
             foreach (var attribute in attributes)

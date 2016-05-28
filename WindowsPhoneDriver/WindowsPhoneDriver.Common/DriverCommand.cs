@@ -460,6 +460,11 @@ namespace WindowsPhoneDriver.Common
         public static readonly string UploadFile = "uploadFile";
 
         /// <summary>
+        /// Represents the GetElementRect command.
+        /// </summary>
+        public static readonly string GetElementRect = "getElementRect";
+
+        /// <summary>
         /// Represents the PullFile command (Appium).
         /// </summary>
         public static readonly string PullFile = "pullFile";
