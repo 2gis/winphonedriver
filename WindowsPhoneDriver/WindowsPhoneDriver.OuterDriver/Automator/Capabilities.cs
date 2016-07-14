@@ -3,7 +3,9 @@
     using Newtonsoft.Json;
     using Newtonsoft.Json.Serialization;
 
-    internal class Capabilities
+    using OpenQA.Selenium.Remote;
+
+	internal class Capabilities
     {
         #region Constructors and Destructors
 
@@ -15,6 +17,7 @@
             this.LaunchTimeout = 10000;
             this.DebugConnectToRunningApp = false;
             this.InnerPort = 9998;
+	        this.IsJavascriptEnabled = true;
         }
 
         #endregion
@@ -47,6 +50,9 @@
 
         [JsonProperty("launchTimeout")]
         public int LaunchTimeout { get; set; }
+
+		[JsonProperty("javascriptEnabled")]
+		public bool IsJavascriptEnabled { get; set; }
 
         #endregion
 
