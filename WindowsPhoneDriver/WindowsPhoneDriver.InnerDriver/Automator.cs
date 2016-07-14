@@ -135,7 +135,11 @@
             {
                 commandToExecute = new InvokeAppBarItemCommand();
             }
-            else
+			else if (command.Equals(DriverCommand.ExecuteScript))
+			{
+				commandToExecute = new ExecuteScriptCommand();
+			}
+			else
             {
                 throw new NotImplementedException("Not implemented: " + command);
             }
