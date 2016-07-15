@@ -113,7 +113,7 @@
             }
             else if (command.Equals(DriverCommand.GetElementSize))
             {
-                commandToExecute = new GetElementSizeCommand {ElementId = elementId};
+                commandToExecute = new GetElementSizeCommand { ElementId = elementId };
             }
             else if (command.Equals(DriverCommand.GetElementRect))
             {
@@ -135,11 +135,11 @@
             {
                 commandToExecute = new InvokeAppBarItemCommand();
             }
-			else if (command.Equals(DriverCommand.ExecuteScript))
-			{
-				commandToExecute = new ExecuteScriptCommand();
-			}
-			else
+            else if (command.Equals(DriverCommand.ExecuteScript))
+            {
+                commandToExecute = new ExecuteScriptCommand();
+            }
+            else
             {
                 throw new NotImplementedException("Not implemented: " + command);
             }
