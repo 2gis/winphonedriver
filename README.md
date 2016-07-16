@@ -17,7 +17,7 @@ Requirements to run tests using Windows Phone driver
 Usage
 -----
 1. Build solution
-2. In tested app project, add reference to `WindowsPhoneDriver.InnerDriver`
+2. In tested app project, add reference to `WindowsPhoneDriver.InnerDriver` and `WindowsPhoneDriver.Common` (we also have NuGet package, but it might lag behind latests version of source code)
 3. In your app’s source code locate place where `RootFrame` is set (usually in `PrepareApplication` if you use `Caliburn.Micro` or App.xaml.cs for vanilla app) and add
     
     ```cs
