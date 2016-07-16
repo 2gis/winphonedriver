@@ -157,6 +157,15 @@ class TestGetCommands(WuaTestCase):
         data = self.driver.pull_file(r"test\sample.dat")
         assert encoded == data
 
+    def test_execute_script_invoke_method_echo_with_arg(self):
+        rv = self.driver.execute_script('mobile: invokeMethod', 'TestApp.AutomationApi', 'Echo', 'blah blah')
+        assert 'blah blah' == rv
+
+    def test_execute_script_invoke_method_complex_return_value_no_args(self):
+        expected = {u'Date': u'1985-10-21T01:20:00', u'Text': u'Flux', u'Value': 3}
+        rv = self.driver.execute_script('mobile: invokeMethod', 'TestApp.AutomationApi', 'ReturnStubState')
+        assert expected == rv
+
 
 class TestBasicInput(WuaTestCase):
     __shared_session__ = False

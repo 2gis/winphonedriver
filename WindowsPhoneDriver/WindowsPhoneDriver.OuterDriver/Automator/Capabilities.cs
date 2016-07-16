@@ -15,6 +15,7 @@
             this.LaunchTimeout = 10000;
             this.DebugConnectToRunningApp = false;
             this.InnerPort = 9998;
+            this.IsJavascriptEnabled = true;
         }
 
         #endregion
@@ -48,6 +49,9 @@
         [JsonProperty("launchTimeout")]
         public int LaunchTimeout { get; set; }
 
+        [JsonProperty("javascriptEnabled")]
+        public bool IsJavascriptEnabled { get; set; }
+
         #endregion
 
         #region Public Methods and Operators
@@ -55,7 +59,7 @@
         public static Capabilities CapabilitiesFromJsonString(string jsonString)
         {
             var capabilities = JsonConvert.DeserializeObject<Capabilities>(
-                jsonString, 
+                jsonString,
                 new JsonSerializerSettings
                     {
                         Error =
