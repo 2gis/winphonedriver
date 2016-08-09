@@ -9,7 +9,7 @@ open OpenQA.Selenium.Remote
 // from TestApp.Test\py-functional\config.py
 let desiredCapabilities () = 
     let capabilities = new DesiredCapabilities()
-    let xapPath = System.IO.Path.Combine(__SOURCE_DIRECTORY__, "../TestApp/Bin/x86/Debug/TestApp_Debug_x86.xap")
+    let xapPath = System.IO.Path.Combine(__SOURCE_DIRECTORY__, "../../TestApp/Bin/x86/Debug/TestApp_Debug_x86.xap")
     capabilities.SetCapability("app", xapPath)
     capabilities.SetCapability("deviceName", "Emulator 8.1")
     capabilities.IsJavaScriptEnabled <- true
@@ -21,3 +21,7 @@ let getDriver () =
 let driver = getDriver()
 driver.ExecuteScript("mobile: invokeMethod", "TestApp.AutomationApi", "Alert", "blah blah")
 driver.ExecuteScript("mobile: invokeMethod", "TestApp.AutomationApi", "AlertEmpty")
+
+driver.FindElementById("SetButton").GetAttribute("DataContext.SampleProperty")
+driver.FindElementById("SetButton").GetAttribute("Background.Color")
+driver.FindElementById("SetButton").GetAttribute("RenderTransform")

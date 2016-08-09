@@ -1,6 +1,9 @@
 ﻿namespace WindowsPhoneDriver.InnerDriver.Commands
 {
-    using WindowsPhoneDriver.Common;
+	using System;
+	using System.Linq;
+
+	using WindowsPhoneDriver.Common;
 
     internal class GetElementAttributeCommand : CommandBase
     {
@@ -28,15 +31,23 @@
                 return this.JsonResponse(ResponseStatus.Success, null);
             }
 
-            var property = element.GetType().GetProperty(attributeName);
-            if (property == null)
+			//Support for attributes with chained names like "Control.RenderTransform.TranslateX"
+	        var finalValue = attributeName
+				.Split('.')
+				.Aggregate(
+					(object)element,
+					(currentValue, propertyName) =>
+						{
+							var prop = currentValue?.GetType().GetProperty(propertyName);
+							return currentValue == null || prop == null ? null : prop.GetValue(currentValue);
+						});
+
+            if (finalValue == null)
             {
                 return this.JsonResponse(ResponseStatus.Success, null);
             }
 
-            var attributeValue = property.GetValue(element, null).ToString();
-
-            return this.JsonResponse(ResponseStatus.Success, attributeValue);
+            return this.JsonResponse(ResponseStatus.Success, finalValue.ToString());
         }
 
         #endregion
