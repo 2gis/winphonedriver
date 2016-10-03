@@ -14,7 +14,6 @@
             this.LaunchDelay = 0;
             this.LaunchTimeout = 10000;
             this.DebugConnectToRunningApp = false;
-            this.InnerPort = 9998;
             this.IsJavascriptEnabled = true;
         }
 
@@ -39,9 +38,6 @@
 
         [JsonProperty("deviceName")]
         public string DeviceName { get; set; }
-
-        [JsonProperty("innerPort")]
-        public int InnerPort { get; set; }
 
         [JsonProperty("launchDelay")]
         public int LaunchDelay { get; set; }
