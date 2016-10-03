@@ -1,13 +1,15 @@
 ﻿namespace WindowsPhoneDriver.InnerDriver
 {
     using System;
-    using System.Globalization;
     using System.Net;
     using System.Threading.Tasks;
     using System.Windows;
 
     using Windows.Networking.Sockets;
+    using Windows.Storage;
     using Windows.Storage.Streams;
+
+    using Newtonsoft.Json;
 
     using WindowsPhoneDriver.Common;
 
@@ -27,8 +29,6 @@
 
         private StreamSocketListener listener;
 
-        private int listeningPort;
-
         #endregion
 
         #region Public Methods and Operators
@@ -44,23 +44,7 @@
         public void InitializeAndStart(UIElement visualRoot)
         {
             this.SetAutomator(visualRoot);
-            this.Start(9998);
-        }
-
-        /// <summary>
-        /// Initializes and starts <see cref="AutomationServer"/> with specified parameters.
-        /// </summary>
-        /// <remarks>
-        /// Use it in conjuction with <see cref="Instance"/> to simplify inclusion of server in tested app.
-        /// </remarks>
-        /// <param name="visualRoot">
-        /// </param>
-        /// <param name="port">
-        /// </param>
-        public void InitializeAndStart(UIElement visualRoot, int port)
-        {
-            this.SetAutomator(visualRoot);
-            this.Start(port);
+            this.Start();
         }
 
         public void SetAutomator(UIElement visualRoot)
@@ -68,34 +52,42 @@
             this.automator = new Automator(visualRoot);
         }
 
-        public async void Start(int port)
+        public async void Start()
         {
             if (this.isServerActive)
             {
                 return;
             }
 
-            this.listeningPort = port;
-
-            this.isServerActive = true;
             this.listener = new StreamSocketListener();
             this.listener.Control.QualityOfService = SocketQualityOfService.Normal;
             this.listener.ConnectionReceived += this.ListenerConnectionReceived;
-            await this.listener.BindServiceNameAsync(this.listeningPort.ToString(CultureInfo.InvariantCulture));
+            await this.listener.BindServiceNameAsync(string.Empty);
+            await this.WriteConnectionData();
+            this.isServerActive = true;
         }
 
         public void Stop()
         {
-            if (this.isServerActive)
+            if (!this.isServerActive)
             {
-                this.listener.Dispose();
-                this.isServerActive = false;
+                return;
             }
+            this.listener.Dispose();
+            this.isServerActive = false;
         }
 
         #endregion
 
         #region Methods
+
+        private async Task WriteConnectionData()
+        {
+            var file = await ApplicationData.Current.TemporaryFolder.CreateFileAsync(ConnectionInformation.FileName, CreationCollisionOption.ReplaceExisting);
+
+            var information = new ConnectionInformation { RemotePort = this.listener.Information.LocalPort };
+            await FileIO.WriteTextAsync(file, JsonConvert.SerializeObject(information));
+        }
 
         private async void HandleRequest(StreamSocket socket)
         {
@@ -128,7 +120,7 @@
         }
 
         private async void ListenerConnectionReceived(
-            StreamSocketListener sender, 
+            StreamSocketListener sender,
             StreamSocketListenerConnectionReceivedEventArgs args)
         {
             await Task.Run(() => this.HandleRequest(args.Socket));

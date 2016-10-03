@@ -4,6 +4,7 @@
 
     using System;
     using System.Diagnostics;
+    using System.IO;
     using System.Threading;
 
     using Newtonsoft.Json;
@@ -11,6 +12,7 @@
     using OpenQA.Selenium.Remote;
 
     using WindowsPhoneDriver.Common;
+    using WindowsPhoneDriver.Common.Exceptions;
     using WindowsPhoneDriver.OuterDriver.Automator;
 
     #endregion
@@ -29,7 +31,10 @@
 
             var innerIp = this.InitializeApplication(this.Automator.ActualCapabilities.DebugConnectToRunningApp);
 
-            this.Automator.CommandForwarder = new Requester(innerIp, this.Automator.ActualCapabilities.InnerPort);
+            var connectionInformation = this.GetConnectionInformation();
+            Logger.Info("Received connection information from device {0}", connectionInformation);
+
+            this.Automator.CommandForwarder = new Requester(innerIp, connectionInformation.RemotePort);
 
             this.ConnectToApp();
 
@@ -41,6 +46,17 @@
             var jsonResponse = this.JsonResponse(ResponseStatus.Success, this.Automator.ActualCapabilities);
 
             return jsonResponse;
+        }
+
+        private ConnectionInformation GetConnectionInformation()
+        {
+            var filePath = Path.GetTempFileName();
+            this.Automator.Deployer.ReceiveFile("Temp", ConnectionInformation.FileName, filePath);
+            using (var file = File.OpenText(filePath))
+            {
+                var serializer = new JsonSerializer();
+                return (ConnectionInformation)serializer.Deserialize(file, typeof(ConnectionInformation));
+            }
         }
 
         private void ConnectToApp()
@@ -70,6 +86,12 @@
         private string InitializeApplication(bool debugDoNotDeploy = false)
         {
             var appPath = this.Automator.ActualCapabilities.App;
+
+            if (string.IsNullOrWhiteSpace(appPath))
+            {
+                throw new AutomationException("app capability is not set.", ResponseStatus.SessionNotCreatedException);
+            }
+
             this.Automator.Deployer = new Winium.Mobile.Connectivity.Deployer(this.Automator.ActualCapabilities.DeviceName, false);
             if (!debugDoNotDeploy)
             {
