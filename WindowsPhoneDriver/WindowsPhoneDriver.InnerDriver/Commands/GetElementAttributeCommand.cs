@@ -38,7 +38,7 @@
                     (object)element,
                     (currentValue, propertyName) =>
                         {
-                            var prop = currentValue?.GetType().GetProperty(propertyName);
+                            var prop = currentValue == null ? null: currentValue.GetType().GetProperty(propertyName);
                             return currentValue == null || prop == null ? null : prop.GetValue(currentValue);
                         });
 

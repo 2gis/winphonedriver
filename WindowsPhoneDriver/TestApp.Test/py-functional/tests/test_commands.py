@@ -108,6 +108,11 @@ class TestGetCommands(WuaTestCase):
         value = element.get_attribute(attr_name)
         assert expected_value == value
 
+    def test_get_element_attribute_dot_syntax(self):
+        element = self.driver.find_element_by_id('SetButton')
+        value = element.get_attribute('Background.Color')
+        assert '#00FFFFFF' == value
+
     @pytest.mark.parametrize(("automation_id", "expected_value"), [
         ('MyTextBox', True),
     ])
