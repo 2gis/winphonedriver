@@ -1,3 +1,11 @@
+DEPRECATION
+===========
+
+Please use https://github.com/2gis/Winium.Mobile for latests releases of Silverlight auotmation.
+Use https://www.nuget.org/packages/Winium.Silverlight.InnerServer/ package instead of WindowsPhoneDriver.InnerDriver.
+
+This repository is no longer maintained. Code from this repository has been merged into Winium.Mobile project. Any new issues, pull requests, bug fixes, etc should be created in https://github.com/2gis/Winium.Mobile from now on.
+
 Windows Phone Driver
 ====================
 
